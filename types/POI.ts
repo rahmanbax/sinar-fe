@@ -11,8 +11,10 @@ export type NRB = {
     otherName: string
     languangeOrigin: string
     pictures: string
-    longitude: number
-    latitude: number
+    coord: {
+        longitude: number
+        latitude: number
+    }
     province: string
     regency: string
     id: string

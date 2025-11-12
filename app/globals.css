@@ -3,6 +3,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@tailwind utilities;
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -118,5 +120,75 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@keyframes expand {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes collapse {
+  from {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+.animate-expand {
+  animation: expand 1s ease-in-out forwards;
+}
+
+.animate-collapse {
+  animation: collapse 1s ease-in-out forwards;
+}
+
+@layer utilities {
+  /* Base: hide scrollbar visually but keep scroll functionality */
+  .scrollbar-hover-hidden::-webkit-scrollbar {
+    width: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .scrollbar-hover-hidden::-webkit-scrollbar-thumb {
+    background-color: transparent;
+  }
+
+  .scrollbar-hover-hidden {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  /* Show scrollbar on hover */
+  .group:hover .scrollbar-hover-hidden::-webkit-scrollbar-thumb {
+    background-color: rgba(100, 100, 100, 0.6);
+  }
+
+  .group:hover .scrollbar-hover-hidden {
+    scrollbar-color: rgba(100, 100, 100, 0.6) transparent;
+  }
+
+  .group:hover .scrollbar-hover-hidden::-webkit-scrollbar {
+    opacity: 1;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .scrollbar-hidden {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
   }
 }

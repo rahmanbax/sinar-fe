@@ -83,7 +83,7 @@ export type StandardToponim = {
         id: number
         name: number
     }
-    // lCode: string
+    lcode: string
     generic_name: string
     specific_name: string
     toponim_name: string

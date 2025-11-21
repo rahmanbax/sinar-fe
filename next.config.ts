@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
     resolveAlias: {
       fs: './empty.ts'
     }
+  },
+  rewrites: () => {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8080/api/*' 
+      }
+    ]
   }
 };
 

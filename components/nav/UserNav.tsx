@@ -102,7 +102,7 @@ export interface ISurveyorNav {
   navbarRef?:  RefObject<HTMLDivElement | null>
 }
 
-const SurveyorNav: React.FC<React.PropsWithChildren<ISurveyorNav>> = ({ isMobile, menuItems = [], setOpenLoginDialog, navbarRef }) => {
+const UserNav: React.FC<React.PropsWithChildren<ISurveyorNav>> = ({ isMobile, menuItems = [], setOpenLoginDialog, navbarRef }) => {
 
   const pathname = usePathname()
   const { user } = useAuth()
@@ -132,7 +132,7 @@ const SurveyorNav: React.FC<React.PropsWithChildren<ISurveyorNav>> = ({ isMobile
             <NavigationMenuItem key={item.label}>
               <Link href={item.href}>
                 <Button
-                  className={`text-md max-w-80 whitespace-normal h-20 min-[1250]:h-auto ${item.href === pathname ? 'text-[#1378B7] font-bold' : 'font-normal'}`}
+                  className={`text-md max-w-80 whitespace-normal h-20 min-[1250]:h-auto ${pathname === item.href ? 'text-[#1378B7] font-bold' : 'font-normal'}`}
                   onMouseEnter={() => setHovered(item.href)}
                   onMouseLeave={() => setHovered(null)}
                   variant={hovered === item.href ? 'outline' : item.variant ?? 'ghost'}
@@ -181,4 +181,4 @@ const SurveyorNav: React.FC<React.PropsWithChildren<ISurveyorNav>> = ({ isMobile
     </NavigationMenu>
   )
 }
-export default SurveyorNav
+export default UserNav

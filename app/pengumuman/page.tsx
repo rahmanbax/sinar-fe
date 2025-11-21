@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import SinarParameterizedTable from "@/components/SinarParameterizedTable";
+import SinarParameterizedTable, { ColumnConfig } from "@/components/SinarParameterizedTable";
 
 const Pengumuman: React.FC = () => {
   const isInitialLoad = useRef(true)
@@ -35,13 +35,13 @@ const Pengumuman: React.FC = () => {
   const [filters, setFilters] = useState([])
 
   const totalPages = 2
-  const columns : Partial<Record<string, string>> = {
-    id: 'ID', 
-    elementType: 'Jenis Unsur', 
-    localName: 'Nama Lokal', 
-    specificName: 'Nama Spesifik', 
-    province:  'Provinsi', 
-    regency: 'Kabupaten/Kota'
+  const columns: ColumnConfig = {
+    id: { label: 'ID' },
+    elementType: { label: 'Jenis Unsur' },
+    localName: { label: 'Nama Lokal' },
+    specificName: { label: 'Nama Spesifik' },
+    province: { label: 'Provinsi' },
+    regency: { label: 'Kabupaten/Kota' }
   }
 
   const apiHandler = useApiHandler({ setLoading, shouldHandleError: true })
@@ -50,9 +50,11 @@ const Pengumuman: React.FC = () => {
     setPage(num)
   }
 
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
+
   const refresh = useCallback(() => {
 
-    apiHandler('GET', `/nrb?page=${page}&limit=${limit}`)
+    apiHandler('GET', `/toponim?page=${page}&per_page=${limit}`)
       .then(r => {
         setData(r)
       })
@@ -62,7 +64,49 @@ const Pengumuman: React.FC = () => {
 
   useEffect(refresh, [refresh])
 
-  return <SinarParameterizedTable data={apiData} limit={5} loading={loading} onPageChange={onPageChange} page={page} totalPages={totalPages} columns={columns} />
+  return (
+    <>
+      <SinarParameterizedTable data={apiData} loading={loading} columns={columns} />
+      <div className="flex justify-between items-center w-full mt-3">
+        <h5>Menampilkan {limit} data per halaman</h5>
+        <div className="flex items-center justify-center gap-2 bg-gray-50 p-2 rounded">
+          <Button
+            size="icon-sm"
+            disabled={page === 1}
+            onClick={() => onPageChange(page - 1)}
+          >
+            <ChevronLeft />
+          </Button>
+
+          {pages.map((p) => (
+            <Button
+              key={p}
+              variant="ghost"
+              size="sm"
+              onClick={() => onPageChange(p)}
+              className={cn(
+                "text-sm transition-all",
+                page === p
+                  ? "font-bold text-black"
+                  : "font-normal text-gray-600 hover:text-black hover:border"
+              )}
+            >
+              {p}
+            </Button>
+          ))}
+
+          <Button
+            size="icon-sm"
+            disabled={page === totalPages}
+            onClick={() => onPageChange(page + 1)}
+          >
+            <ChevronRight />
+          </Button>
+        </div>
+      </div>
+    </>
+  )
+
 }
 
 const Tanggapan: React.FC = () => {
@@ -226,7 +270,7 @@ const Page = () => {
             <div className="block lg:hidden mb-2 sm:mb-0 w-36">
               <Select onValueChange={(v) => setPanel(v)} value={panel}>
                 <SelectTrigger className="w-full rounded-md shadow-md font-semibold">
-                  <SelectValue/>
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>

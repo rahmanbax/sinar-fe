@@ -26,9 +26,7 @@ const SurveyorLayout: React.FC<React.PropsWithChildren<ISurveyorLayout>> = ({ ch
     const { isMobile } = useIsMobile()
 
     const menuItems: ISurveyorNav['menuItems'] = [
-        { label: 'Beranda', href: '/' },
-        { label: 'Dashboard', href: '/survey'},
-        { label: 'Rapor Nama Rupabumi', href: '/survey/rapor'},
+        { label: 'Penalaahan', href: '/penelaahan' },
         { label: 'Gazeter', href: '/gazeter', variant: 'ghost' },
         { label: 'Pengumuman Nama Rupabumi', href: '/pengumuman', variant: 'ghost' }
     ]

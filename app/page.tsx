@@ -19,7 +19,7 @@ const Home = () => {
 
   const isInitialLoad = useRef(true)
   const [loading, setLoading] = useState(false)
-  const apiHandler = useApiHandler({ setLoading, shouldHandleError: true })
+  const apiHandler = useApiHandler({ setLoading, shouldHandleError: false })
   const [apiData, setData] = useState<NRB[]>([])
   const [dataId, setDataId] = useState<string | null>(null)
   const [openFilter, setOpenFilter] = useState(false)
@@ -30,11 +30,9 @@ const Home = () => {
   const [filters, setFilters] = useState([])
 
   const refresh = useCallback(() => {
-      apiHandler('GET', `/nrb`).then(r => {
+      apiHandler('GET', `/toponim`).then(r => {
         setData(r)
       })
-
-      
 
       if(searchString && searchString.length > 2) {
         apiHandler('GET', `/nrb?limit=${limit}&search=${searchString}`)

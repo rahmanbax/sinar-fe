@@ -21,9 +21,9 @@ import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import Image from "next/image";
 import StatisticTab from "./StatisticTab";
-import MyDataTab from "./MyDataTab";
+import RegencyDataTab from "./RegencyDataTab";
 import MyTeamTab from "./MyTeamTab";
-import DataDeliveryTab from "./DataDeliveryTab";
+import ReviewDataTab from "./ReviewDataTab";
 
 const Page = () => {
     const [fullTab, setFulltab] = useState(false)
@@ -31,8 +31,8 @@ const Page = () => {
     const [navbarHeight, setNavbarHeight] = useState(0);
     const tabs = [
         { key: 'statistic', label: 'Statistik', component: <StatisticTab/> },
-        { key: 'my-data', label: 'Data Saya', component: <MyDataTab/> },
-        { key: 'data-delivery', label: 'Penyampaian Data', component: <DataDeliveryTab/> },
+        { key: 'review-data', label: 'Data Penelaahan', component: <ReviewDataTab/> },
+        { key: 'regency-data', label: 'Data Kabupaten/Kota', component: <RegencyDataTab/> },
         { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab/> }
     ]
 

@@ -46,11 +46,18 @@ export const useApiHandler = ({
             new Promise((resolve, reject) => {
                 // if (!token) return reject({ code: 'noToken' })
                 if (typeof setLoading === 'function') setLoading(true)
+
+                if (token) {
+                    header = {
+                        ...header,
+                        'Authorization' : `Bearer ${token}`
+                    }
+                }
+                
                 fetch(`${API_URL}${path}`, {
                     headers: {
                         'content-type': 'application/json',
-                        // token,
-                        ...header,
+                        ...header, 
                     },
                     method,
                     body:

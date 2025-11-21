@@ -357,9 +357,8 @@ const MapDefault: React.FC<IMapDefault> = ({ geoLocation, data, dataId, setDataI
               <PopoverContent side="left" sideOffset={10} className="translate-y-[-5.7em] max-w-16 max-h-96 md:max-w-52 sm:max-h-fit sm:max-w-fit">
                 <div className="flex flex-col gap-1 md:gap-3 items-center">
                   {MapStyles.map((item) => (
-                    <>
+                    <div key={item.id}>
                       <div
-                        key={item.id}
                         onClick={() => handleChangeMapStyle(item)}
                         className={`hover:scale-105 transition p-5 rounded-md border cursor-pointer w-full ${item.id === mapStyle.id ? 'border-blue-500' : ''}`}
                         style={{
@@ -373,7 +372,7 @@ const MapDefault: React.FC<IMapDefault> = ({ geoLocation, data, dataId, setDataI
                         </div>
                       </div>
                       <h5 className="text-sm text-center md:hidden text-black font-semibold drop-shadow">{item.abbrv}</h5>
-                    </>
+                    </div>
 
                   ))}
                 </div>

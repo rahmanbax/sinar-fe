@@ -21,9 +21,9 @@ import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import Image from "next/image";
 import StatisticTab from "./StatisticTab";
-import MyDataTab from "./MyDataTab";
+import GazeterTab from "./GazeterTab";
 import MyTeamTab from "./MyTeamTab";
-import DataDeliveryTab from "./DataDeliveryTab";
+import ReviewDataTab from "./ReviewDataTab";
 
 const Page = () => {
     const [fullTab, setFulltab] = useState(false)
@@ -31,8 +31,11 @@ const Page = () => {
     const [navbarHeight, setNavbarHeight] = useState(0);
     const tabs = [
         { key: 'statistic', label: 'Statistik', component: <StatisticTab/> },
-        { key: 'my-data', label: 'Data Saya', component: <MyDataTab/> },
-        { key: 'data-delivery', label: 'Penyampaian Data', component: <DataDeliveryTab/> },
+        { key: 'announcement', label: 'Pengumuman', component: <StatisticTab/> },
+        { key: 'response-review', label: 'Penelaahan Tanggapan', component: <StatisticTab/> },
+        { key: 'publication', label: 'Penetapan', component: <StatisticTab/> },
+        { key: 'create-gazeter', label: 'Pembuatan GRI', component: <GazeterTab/> },
+        { key: 'update-review', label: 'Penelaahan Perubahan', component: <StatisticTab/> },
         { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab/> }
     ]
 
@@ -61,11 +64,16 @@ const Page = () => {
 
                     <div className="flex items-center gap-6">
                         <Avatar className="w-28 h-28 md:w-36 md:h-36">
-                            <CircleUserRound size="max" />
+                            <Image
+                                src="/logo-wiki.png"
+                                layout="fill"
+                                objectFit="contain"
+                                alt="logo-big"
+                            />
                         </Avatar>
                         <div className="flex flex-col gap-1">
                             <h3 className="uppercase font-bold text-xl inline-flex gap-2">
-                                Username
+                                Badan Informasi Geospasial
                                 <Link href="/profile">
                                     <PiPencilSimpleLineDuotone size={18} className="mt-1" />
                                 </Link>

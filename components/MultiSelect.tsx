@@ -15,6 +15,7 @@ import {
     CommandSeparator,
 } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ColumnConfig } from "./SinarParameterizedTable"
 
 export type Option = {
     label: string
@@ -25,9 +26,14 @@ export type Option = {
 interface MultiSelectProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
     options: Option[]
     selected: Option[]
-    onChange: (options: Option[]) => void
+    onChange: (opt: Option[]) => void
     placeholder?: string
 }
+
+
+export const colToOptions = (columns: ColumnConfig) : {label: string, value: string}[] => {
+    return Object.entries(columns).map(([key, val]) => ({ label: val.label, value: key}))
+} 
 
 export function MultiSelect({
     options,

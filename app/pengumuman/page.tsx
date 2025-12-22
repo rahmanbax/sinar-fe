@@ -23,11 +23,25 @@ import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SinarParameterizedTable, { ColumnConfig } from "@/components/SinarParameterizedTable";
+import dayjs from "dayjs";
+import { ToponymAnnouncementTabular } from "@/types/Toponim";
+import { useRouter } from "next/navigation";
 
 const Pengumuman: React.FC = () => {
+  const columns: ColumnConfig = {
+    id: { label: 'ID' },
+    element: { label: 'Jenis Unsur', render: (v) => v.name},
+    local_name: { label: 'Nama Lokal' },
+    map_name: { label: 'Nama Spesifik' },
+    province: { label: 'Provinsi', render: (v) => v.name },
+    regency: { label: 'Kabupaten/Kota', render: (v) => v.name },
+  }
+
   const isInitialLoad = useRef(true)
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [apiData, setData] = useState<NRB[]>([])
+  const [apiData, setData] = useState<ToponymAnnouncementTabular[]>([])
+  const [sortBy, setSortBy] = useState<keyof typeof columns>('created_at')
   const [dataId, setDataId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(5)
@@ -35,16 +49,9 @@ const Pengumuman: React.FC = () => {
   const [filters, setFilters] = useState([])
 
   const totalPages = 2
-  const columns: ColumnConfig = {
-    id: { label: 'ID' },
-    elementType: { label: 'Jenis Unsur' },
-    localName: { label: 'Nama Lokal' },
-    specificName: { label: 'Nama Spesifik' },
-    province: { label: 'Provinsi' },
-    regency: { label: 'Kabupaten/Kota' }
-  }
+  
 
-  const apiHandler = useApiHandler({ setLoading, shouldHandleError: true })
+  const apiHandler = useApiHandler<NRB[]>({ setLoading, shouldHandleError: true })
 
   const onPageChange = (num: number) => {
     setPage(num)
@@ -52,9 +59,13 @@ const Pengumuman: React.FC = () => {
 
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
 
+  const onAct = (data: ToponymAnnouncementTabular) => {
+    router.push(`/?marker_id=${data.id}&lng=${data.location.coordinates[0]}&lat=${data.location.coordinates[1]}&zoom=15&limit=10`)
+  }
+
   const refresh = useCallback(() => {
 
-    apiHandler('GET', `/toponim?page=${page}&per_page=${limit}`)
+    apiHandler('GET', `/toponyms?page=${page}&per_page=${limit}`)
       .then(r => {
         setData(r)
       })
@@ -66,7 +77,7 @@ const Pengumuman: React.FC = () => {
 
   return (
     <>
-      <SinarParameterizedTable data={apiData} loading={loading} columns={columns} />
+      <SinarParameterizedTable data={apiData} loading={loading} columns={columns} actHandler={onAct}/>
       <div className="flex justify-between items-center w-full mt-3">
         <h5>Menampilkan {limit} data per halaman</h5>
         <div className="flex items-center justify-center gap-2 bg-gray-50 p-2 rounded">
@@ -112,7 +123,7 @@ const Pengumuman: React.FC = () => {
 const Tanggapan: React.FC = () => {
   const isInitialLoad = useRef(true)
   const [loading, setLoading] = useState(false)
-  const apiHandler = useApiHandler({ setLoading, shouldHandleError: true })
+  const apiHandler = useApiHandler<NRB[]>({ setLoading, shouldHandleError: true })
   const [apiData, setData] = useState<NRB[]>([])
   const [dataId, setDataId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
@@ -122,6 +133,18 @@ const Tanggapan: React.FC = () => {
   const totalPages = 2
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
   const columns = ['ID', 'Kode Pengumuman', 'Nama Rupabumi', 'Kolom Tanggapan', 'Isi Tanggapan', 'Pemberi Tanggapan', 'Tanggal Respon', 'Status', 'Detail']
+
+  // const columns: ColumnConfig = {
+  //   id: { label: 'ID' },
+  //   issue_code: {label: 'Kode Pengumuman'},
+  //   map_name: { label: 'Nama Rupabumi'},
+  //   issue_column: { label: 'Kolom Tanggapan'},
+  //   issue_value: {label: 'Isi Tanggapan'},
+  //   issuer : {label: 'Pemberi Tanggapan'},
+  //   issued_at: {label: 'Tanggal Respon'},
+  //   status: {label: 'Status'},
+  //   detail: {label: 'Detail'}
+  // }
 
   const onPageChange = (num: number) => {
     setPage(num)

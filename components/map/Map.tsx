@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
-import { useState, useEffect, useRef } from 'react';
-import { Map, Marker, GeolocateControl, GeolocateResultEvent, type MapRef, type ViewState, NavigationControl } from '@vis.gl/react-maplibre'
+import { useState, useEffect, useRef, SetStateAction, Dispatch, useCallback, useMemo } from 'react';
+import Map, { Marker, GeolocateControl, GeolocateResultEvent, type MapRef, type ViewState, NavigationControl, ViewStateChangeEvent, LngLatBounds } from '@vis.gl/react-maplibre'
 import { IoLocationSharp, IoLocationOutline } from 'react-icons/io5'
 import { DEV_MODE } from '@/lib/config';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -11,6 +12,11 @@ import { NRB } from '@/types';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '../ui/input-group';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { motion } from 'framer-motion'
+import { ToponimMarkerItem, ToponymAnnouncementTabular } from '@/types/Toponim';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { ParsedUrlQuery } from 'querystring';
+import { useApiHandler } from '@/utils/apiHandler';
+import AutoComplete from '../AutoComplete';
 
 const MAP_STYLE_SRC = 'https://api.maptiler.com/maps/hybrid/style.json?key=LKoyDpZYXFZFev1xFoUc'
 
@@ -58,18 +64,18 @@ export const MapStyles = [
 ]
 
 interface ILabeledMarker {
-  dataId: string
+  data: ToponimMarkerItem
   longitude: number
   latitude: number
   label: string
-  handleMouseEnter: (dataId: string) => void
+  handleMouseEnter: (data: ToponimMarkerItem) => void
   handleMouseLeave: () => void
   hovered: boolean
-  handleOnClick: (dataId: string) => void
+  handleOnClick: (data: ToponimMarkerItem) => void
   selected: boolean
 }
 
-const LabeledMarker: React.FC<ILabeledMarker> = ({ dataId, longitude, latitude, label, handleMouseEnter, handleMouseLeave, hovered, handleOnClick, selected }) => {
+const LabeledMarker: React.FC<ILabeledMarker> = ({ data, longitude, latitude, label, handleMouseEnter, handleMouseLeave, hovered, handleOnClick, selected }) => {
   const isActive = hovered || selected
 
   return (
@@ -78,11 +84,11 @@ const LabeledMarker: React.FC<ILabeledMarker> = ({ dataId, longitude, latitude, 
       anchor='center'
       latitude={latitude} longitude={longitude}
       className='hover:cursor-pointer'
-      onClick={() => handleOnClick(dataId)}
+      onClick={() => handleOnClick(data)}
     >
       <motion.div
         className="relative flex flex-col items-center cursor-pointer"
-        onMouseEnter={() => handleMouseEnter(dataId)}
+        onMouseEnter={() => handleMouseEnter(data)}
         onMouseLeave={handleMouseLeave}
         animate={{
           scale: isActive ? 1.25 : 1,
@@ -123,13 +129,14 @@ const LabeledMarker: React.FC<ILabeledMarker> = ({ dataId, longitude, latitude, 
 }
 
 interface IMapDefault {
+  refreshMap: (v?: ViewState & {bounds: LngLatBounds}) => Promise<void>
   geoLocation?: GeolocationCoordinates
-  dataId: string | null
-  setDataId: (dataId: string | null) => void
-  data?: NRB[]
+  viewState: ViewState
+  setViewState: Dispatch<SetStateAction<ViewState>>
+  selectedMarker?: ToponimMarkerItem | null
+  setMarkerData: (data: ToponimMarkerItem) => void
+  markerItems?: ToponimMarkerItem[]
   setOpenFilter: (open: boolean) => void
-  setSearchString: (search: string) => void
-  loading: boolean
 }
 /*
 Usage:
@@ -138,52 +145,85 @@ Usage:
 - Tailwind used for styling
 - Supports zooming, reset view, and toggle UI visibility
 */
-const MapDefault: React.FC<IMapDefault> = ({ geoLocation, data, dataId, setDataId, setOpenFilter, setSearchString, loading }) => {
+const MapDefault: React.FC<IMapDefault> = (
+  { refreshMap, viewState, setViewState, geoLocation, markerItems, selectedMarker, setMarkerData, setOpenFilter }) => {
   const mapRef = useRef<MapRef>(null);
+  const flyToInProgress = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const geoRef = useRef<maplibregl.GeolocateControl>(null);
+  const [loading, setLoading] = useState(false)
+  const apiHandler = useApiHandler<ToponymAnnouncementTabular[]>({ setLoading, shouldHandleError: false })
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const [loadingStyle, setLoadingStyle] = useState(false)
+  const [mapStyle, setMapStyle] = useState(MapStyles[0])
+  const [onHover, setOnHover] = useState<number | undefined>()
 
-  const [bearing, setBearing] = useState(0)
-
-  const initialViewState: ViewState = {
-    longitude: geoLocation?.longitude ?? 119.450,
-    latitude: geoLocation?.longitude ?? -6.900,
-    zoom: 4.55,
+  const [camera, setCamera] = useState({
+    lng: 0,
+    lat: 0,
+    zoom: 10,
     bearing: 0,
     pitch: 0,
-    padding: { bottom: 0 }
+  });
+
+  const [listData, setListData] = useState<ToponymAnnouncementTabular[]>([])
+  const [searchString, setSearchString] = useState<string>("")
+  const [filters, setFilters] = useState([])
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams(); // Not strictly needed for clearing all, but good practice
+
+  const getViewFromMap = useCallback((ref: React.RefObject<MapRef | null>): (ViewState & {bounds: LngLatBounds}) | undefined => {
+    const map = ref.current?.getMap()
+    if (!map) return
+    return {
+      longitude: map.getCenter().lng ?? 0,
+      latitude: map.getCenter().lat ?? 0,
+      zoom: map.getZoom() ?? 10,
+      bearing: map.getBearing() ?? 0,
+      pitch: map.getPitch() ?? 0,
+      bounds: map.getBounds(),
+      padding: map.getPadding() 
+    }
+  }, [])
+
+  const handleClearParams = () => {
+    router.replace(pathname, { scroll: false });
   };
 
-  const [loadingStyle, setLoadingStyle] = useState(false)
-  const [viewState, setViewState] = useState(initialViewState);
-  const [mapStyle, setMapStyle] = useState(MapStyles[0])
-  const [onHover, setOnHover] = useState<string | undefined>()
+  const objToParams = (k: Record<string, string | number | string[] | number[]>): string => {
+    return new URLSearchParams(Object.entries(k)
+      .flatMap(([key, value]) =>
+        Array.isArray(value)
+          ? value.map(v => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`)
+          : [`${encodeURIComponent(key)}=${encodeURIComponent(value.toString() ?? '')}`]
+      )
+      .join('&')).toString();
+  }
 
   const handleOnGeoLocate = (e: GeolocateResultEvent) => {
     const coords = e.coords;
-    mapRef.current?.flyTo({
-      center: [coords.longitude, coords.latitude],
-      zoom: 10,
-      essential: true,
-    });
+    handleMapFlyTo(coords.longitude, coords.latitude)
   }
 
   const geoLocateTrigger = () => {
     geoRef.current?.trigger()
   }
 
-  const handleZoomIn = () => setViewState((v) => ({ ...v, zoom: v.zoom + 0.1 }));
-  const handleZoomOut = () => setViewState((v) => ({ ...v, zoom: Math.max(v.zoom - 0.1, 0) }));
-
-  const handleMarkerOnClick = (dataId: string | null) => {
-    setDataId(dataId)
-    const poi = data?.find(i => i.id === dataId)
-    if (poi) mapRef.current?.flyTo({
-      center: [poi.coord.longitude, poi.coord.latitude],
-      zoom: 15,
-      essential: true,
-    });
+  const handleZoomIn = () => {
+    mapRef.current?.zoomTo(
+      (mapRef.current?.getZoom() ?? 12) + 0.5,
+      { duration: 300 }
+    )
   }
+  
+  const handleZoomOut = () => {
+    mapRef.current?.zoomTo(
+      Math.max((mapRef.current?.getZoom() ?? 12) - 0.5, 0),
+      { duration: 300 }
+    )
+  }
+
 
   const handleChangeMapStyle = (style: typeof mapStyle) => {
     if (style.id !== mapStyle.id) {
@@ -191,6 +231,14 @@ const MapDefault: React.FC<IMapDefault> = ({ geoLocation, data, dataId, setDataI
       setMapStyle(style)
     }
   }
+
+  const handleLoad = useCallback(() => {
+    const view = getViewFromMap(mapRef)
+    if (!view) return
+
+    refreshMap(view)
+  }, [refreshMap, getViewFromMap])
+
 
   const handleLoadMapStyle = () => {
     const map = mapRef.current?.getMap()
@@ -206,27 +254,140 @@ const MapDefault: React.FC<IMapDefault> = ({ geoLocation, data, dataId, setDataI
     }
   }
 
-  const handleRotation = () => {
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-
-    const updateBearing = () => {
-      setBearing(map.getBearing());
-    };
-
-    updateBearing(); // set awal
-    map.on("rotate", updateBearing);
-    map.on("pitch", updateBearing);
-
-    return () => {
-      map.off("rotate", updateBearing);
-      map.off("pitch", updateBearing);
-    };
+  const onSearchChange = (val: string) => {
+    setSearchString(val)
   }
 
-  useEffect(handleLoadMapStyle, [mapStyle])
+  const handleMapFlyTo = useCallback((lng: number, lat: number) => {
+    flyToInProgress.current = true
 
-  useEffect(handleRotation, []);
+    mapRef.current?.flyTo({
+      center: [lng, lat],
+      zoom: 15,
+      duration: 1000,
+      essential: true,
+    })
+
+    const view = getViewFromMap(mapRef)
+
+    refreshMap(view)
+  }, [refreshMap, getViewFromMap])
+
+
+  const handleMarkerOnClick = useCallback((d: ToponimMarkerItem) => {
+    setMarkerData(d)
+    const poi = markerItems?.find(i => i.id === d.id)
+    if (poi) {
+      const params = objToParams({ marker_id: poi.id, lng: poi.coordinates.lng, lat: poi.coordinates.lat, zoom: 15 })
+      router.push(`${pathname}?${params}`)
+      handleMapFlyTo(poi.coordinates.lng, poi.coordinates.lat)
+    }
+  }, [handleMapFlyTo, markerItems, pathname, setMarkerData, router])
+
+
+  const handleOnSearchSelect = (id: number) => {
+    const v = listData.find(d => d.id === id)
+    if (!v) return
+    const markerData: ToponimMarkerItem = {
+      id: v.id,
+      category: v.category.name,
+      coordinates: {
+        lng: v.location.coordinates[0],
+        lat: v.location.coordinates[1]
+      },
+      element: v.element_type,
+      name: v.map_name
+    }
+    setMarkerData(markerData)
+    const params = objToParams({ marker_id: markerData.id, lng: markerData.coordinates.lng, lat: markerData.coordinates.lat, zoom: 15 })
+    router.push(`${pathname}?${params}`)
+    handleMapFlyTo(markerData.coordinates.lng, markerData.coordinates.lat)
+  }
+
+  const handleMoveEnd = useCallback(() => {
+    const view = getViewFromMap(mapRef)
+
+    if(!view) return
+
+    // Case 2: user drag / zoom → debounce
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      refreshMap(view)
+    }, 700)
+
+  }, [refreshMap, getViewFromMap])
+
+  const markers = useMemo(() => {
+    return markerItems && markerItems.length
+    && markerItems.map(d => (
+      <LabeledMarker
+        key={d.id}
+        data={d}
+        latitude={d.coordinates.lat}
+        longitude={d.coordinates.lng}
+        label={d.name}
+        handleOnClick={handleMarkerOnClick}
+        selected={selectedMarker?.id === d.id}
+        handleMouseEnter={() => setOnHover(d.id)}
+        handleMouseLeave={() => setOnHover(undefined)}
+        hovered={onHover === d.id}
+      />
+    ))}, [markerItems, handleMarkerOnClick, selectedMarker, onHover])
+
+  useEffect(handleLoadMapStyle, [mapStyle])
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+  
+    const syncCamera = () => {
+      const c = map.getCenter();
+      setCamera({
+        lng: c.lng,
+        lat: c.lat,
+        zoom: map.getZoom(),
+        bearing: map.getBearing(),
+        pitch: map.getPitch(),
+      });
+    };
+
+    const handleChange = () => {
+      handleMoveEnd()
+      syncCamera()
+    }
+    
+    map.on("moveend", handleChange)
+    map.on("zoomend", handleChange)
+    return () => {
+      map.off("moveend", handleChange)
+      map.off("zoomend", handleChange)
+    }
+  }, [handleMoveEnd])
+
+  useEffect(() => {
+    if (!searchString || searchString.length < 3) {
+      return
+    }
+
+    const controller = new AbortController()
+    const timeout = setTimeout(() => {
+      apiHandler(
+        'GET',
+        `/toponyms?search=${encodeURIComponent(searchString)}&per_page=10&order_by=map_name&sort_order=asc`,
+        undefined, // body
+        undefined,
+        { signal: controller.signal }
+      )
+        .then(setListData)
+        .catch((e) => {
+          if (e.name !== 'AbortError') console.error(e)
+        })
+    }, 400)
+
+    return () => {
+      controller.abort()
+      clearTimeout(timeout)
+    }
+  }, [searchString, apiHandler])
 
   return (
     <div className='flex justify-center min-w-[95vw] min-h-screen'>
@@ -237,14 +398,11 @@ const MapDefault: React.FC<IMapDefault> = ({ geoLocation, data, dataId, setDataI
         </div>
       )}
       <Map
-        {...viewState}
         ref={mapRef}
         style={{ width: '100vw', height: 'max' }}
         mapStyle={mapStyle.src ?? MAP_STYLE_SRC}
-        onMove={e => {
-          setViewState(e.viewState)
-          setBearing(e.viewState.bearing)
-        }}
+        onLoad={handleLoad}
+        onMoveEnd={handleMoveEnd}
         maxBounds={[
           [91, -12],   // Sudut barat daya Indonesia (lon, lat) + 5
           [142, 12]     // Sudut timur laut Indonesia (lon, lat) + 5
@@ -252,69 +410,75 @@ const MapDefault: React.FC<IMapDefault> = ({ geoLocation, data, dataId, setDataI
       >
 
         {DEV_MODE && <>
-
-          <div className='absolute bottom-120 right-2 flex flex-col gap-2 z-10'>
-            <h5 className='text-md'>accuracy: {geoLocation?.accuracy?.toFixed(3)}</h5>
-            <h5 className='text-md'>Longitude: {geoLocation?.longitude?.toFixed(3)}</h5>
-            <h5 className='text-md'>Latitude: {geoLocation?.latitude?.toFixed(3)}</h5>
-            <h5 className='text-md'>altitudeAccuracy: {geoLocation?.altitudeAccuracy?.toFixed(3)}</h5>
-            <h5 className='text-md'>Heading: {geoLocation?.heading?.toFixed(3)}</h5>
-            <h5 className='text-md'>Speed: {geoLocation?.speed?.toFixed(3)}</h5>
-          </div>
-          <div className='absolute bottom-80 right-2 flex flex-col gap-2 z-10'>
-            <h5 className='text-md'>Zoom: {viewState.zoom.toFixed(3)}</h5>
-            <h5 className='text-md'>Longitude: {viewState.longitude?.toFixed(3)}</h5>
-            <h5 className='text-md'>Latitude: {viewState.latitude?.toFixed(3)}</h5>
-            <h5 className='text-md'>Bearing: {viewState.bearing?.toFixed(3)}</h5>
-            <h5 className='text-md'>Pitch: {viewState.pitch?.toFixed(3)}</h5>
+          <div className="absolute bottom-80 right-2 z-10 text-sm">
+            <p>Zoom: {camera.zoom.toFixed(2)}</p>
+            <p>Lng: {camera.lng.toFixed(5)}</p>
+            <p>Lat: {camera.lat.toFixed(5)}</p>
+            <p>Bearing: {camera.bearing.toFixed(2)}</p>
+            <p>Pitch: {camera.pitch.toFixed(2)}</p>
           </div>
         </>}
 
         <div className="w-[90vw] absolute top-25 sm:top-22 left-1/2 -translate-x-1/2 z-3 flex gap-2 sm:left-5 sm:translate-x-0 sm:w-[50vw] md:w-[40vw] lg:w-96">
-          <InputGroup className='bg-neutral-50'>
-            <InputGroupInput placeholder="Search..." onChange={(e) => setSearchString(e.target.value)} />
+          {/* <InputGroup className='bg-neutral-50'>
+            <InputGroupInput placeholder="Search..." onChange={(e) => onSearchChange(e.target.value)} />
             <InputGroupAddon>
               <Search />
             </InputGroupAddon>
-          </InputGroup>
+          </InputGroup> */}
+          <AutoComplete
+            placeholder='Cari Data'
+            valueField='id'
+            items={listData}
+            labelField='local_name'
+            onSearchValueChange={onSearchChange}
+            onSelectedValueChange={handleOnSearchSelect}
+            searchValue={searchString}
+            isLoading={loading}
+            renderItem={(v) => (<div>
+              <h4 className='font-semibold'>{v.local_name}</h4>
+              <h5 className='text-muted-foreground'>{v.map_name}</h5>
+              <h5 className='text-muted-foreground text-wrap'>{v.village.name}, {v.district.name}, {v.regency.name}, {v.province.name}</h5>
+            </div>)}
+          />
           <Button size='icon' variant='outline' onClick={() => setOpenFilter(true)}>
             <SlidersVertical />
           </Button>
         </div>
         <div className="absolute bottom-12 right-3 flex flex-col gap-2 z-7">
-        <div
-          onClick={() => mapRef.current?.easeTo({ bearing: 0, pitch: 0 })}
-          className="flex items-center justify-center 
+          <div
+            onClick={() => mapRef.current?.easeTo({ bearing: 0, pitch: 0 })}
+            className="flex items-center justify-center 
            w-10 h-10 rounded-full shadow-lg border 
            bg-linear-to-b from-white to-gray-100 
            backdrop-blur-md cursor-pointer hover:scale-105 transition-transform"
-          title="Klik untuk reset ke utara"
-        >
-          <div
-            className="relative w-10 h-10 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-            style={{ transform: `rotate(${-bearing}deg)` }}
+            title="Klik untuk reset ke utara"
           >
-            {/* Jarum kompas */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative w-fit h-5">
-                {/* Segitiga atas (utara) */}
-                <div
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 
+            <div
+              className="relative w-10 h-10 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{ transform: `rotate(${-viewState.bearing}deg)` }}
+            >
+              {/* Jarum kompas */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative w-fit h-5">
+                  {/* Segitiga atas (utara) */}
+                  <div
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 
                      border-l-[4px] border-l-transparent 
                      border-r-[4px] border-r-transparent 
                      border-b-10 border-b-red-600"
-                />
-                {/* Segitiga bawah (selatan) */}
-                <div
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 
+                  />
+                  {/* Segitiga bawah (selatan) */}
+                  <div
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 
                      border-l-[4px] border-l-transparent 
                      border-r-[4px] border-r-transparent 
                      border-t-10 border-muted-foreground"
-                />
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
           <GeolocateControl ref={geoRef} onGeolocate={handleOnGeoLocate} positionOptions={{ enableHighAccuracy: true }} />
 
@@ -388,21 +552,7 @@ const MapDefault: React.FC<IMapDefault> = ({ geoLocation, data, dataId, setDataI
             </Button>
           </div>
         </div>
-        {data && data.length
-          && data.map(d => (
-            <LabeledMarker
-              key={d.id}
-              dataId={d.id}
-              latitude={d.coord.latitude}
-              longitude={d.coord.longitude}
-              label={d.nrb}
-              handleOnClick={handleMarkerOnClick}
-              selected={dataId === d.id}
-              handleMouseEnter={() => setOnHover(d.id)}
-              handleMouseLeave={() => setOnHover(undefined)}
-              hovered={onHover === d.id}
-            />
-          ))}
+        {markers}
       </Map>
     </div>
 

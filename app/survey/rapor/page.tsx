@@ -53,10 +53,12 @@ const Page = () => {
         <div className="flex flex-col md:flex-row gap-x-5 gap-y-5">
           <div className="flex flex-col md:flex-row md:items-center gap-x-8 gap-y-5 grow w-full">
             <div className="shrink">
-              <AutoComplete label="Provinsi" placeholder="Pilih Provinsi..." data={[]} value={1} onSelect={(v) => console.log(v)} />
+              <FieldLabel>Provinsi</FieldLabel>
+              <AutoComplete placeholder="Pilih Provinsi..." data={[]} value={1} onSelect={(v) => console.log(v)} />
             </div>
             <div className="shrink">
-              <AutoComplete label="Kabupaten/Kota" placeholder="Kabupaten/Kota" data={[]} value={1} onSelect={(v) => console.log(v)} />
+              <FieldLabel>Kabupaten/Kota</FieldLabel>
+              <AutoComplete placeholder="Kabupaten/Kota" data={[]} value={1} onSelect={(v) => console.log(v)} />
             </div>
             <div className="grow">
               <Label className="mb-3">Pilih Periode</Label>

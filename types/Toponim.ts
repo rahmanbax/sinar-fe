@@ -1,13 +1,13 @@
 
 export enum GeometryType {
-    POINT = 'point',
-    LINE = 'line', 
-    POLYGON = 'polygon'
+    POINT = 'POINT',
+    LINE = 'LINE', 
+    POLYGON = 'POLYGON'
 }
 
 export type Point = {
-    longitude: number
-    latitude: number
+    lng: number
+    lat: number
 }
 
 export type Line = [Point, Point]
@@ -46,25 +46,37 @@ export type CreateToponimReq = {
 }
 
 export type ToponimMarkerItem = {
-    toponim_name: string
-    point: Point
-    element_id: number
-    element_name: string
-    classification_id: number
-    classification_name: string
+    id: number
+    name: string
+    category: string
+    element: string
+    coordinates: Point
 }
 
 export type StandardToponim = { 
     id: number
-    standard_id: string
+    id_toponym: string
+    utm_zone: string
+    nlp? : string
     geometry_type: GeometryType
-    point: Point
-    line?: Line
-    polygon?: Polygon
-    altitude?: number
-    gazeter?: {
+    location: {
+        type: string
+        coordinates : Point | Polygon | Line
+    }
+    elevation_value?: number
+    accuracy?: number
+    scope?: unknown
+    country: string
+    surveyor_code: string
+    surveyor_name: string
+    source_person: string
+    survey_date: string
+    data_source: string
+    notes: string
+    gazetteer?: {
         id: number
-        title: number
+        code: string
+        name: string
     }
     category: {
         id: number,
@@ -73,17 +85,25 @@ export type StandardToponim = {
     sub_category: {
         id: number
         category_id: number
+        code: string
         name: string
     }
-    classification:{
+    toponym_classification:{
         id: number
-        name: number
+        code: string
+        name: string
     }
     element: {
         id: number
-        name: number
+        code: string
+        name: string
+    }
+    standardization_status: {
+        id: number
+        name: string
     }
     lcode: string
+    map_name: string
     generic_name: string
     specific_name: string
     toponim_name: string
@@ -94,13 +114,15 @@ export type StandardToponim = {
     languange_origin?: string
     pronounce?: string
     spelling?: string
-    province?: {id: number, name: string}
-    regency?: {id: number, name: string}
-    district?: {id: number, name: string}
-    village: {id: number, name: string}
-    source_person?: string
+    province?: {id: number, code: string, name: string}
+    regency?: {id: number, code: string, name: string}
+    district?: {id: number, code: string, name: string}
+    village: {id: number, code: string, name: string}
     source: string
-    pictures: [string?, string?, string?, string?]
+    photos:  {
+        filename:string
+        url: string
+    }[]
     created_at: Date
     official_at: Date
 }
@@ -110,4 +132,41 @@ export type PreStandarizedToponim = StandardToponim & {
     notes?: string
     source_person?: string
     survey_date?: Date
+}
+
+export type ToponymAnnouncementTabular = {
+    id: number
+    element_type: string
+    local_name: string
+    map_name: string
+    category: {
+        id: string
+        code: string
+        name: string
+    }
+    province: {
+        id: string
+        code: string
+        name: string
+    }
+    regency: {
+        id: string
+        code: string
+        name: string
+    }
+    district: {
+        id: string
+        code: string
+        name: string
+    }
+    village: {
+        id: string
+        code: string
+        name: string
+    }
+    location: {
+        type: 'Points'
+        coordinates: [number, number]
+    }
+    created_at: string | Date
 }

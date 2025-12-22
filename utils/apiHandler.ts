@@ -19,18 +19,19 @@ interface ApiHandlerOptions {
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
-interface ApiHandlerFunction {
+interface ApiHandlerFunction<T> {
     (
         method: HttpMethod,
         path: string,
         body?: string | object,
-        header?: Record<string, string>
+        header?: Record<string, string>,
+        options?: RequestInit
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ): Promise<any>
+    ): Promise<T>
 }
 
 
-export const useApiHandler = ({
+export const useApiHandler = <T> ({
     shouldHandleError,
     setLoading,
 }: ApiHandlerOptions) => {
@@ -41,9 +42,9 @@ export const useApiHandler = ({
      * @param {string|object} body will be JSON.stringified if not already string
      * @param {Object|null} header will be spread with JSON content-type header
      *  */
-    const apiHandler = useCallback<ApiHandlerFunction>(
-        (method, path, body, header) =>
-            new Promise((resolve, reject) => {
+    const apiHandler = useCallback<ApiHandlerFunction<T>>(
+        (method, path, body, header, options) =>
+            new Promise((resolve, reject)  => {
                 // if (!token) return reject({ code: 'noToken' })
                 if (typeof setLoading === 'function') setLoading(true)
 
@@ -64,12 +65,12 @@ export const useApiHandler = ({
                         body && typeof body === 'string'
                             ? body
                             : JSON.stringify(body),
+                    ...options,
                 })
                     .then(r => r.json())
                     .then(r => {
                         if (r.error) throw r
-                        // resolve(r.data)
-                        resolve(r)
+                        resolve(r.data)
                         if (typeof setLoading === 'function') setLoading(false)
                     })
                     .catch(networkErrorGate)

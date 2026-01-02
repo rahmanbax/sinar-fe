@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import PublicLayout from "@/layouts/PublicLayout";
 import { cn } from "@/lib/utils";
 import { useGeolocated } from "react-geolocated";
-import { useApiHandler } from "@/utils/apiHandler";
+import { useApiHandlerWithPagination } from "@/utils/apiHandler";
 import { NRB } from "@/types";
 import { PiChatTeardropDots, PiChatTeardropDotsBold } from 'react-icons/pi'
 import {
@@ -30,11 +30,11 @@ import { useRouter } from "next/navigation";
 const Pengumuman: React.FC = () => {
   const columns: ColumnConfig = {
     id: { label: 'ID' },
-    element: { label: 'Jenis Unsur', render: (v) => v.name},
+    element: { label: 'Jenis Unsur', render: (v) => v?.name ?? '-' },
     local_name: { label: 'Nama Lokal' },
     map_name: { label: 'Nama Spesifik' },
-    province: { label: 'Provinsi', render: (v) => v.name },
-    regency: { label: 'Kabupaten/Kota', render: (v) => v.name },
+    province: { label: 'Provinsi', render: (v) => v?.name ?? '-' },
+    regency: { label: 'Kabupaten/Kota', render: (v) => v?.name ?? '-' },
   }
 
   const isInitialLoad = useRef(true)
@@ -48,10 +48,10 @@ const Pengumuman: React.FC = () => {
   const [searchString, setSearchString] = useState<string | undefined>()
   const [filters, setFilters] = useState([])
 
-  const totalPages = 2
-  
+  const [totalPages, setTotalPages] = useState(1)
 
-  const apiHandler = useApiHandler<NRB[]>({ setLoading, shouldHandleError: true })
+
+  const apiHandler = useApiHandlerWithPagination<ToponymAnnouncementTabular>({ setLoading, shouldHandleError: true })
 
   const onPageChange = (num: number) => {
     setPage(num)
@@ -60,14 +60,19 @@ const Pengumuman: React.FC = () => {
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
 
   const onAct = (data: ToponymAnnouncementTabular) => {
-    router.push(`/?marker_id=${data.id}&lng=${data.location.coordinates[0]}&lat=${data.location.coordinates[1]}&zoom=15&limit=10`)
+    if (!data.location_point?.coordinates) return
+    router.push(`/?marker_id=${data.id}&lng=${data.location_point.coordinates[0]}&lat=${data.location_point.coordinates[1]}&zoom=15&limit=10`)
   }
 
   const refresh = useCallback(() => {
 
     apiHandler('GET', `/toponyms?page=${page}&per_page=${limit}`)
       .then(r => {
-        setData(r)
+        if (!r?.data || !Array.isArray(r.data)) return
+        setData(r.data)
+        if (r.pagination) {
+          setTotalPages(r.pagination.last_page)
+        }
       })
 
     isInitialLoad.current = false
@@ -77,7 +82,7 @@ const Pengumuman: React.FC = () => {
 
   return (
     <>
-      <SinarParameterizedTable data={apiData} loading={loading} columns={columns} actHandler={onAct}/>
+      <SinarParameterizedTable data={apiData} loading={loading} columns={columns} actHandler={onAct} />
       <div className="flex justify-between items-center w-full mt-3">
         <h5>Menampilkan {limit} data per halaman</h5>
         <div className="flex items-center justify-center gap-2 bg-gray-50 p-2 rounded">

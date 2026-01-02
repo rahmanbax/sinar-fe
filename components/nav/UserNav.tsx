@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
-import { Bell, ChevronDown, CircleQuestionMark, CircleUserRound, Edit, Mail, Menu } from "lucide-react"
+import { Bell, ChevronDown, CircleQuestionMark, CircleUserRound, Edit, Loader2, LogOut, Mail, Menu } from "lucide-react"
 
 import {
   Menubar,
@@ -66,13 +66,13 @@ const Sidebar: React.FC<React.PropsWithChildren<ISidebar>> = ({ menuItems, setOp
                 Sistem Informasi Nama Rupabumi
               </SheetTitle>
               <div className="flex flex-col grow">
-                <h5 className="">Username</h5>
+                <h5 className="">{user?.name || 'User'}</h5>
                 <Link href="/profile" className="text-xs flex items-center gap-1">
                   <span>Edit Profil</span> <Edit size={15} />
                 </Link>
                 <div className="flex gap-3">
-                  <button ><Mail size={16}/></button>
-                  <button><CircleQuestionMark size={16}/></button>
+                  <button ><Mail size={16} /></button>
+                  <button><CircleQuestionMark size={16} /></button>
                 </div>
               </div>
             </div>
@@ -99,13 +99,13 @@ export interface ISurveyorNav {
   toggleSidebar?: () => void
   menuItems: { label: string, href: string, variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" }[]
   setOpenLoginDialog: (open: boolean) => void
-  navbarRef?:  RefObject<HTMLDivElement | null>
+  navbarRef?: RefObject<HTMLDivElement | null>
 }
 
 const UserNav: React.FC<React.PropsWithChildren<ISurveyorNav>> = ({ isMobile, menuItems = [], setOpenLoginDialog, navbarRef }) => {
 
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, logout, isLoggingOut } = useAuth()
 
   const [hovered, setHovered] = useState<string | null>(null)
 
@@ -156,13 +156,13 @@ const UserNav: React.FC<React.PropsWithChildren<ISurveyorNav>> = ({ isMobile, me
             <MenubarTrigger className="hover:bg-accent w-full justify-between h-full py-0">
               <div className="flex gap-2 items-center">
                 <CircleUserRound size={24} />
-                <h5 className="hidden min-[1250]:flex">Username</h5>
+                <h5 className="hidden min-[1250]:flex">{user?.name || 'User'}</h5>
               </div>
               <ChevronDown size={20} className="text-muted-foreground" />
             </MenubarTrigger>
             <MenubarContent>
               <MenubarItem disabled>
-                Halo, Username!
+                Halo, {user?.name || 'User'}!
               </MenubarItem>
               <MenubarItem>
                 <CircleUserRound /> Ubah Profil
@@ -172,6 +172,11 @@ const UserNav: React.FC<React.PropsWithChildren<ISurveyorNav>> = ({ isMobile, me
               </MenubarItem>
               <MenubarItem>
                 <CircleQuestionMark /> Bantuan
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem onClick={logout} disabled={isLoggingOut} className="">
+                {isLoggingOut ? <Loader2 className="animate-spin" /> : <LogOut />}
+                {isLoggingOut ? 'Logging out...' : 'Keluar'}
               </MenubarItem>
             </MenubarContent>
           </MenubarMenu>

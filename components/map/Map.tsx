@@ -129,7 +129,7 @@ const LabeledMarker: React.FC<ILabeledMarker> = ({ data, longitude, latitude, la
 }
 
 interface IMapDefault {
-  refreshMap: (v?: ViewState & {bounds: LngLatBounds}) => Promise<void>
+  refreshMap: (v?: ViewState & { bounds: LngLatBounds }) => Promise<void>
   geoLocation?: GeolocationCoordinates
   viewState: ViewState
   setViewState: Dispatch<SetStateAction<ViewState>>
@@ -173,7 +173,7 @@ const MapDefault: React.FC<IMapDefault> = (
   const pathname = usePathname();
   const searchParams = useSearchParams(); // Not strictly needed for clearing all, but good practice
 
-  const getViewFromMap = useCallback((ref: React.RefObject<MapRef | null>): (ViewState & {bounds: LngLatBounds}) | undefined => {
+  const getViewFromMap = useCallback((ref: React.RefObject<MapRef | null>): (ViewState & { bounds: LngLatBounds }) | undefined => {
     const map = ref.current?.getMap()
     if (!map) return
     return {
@@ -183,7 +183,7 @@ const MapDefault: React.FC<IMapDefault> = (
       bearing: map.getBearing() ?? 0,
       pitch: map.getPitch() ?? 0,
       bounds: map.getBounds(),
-      padding: map.getPadding() 
+      padding: map.getPadding()
     }
   }, [])
 
@@ -216,7 +216,7 @@ const MapDefault: React.FC<IMapDefault> = (
       { duration: 300 }
     )
   }
-  
+
   const handleZoomOut = () => {
     mapRef.current?.zoomTo(
       Math.max((mapRef.current?.getZoom() ?? 12) - 0.5, 0),
@@ -236,8 +236,22 @@ const MapDefault: React.FC<IMapDefault> = (
     const view = getViewFromMap(mapRef)
     if (!view) return
 
+    // Check if URL has coordinates to fly to
+    const urlLng = searchParams.get('lng')
+    const urlLat = searchParams.get('lat')
+    const urlZoom = searchParams.get('zoom')
+
+    if (urlLng && urlLat) {
+      mapRef.current?.flyTo({
+        center: [parseFloat(urlLng), parseFloat(urlLat)],
+        zoom: urlZoom ? parseFloat(urlZoom) : 15,
+        duration: 1000,
+        essential: true,
+      })
+    }
+
     refreshMap(view)
-  }, [refreshMap, getViewFromMap])
+  }, [refreshMap, getViewFromMap, searchParams])
 
 
   const handleLoadMapStyle = () => {
@@ -307,7 +321,7 @@ const MapDefault: React.FC<IMapDefault> = (
   const handleMoveEnd = useCallback(() => {
     const view = getViewFromMap(mapRef)
 
-    if(!view) return
+    if (!view) return
 
     // Case 2: user drag / zoom → debounce
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -319,26 +333,27 @@ const MapDefault: React.FC<IMapDefault> = (
 
   const markers = useMemo(() => {
     return markerItems && markerItems.length
-    && markerItems.map(d => (
-      <LabeledMarker
-        key={d.id}
-        data={d}
-        latitude={d.coordinates.lat}
-        longitude={d.coordinates.lng}
-        label={d.name}
-        handleOnClick={handleMarkerOnClick}
-        selected={selectedMarker?.id === d.id}
-        handleMouseEnter={() => setOnHover(d.id)}
-        handleMouseLeave={() => setOnHover(undefined)}
-        hovered={onHover === d.id}
-      />
-    ))}, [markerItems, handleMarkerOnClick, selectedMarker, onHover])
+      && markerItems.map(d => (
+        <LabeledMarker
+          key={d.id}
+          data={d}
+          latitude={d.coordinates.lat}
+          longitude={d.coordinates.lng}
+          label={d.name}
+          handleOnClick={handleMarkerOnClick}
+          selected={selectedMarker?.id === d.id}
+          handleMouseEnter={() => setOnHover(d.id)}
+          handleMouseLeave={() => setOnHover(undefined)}
+          hovered={onHover === d.id}
+        />
+      ))
+  }, [markerItems, handleMarkerOnClick, selectedMarker, onHover])
 
   useEffect(handleLoadMapStyle, [mapStyle])
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
-  
+
     const syncCamera = () => {
       const c = map.getCenter();
       setCamera({
@@ -354,7 +369,7 @@ const MapDefault: React.FC<IMapDefault> = (
       handleMoveEnd()
       syncCamera()
     }
-    
+
     map.on("moveend", handleChange)
     map.on("zoomend", handleChange)
     return () => {

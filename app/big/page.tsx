@@ -4,7 +4,7 @@ import { PiPencilSimpleLineDuotone } from 'react-icons/pi'
 
 import { Button } from "@/components/ui/button";
 import { ChevronsDown, ChevronsUp, CircleUserRound, Database } from "lucide-react";
-import SurveyorLayout from "@/layouts/SurveryorLayout";
+import BigLayout from "@/layouts/BigLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,19 +24,22 @@ import StatisticTab from "./StatisticTab";
 import GazeterTab from "./GazeterTab";
 import MyTeamTab from "./MyTeamTab";
 import ReviewDataTab from "./ReviewDataTab";
+import PengumumanTab from "./PengumumanTab";
+import PenelahaanTanggapanTab from "./PenelahaanTanggapanTab";
+import PenetapanTab from "./PenetapanTab";
 
 const Page = () => {
     const [fullTab, setFulltab] = useState(false)
     const navbarRef = useRef<HTMLDivElement>(null);
     const [navbarHeight, setNavbarHeight] = useState(0);
     const tabs = [
-        { key: 'statistic', label: 'Statistik', component: <StatisticTab/> },
-        { key: 'announcement', label: 'Pengumuman', component: <StatisticTab/> },
-        { key: 'response-review', label: 'Penelaahan Tanggapan', component: <StatisticTab/> },
-        { key: 'publication', label: 'Penetapan', component: <StatisticTab/> },
-        { key: 'create-gazeter', label: 'Pembuatan GRI', component: <GazeterTab/> },
-        { key: 'update-review', label: 'Penelaahan Perubahan', component: <StatisticTab/> },
-        { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab/> }
+        { key: 'statistic', label: 'Statistik', component: <StatisticTab /> },
+        { key: 'announcement', label: 'Pengumuman', component: <PengumumanTab /> },
+        { key: 'response-review', label: 'Penelaahan Tanggapan', component: <PenelahaanTanggapanTab /> },
+        { key: 'publication', label: 'Penetapan', component: <PenetapanTab /> },
+        { key: 'create-gazeter', label: 'Pembuatan GRI', component: <GazeterTab /> },
+        { key: 'update-review', label: 'Penelaahan Perubahan', component: <StatisticTab /> },
+        { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab /> }
     ]
 
     useEffect(() => {
@@ -54,7 +57,7 @@ const Page = () => {
     }, []);
 
     return (
-        <SurveyorLayout navbarRef={navbarRef}>
+        <BigLayout navbarRef={navbarRef}>
             <div
                 className="flex flex-col grow overflow-hidden"
                 style={{ paddingTop: fullTab ? navbarHeight + 27 : 90 }}
@@ -137,7 +140,7 @@ const Page = () => {
                     </Tabs>
                 </div>
             </div>
-        </SurveyorLayout>
+        </BigLayout>
     );
 }
 

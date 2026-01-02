@@ -14,26 +14,24 @@ const Footer: React.FC = () => {
     )
 }
 
-export interface ISurveyorLayout {
+export interface IBigLayout {
     children: React.ReactNode
     navbarRef?: RefObject<HTMLDivElement | null>
 }
 
-const SurveyorLayout: React.FC<React.PropsWithChildren<ISurveyorLayout>> = ({ children, navbarRef }) => {
+const BigLayout: React.FC<React.PropsWithChildren<IBigLayout>> = ({ children, navbarRef }) => {
     const [openLoginDialog, setOpenLoginDialog] = useState(false)
 
     const { isMobile } = useIsMobile()
 
     const menuItems: ISurveyorNav['menuItems'] = [
-        { label: 'Beranda', href: '/' },
-        { label: 'Dashboard', href: '/survey' },
-        { label: 'Rapor Nama Rupabumi', href: '/survey/rapor' },
+        { label: 'Dashboard', href: '/big' },
+        { label: 'Pengumuman', href: '/big/pengumuman' },
         { label: 'Gazeter', href: '/gazeter', variant: 'ghost' },
-        { label: 'Pengumuman Nama Rupabumi', href: '/pengumuman', variant: 'ghost' }
     ]
 
     return (
-        <ProtectedRoute allowedRoles={[Role.SURVEYOR, Role.ADMIN]}>
+        <ProtectedRoute allowedRoles={[Role.BIG, Role.ADMIN]}>
             <div className="flex w-full flex-col h-screen bg-neutral-50">
                 <UserNav isMobile={isMobile} menuItems={menuItems} setOpenLoginDialog={setOpenLoginDialog} navbarRef={navbarRef} />
                 <main className="flex-1 bg-white flex flex-col h-full">
@@ -46,4 +44,4 @@ const SurveyorLayout: React.FC<React.PropsWithChildren<ISurveyorLayout>> = ({ ch
     )
 }
 
-export default SurveyorLayout
+export default BigLayout

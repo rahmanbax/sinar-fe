@@ -89,3 +89,70 @@ export const useApiHandler = <T> ({
     )
     return apiHandler
 }
+
+export type PaginationInfo = {
+    total: number
+    per_page: number
+    current_page: number
+    last_page: number
+    from: number
+    to: number
+}
+
+export type PaginatedResponse<T> = {
+    data: T[]
+    pagination: PaginationInfo
+}
+
+export const useApiHandlerWithPagination = <T>({
+    shouldHandleError,
+    setLoading,
+}: ApiHandlerOptions) => {
+    const token = getAccessToken()
+    
+    const apiHandler = useCallback<ApiHandlerFunction<PaginatedResponse<T>>>(
+        (method, path, body, header, options) =>
+            new Promise((resolve, reject) => {
+                if (typeof setLoading === 'function') setLoading(true)
+
+                if (token) {
+                    header = {
+                        ...header,
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+
+                fetch(`${API_URL}${path}`, {
+                    headers: {
+                        'content-type': 'application/json',
+                        ...header,
+                    },
+                    method,
+                    body:
+                        body && typeof body === 'string'
+                            ? body
+                            : JSON.stringify(body),
+                    ...options,
+                })
+                    .then(r => r.json())
+                    .then(r => {
+                        if (r.error) throw r
+                        resolve({ data: r.data, pagination: r.pagination })
+                        if (typeof setLoading === 'function') setLoading(false)
+                    })
+                    .catch(networkErrorGate)
+                    .catch(e => {
+                        if (shouldHandleError) {
+                            errorNotifyWithSetLoadingFalse(setLoading)(e)
+                            resolve(e)
+                        } else {
+                            if (typeof setLoading === 'function')
+                                setLoading(false)
+                            reject(e)
+                        }
+                    })
+            }),
+        [token, shouldHandleError, setLoading]
+    )
+    return apiHandler
+}

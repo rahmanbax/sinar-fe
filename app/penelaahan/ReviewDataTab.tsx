@@ -1,11 +1,11 @@
 import { MultiSelect, Option } from "@/components/MultiSelect"
-import SinarParameterizedTable from "@/components/SinarParameterizedTable"
+import SinarParameterizedTable, { ColumnConfig } from "@/components/SinarParameterizedTable"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, CircleUserRound, Map, Plus, Search, SlidersVertical } from "lucide-react"
+import { ChevronLeft, ChevronRight, CircleUserRound, LayoutGrid, List, Map, Plus, Search, SlidersVertical } from "lucide-react"
 
 import Link from "next/link"
 import { useState } from "react"
@@ -13,6 +13,7 @@ import { useState } from "react"
 import { Chart as ChartJS, ChartData, ArcElement, Tooltip, Legend, Plugin } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import { Progress } from "@/components/ui/progress"
+import dayjs from "dayjs"
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -54,7 +55,7 @@ const DoughnutPerformance: React.FC<{ data: number[], type: 'accepted' | 'reject
     return <Doughnut data={chartData} plugins={[CenterTextPlugin]} options={{
         responsive: true,
         maintainAspectRatio: false,
-        cutout: "85%",   // THINNER DOUGHNUT
+        cutout: "85%",
         plugins: {
             legend: { display: false }
         }
@@ -93,7 +94,6 @@ const ReviewCard:
                         Proses Penelaahan
                     </div>
                 </CardHeader>
-                {/* Bottom Section */}
                 <CardContent className="px-0">
                     <h3 className="text-xl mb-3">
                         {title}
@@ -138,22 +138,105 @@ const ReviewCard:
         )
     }
 
+const reviewData = [
+    { id: 1, title: 'Penelaahan Kabupaten Konoha Tahap 8', startDate: '2025-01-01', endDate: '2025-01-31', reviewerCnt: 5, reviewedCnt: 100, elementTypeCnt: 3, districtCnt: 10, acceptedCnt: 30, rejectedCnt: 10, status: 'Direkomendasikan Provinsi' },
+    { id: 2, title: 'Penelaahan Kabupaten Konoha Tahap 8', startDate: '2025-02-01', endDate: '2025-02-28', reviewerCnt: 5, reviewedCnt: 100, elementTypeCnt: 3, districtCnt: 10, acceptedCnt: 30, rejectedCnt: 10, status: 'Proses Penelaahan' },
+    { id: 3, title: 'Penelaahan Kabupaten Konoha Tahap 8', startDate: '2025-03-01', endDate: '2025-03-31', reviewerCnt: 5, reviewedCnt: 100, elementTypeCnt: 3, districtCnt: 10, acceptedCnt: 30, rejectedCnt: 10, status: 'Selesai Penelaahan' },
+    { id: 4, title: 'Penelaahan Kabupaten Konoha Tahap 8', startDate: '2025-04-01', endDate: '2025-04-30', reviewerCnt: 5, reviewedCnt: 100, elementTypeCnt: 3, districtCnt: 10, acceptedCnt: 30, rejectedCnt: 10, status: 'Direkomendasikan Provinsi' },
+]
+
 const ReviewDataTab: React.FC = () => {
+    const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
+
+    const columns: ColumnConfig = {
+        id: { label: 'ID Penelaahan' },
+        dateRange: { label: 'Rentang Penelaahan' },
+        title: { label: 'Judul Penelaahan' },
+        reviewedCnt: { label: 'Jumlah Data Ditelaah' },
+        acceptedCnt: { label: 'Jumlah Diterima' },
+        rejectedCnt: { label: 'Jumlah Ditolak' },
+        status: { label: 'Progres Penelaahan' },
+    }
+
+    // Transform data for table view with dateRange field
+    const tableData = reviewData.map(item => ({
+        ...item,
+        dateRange: `${dayjs(item.startDate).format('DD/MM/YYYY')} s.d ${dayjs(item.endDate).format('DD/MM/YYYY')}`
+    }))
+
+    const options: Option[] = Object.keys(columns).map((c) => ({
+        value: c,
+        label: columns[c].label
+    }))
+
+    const [showCols, setShowCols] = useState<Option[]>(options)
 
     return (
         <div className="block px-4">
-            <Button>
-                <div className="p-0.5 bg-white">
-                    <Plus className="text-black" />
+            <div className="flex justify-between items-center mb-4">
+                <Button>
+                    <Link href="/penelaahan/buat-penelaahan">
+                        <div className="flex gap-1 items-center">
+                            <Plus className="text-white" />
+                            Buat penelaahan
+                        </div>
+                    </Link>
+                </Button>
+
+                {/* View Toggle */}
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                    <Button
+                        size="icon"
+                        variant={viewMode === 'card' ? 'default' : 'ghost'}
+                        className={cn(
+                            "rounded-md",
+                            viewMode === 'card' ? 'bg-white text-blackshadow-sm hover:bg-gray-50' : 'hover:bg-white'
+                        )}
+                        onClick={() => setViewMode('card')}
+                    >
+                        <LayoutGrid size={18} />
+                    </Button>
+                    <Button
+                        size="icon"
+                        variant={viewMode === 'table' ? 'default' : 'ghost'}
+                        className={cn(
+                            "rounded-md",
+                            viewMode === 'table' ? 'bg-white text-black shadow-sm hover:bg-gray-50' : 'hover:bg-white'
+                        )}
+                        onClick={() => setViewMode('table')}
+                    >
+                        <List size={18} />
+                    </Button>
                 </div>
-                Buat penelaahan
-            </Button>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mt-8 gap-5">
-                <ReviewCard id={1} title="Penelaahan Kabupaten Konoha Tahap 8" reviewedCnt={100} acceptedCnt={30} />
-                <ReviewCard id={1} title="Penelaahan Kabupaten Konoha Tahap 8" reviewedCnt={100} acceptedCnt={30} />
-                <ReviewCard id={1} title="Penelaahan Kabupaten Konoha Tahap 8" reviewedCnt={100} acceptedCnt={30} />
-                <ReviewCard id={1} title="Penelaahan Kabupaten Konoha Tahap 8" reviewedCnt={100} acceptedCnt={30} />
             </div>
+
+            {viewMode === 'card' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mt-4 gap-5">
+                    {reviewData.map((item) => (
+                        <ReviewCard
+                            key={item.id}
+                            id={item.id}
+                            title={item.title}
+                            reviewerCnt={item.reviewerCnt}
+                            reviewedCnt={item.reviewedCnt}
+                            elementTypeCnt={item.elementTypeCnt}
+                            districtCnt={item.districtCnt}
+                            acceptedCnt={item.acceptedCnt}
+                            rejectedCnt={item.rejectedCnt}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <Card className="mt-4">
+                    <CardContent className="p-6">
+                        <SinarParameterizedTable
+                            data={tableData}
+                            columns={columns}
+                            showCols={showCols}
+                        />
+                    </CardContent>
+                </Card>
+            )}
         </div>
     )
 }

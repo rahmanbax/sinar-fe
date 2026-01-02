@@ -4,7 +4,7 @@ import { PiPencilSimpleLineDuotone } from 'react-icons/pi'
 
 import { Button } from "@/components/ui/button";
 import { ChevronsDown, ChevronsUp, CircleUserRound, Database } from "lucide-react";
-import SurveyorLayout from "@/layouts/SurveryorLayout";
+import ReviewerLayout from "@/layouts/ReviewerLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,10 +30,10 @@ const Page = () => {
     const navbarRef = useRef<HTMLDivElement>(null);
     const [navbarHeight, setNavbarHeight] = useState(0);
     const tabs = [
-        { key: 'statistic', label: 'Statistik', component: <StatisticTab/> },
-        { key: 'review-data', label: 'Data Penelaahan', component: <ReviewDataTab/> },
-        { key: 'regency-data', label: 'Data Kabupaten/Kota', component: <RegencyDataTab/> },
-        { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab/> }
+        { key: 'statistic', label: 'Statistik', component: <StatisticTab /> },
+        { key: 'review-data', label: 'Data Penelaahan', component: <ReviewDataTab /> },
+        { key: 'regency-data', label: 'Data Kabupaten/Kota', component: <RegencyDataTab /> },
+        { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab /> }
     ]
 
     useEffect(() => {
@@ -51,7 +51,7 @@ const Page = () => {
     }, []);
 
     return (
-        <SurveyorLayout navbarRef={navbarRef}>
+        <ReviewerLayout navbarRef={navbarRef}>
             <div
                 className="flex flex-col grow overflow-hidden"
                 style={{ paddingTop: fullTab ? navbarHeight + 27 : 90 }}
@@ -129,7 +129,7 @@ const Page = () => {
                     </Tabs>
                 </div>
             </div>
-        </SurveyorLayout>
+        </ReviewerLayout>
     );
 }
 

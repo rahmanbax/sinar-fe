@@ -5,14 +5,21 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { StandardToponim } from "@/types/Toponim"
+import { useApiHandlerWithPagination } from "@/utils/apiHandler"
 import { ChevronLeft, ChevronRight, Map, Search, SlidersVertical } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
-
-const data = [
-    { id: 123456, element_type: 'test123', generic_name: 'Test 123', specific_name: 'Test123', province: 'province', regency: 'regency', source: 'SINAR', status: 'Data Survei' }
-]
+type ApiResponse = {
+    data: StandardToponim[]
+    pagination: {
+        total: number
+        per_page: number
+        current_page: number
+        last_page: number
+    }
+}
 
 const MyDataTab: React.FC = () => {
     const columns: ColumnConfig = {
@@ -31,18 +38,43 @@ const MyDataTab: React.FC = () => {
         label: columns[c].label
     }))
 
+    const [loading, setLoading] = useState(false)
+    const apiHandler = useApiHandlerWithPagination<StandardToponim>({ setLoading, shouldHandleError: true })
+    const [data, setData] = useState<Record<string, unknown>[]>([])
     const [searchString, setSearchString] = useState<string>()
     const [limit, setLimit] = useState(5)
     const [showCols, setShowCols] = useState<Option[]>(options)
     const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
 
-    const totalPages = 2
     const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
-
 
     const onPageChange = (num: number) => {
         setPage(num)
     }
+
+    const refresh = useCallback(() => {
+        apiHandler('GET', `/toponyms?page=${page}&per_page=${limit}`)
+            .then(r => {
+                if (!r?.data || !Array.isArray(r.data)) return
+                const mapped = r.data.map(item => ({
+                    id: item.id,
+                    element_type: item.element?.name ?? '-',
+                    generic_name: item.local_name,
+                    specific_name: item.map_name,
+                    province: item.province?.name ?? '-',
+                    regency: item.regency?.name ?? '-',
+                    source: item.source,
+                    status: item.status
+                }))
+                setData(mapped)
+                if (r.pagination) {
+                    setTotalPages(r.pagination.last_page)
+                }
+            })
+    }, [apiHandler, page, limit])
+
+    useEffect(refresh, [refresh])
 
     return (
         <Card>
@@ -100,7 +132,6 @@ const MyDataTab: React.FC = () => {
                             </Select>
                         </div>
                         <div className="flex items-center justify-center gap-1 p-1">
-                            {/* Prev Button */}
                             <Button
                                 size="icon-sm"
                                 disabled={page === 1}
@@ -109,8 +140,6 @@ const MyDataTab: React.FC = () => {
                             >
                                 <ChevronLeft />
                             </Button>
-
-                            {/* Page Numbers */}
                             {pages.map((p) => (
                                 <Button
                                     key={p}
@@ -127,8 +156,6 @@ const MyDataTab: React.FC = () => {
                                     {p}
                                 </Button>
                             ))}
-
-                            {/* Next Button */}
                             <Button
                                 size="icon-sm"
                                 disabled={page === totalPages}
@@ -140,7 +167,7 @@ const MyDataTab: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <SinarParameterizedTable data={data} columns={columns} showCols={showCols} />
+                <SinarParameterizedTable data={data} columns={columns} showCols={showCols} loading={loading} />
             </CardContent>
         </Card>
     )

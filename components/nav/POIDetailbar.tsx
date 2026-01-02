@@ -21,10 +21,10 @@ import { Spinner } from "../ui/spinner"
 import { StandardToponim, ToponimMarkerItem } from "@/types/Toponim"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
-const ShowLoading : React.FC =  () => (
+const ShowLoading: React.FC = () => (
     <div className="flex justify-center items-center h-full">
         <SheetTitle className="sr-only">ID POI</SheetTitle>
-        <Spinner className="size-8"/>
+        <Spinner className="size-8" />
     </div>
 )
 
@@ -45,20 +45,26 @@ const POIDetailSidebar: React.FC<React.PropsWithChildren<IPOIDetailSidebar>> = (
     const handleOnOpenChange = (open: boolean) => {
         handleClearParams()
         if (open && markerData) setMarkerData(markerData)
-        else {setMarkerData(null)}
+        else { setMarkerData(null) }
     }
 
     const isInitialLoad = useRef(true)
+    const fetchedId = useRef<number | null>(null)
     const [loading, setLoading] = useState(false)
     const apiHandler = useApiHandler<StandardToponim>({ setLoading, shouldHandleError: true })
     const [item, setData] = useState<StandardToponim | null>(null)
 
     const refresh = useCallback(() => {
-        if(markerData) {
+        if (markerData && fetchedId.current !== markerData.id) {
+            fetchedId.current = markerData.id
             apiHandler('GET', `/toponyms/${markerData.id}`)
-            .then(r => {
-                setData(r)
-            })
+                .then(r => {
+                    setData(r)
+                })
+        }
+        if (!markerData) {
+            fetchedId.current = null
+            setData(null)
         }
         isInitialLoad.current = false
     }, [apiHandler, markerData])
@@ -71,92 +77,92 @@ const POIDetailSidebar: React.FC<React.PropsWithChildren<IPOIDetailSidebar>> = (
                 <SheetClose asChild>
                     <div className="flex items-center gap-1">
                         <Button type="button" onClick={() => handleOnOpenChange(false)} size='icon-sm' className="rounded-sm border-2">
-                            <ChevronLeft /> 
-                        </Button> 
+                            <ChevronLeft />
+                        </Button>
                         <h5 className="font-semibold"> Kembali </h5>
                     </div>
-                    
-                </SheetClose> 
-                {loading ? (<ShowLoading/>) : (
+
+                </SheetClose>
+                {loading ? (<ShowLoading />) : (
                     <>
                         <SheetHeader className="px-0">
-                            <SheetTitle className="font-bold">ID {item?.id_toponym} {item?.local_name}</SheetTitle>
+                            <SheetTitle className="font-bold">ID {item?.id} {item?.local_name}</SheetTitle>
                         </SheetHeader>
                         <div className="relative w-full h-44">
-                        {item?.photos?.length && <Image
-                            src={item.photos[0].url}
-                            layout="fill"
-                            objectFit="cover"
-                            alt={item.map_name}
-                        />}
+                            {item?.photos?.length && <Image
+                                src={item.photos[0].url}
+                                layout="fill"
+                                objectFit="cover"
+                                alt={item.map_name}
+                            />}
                         </div>
-                        
-                        <div className="flex flex-col mt-5"> 
+
+                        <div className="flex flex-col mt-5">
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Status Pembakuan</div>
-                                <div className="text-wrap">{item?.standardization_status.name}</div>
-                            </div> 
-                            <Separator className="my-2"/>
+                                <div className="text-wrap">{item?.status}</div>
+                            </div>
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Kategori</div>
-                                <div className="text-wrap">{item?.category.name}</div>
-                            </div> 
-                            <Separator className="my-2"/>
+                                <div className="text-wrap">{item?.element?.name ?? '-'}</div>
+                            </div>
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Sub Kategori</div>
-                                <div className="text-wrap">{item?.sub_category.name}</div>
+                                <div className="text-wrap">-</div>
                             </div>
-                            <Separator className="my-2"/>     
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Jenis Unsur</div>
-                                <div className="text-wrap">{item?.element.name}</div>
-                            </div> 
-                            <Separator className="my-2"/>
+                                <div className="text-wrap">{item?.element?.name ?? '-'}</div>
+                            </div>
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Nama Lokal</div>
                                 <div className="text-wrap">{item?.local_name}</div>
                             </div>
-                            <Separator className="my-2"/>
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Nama Spesifik</div>
-                                <div className="text-wrap">{item?.specific_name}</div>
+                                <div className="text-wrap">{item?.map_name}</div>
                             </div>
-                            <Separator className="my-2"/>     
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Nama Lain</div>
                                 <div className="text-wrap">{item?.other_name}</div>
                             </div>
-                            <Separator className="my-2"/>
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Asal Bahasa</div>
-                                <div className="text-wrap">{item?.languange_origin}</div>
+                                <div className="text-wrap">{item?.language_origin}</div>
                             </div>
-                            <Separator className="my-2"/>
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Provinsi</div>
                                 <div className="text-wrap">{item?.province?.name}</div>
                             </div>
-                            <Separator className="my-2"/>
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Kabupaten/Kota</div>
                                 <div className="text-wrap">{item?.regency?.name}</div>
                             </div>
-                            <Separator className="my-2"/>
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Kecamatan</div>
                                 <div className="text-wrap">{item?.district?.name}</div>
                             </div>
-                            <Separator className="my-2"/>
+                            <Separator className="my-2" />
                             <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Kelurahan/Desa</div>
                                 <div className="text-wrap">{item?.village?.name}</div>
                             </div>
-                            <Separator className="my-2"/>
+                            <Separator className="my-2" />
                         </div>
-                        
+
                     </>
                 )}
-                
+
             </SheetContent>
         </Sheet>
     )

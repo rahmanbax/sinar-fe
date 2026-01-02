@@ -53,78 +53,95 @@ export type ToponimMarkerItem = {
     coordinates: Point
 }
 
+export type BoundingBoxToponymItem = {
+    id: number
+    local_name: string
+    category_name: string
+    subcategory_name: string
+    element_name: string
+    province: string | null
+    regency: string | null
+    district: string | null
+    village: string | null
+    lat: string
+    lng: string
+}
+
 export type StandardToponim = { 
     id: number
-    id_toponym: string
+    element_id: number
     utm_zone: string
-    nlp? : string
-    geometry_type: GeometryType
-    location: {
-        type: string
-        coordinates : Point | Polygon | Line
-    }
-    elevation_value?: number
-    accuracy?: number
-    scope?: unknown
-    country: string
-    surveyor_code: string
-    surveyor_name: string
-    source_person: string
-    survey_date: string
-    data_source: string
-    notes: string
-    gazetteer?: {
-        id: number
-        code: string
-        name: string
-    }
-    category: {
-        id: number,
-        name: string
-    }
-    sub_category: {
-        id: number
-        category_id: number
-        code: string
-        name: string
-    }
-    toponym_classification:{
-        id: number
-        code: string
-        name: string
-    }
-    element: {
-        id: number
-        code: string
-        name: string
-    }
-    standardization_status: {
-        id: number
-        name: string
-    }
-    lcode: string
-    map_name: string
-    generic_name: string
-    specific_name: string
-    toponim_name: string
+    nlp?: string | null
+    lcode?: string | null
     local_name: string
-    other_name?: string
-    name_meaning?: string
-    name_history?: string
-    languange_origin?: string
-    pronounce?: string
-    spelling?: string
-    province?: {id: number, code: string, name: string}
-    regency?: {id: number, code: string, name: string}
-    district?: {id: number, code: string, name: string}
-    village: {id: number, code: string, name: string}
+    map_name: string
+    other_name?: string | null
+    language_origin?: string | null
+    name_meaning?: string | null
+    name_history?: string | null
+    pronunciation?: string | null
+    spelling?: string | null
+    geometry_type: GeometryType
+    location_point?: string | null
+    location_line?: {
+        type: string
+        coordinates: number[][]
+    } | null
+    location_area?: unknown | null
+    elevation_value?: string | null
+    accuracy?: number | null
+    scope?: unknown | null
+    country: string
+    province_id?: number | null
+    regency_id?: number | null
+    district_id?: number | null
+    village_id?: number | null
+    created_by: number
+    surveyts?: string | null
     source: string
-    photos:  {
-        filename:string
+    notes?: string | null
+    photos?: {
         url: string
-    }[]
-    created_at: Date
-    official_at: Date
+        size: number
+        filename: string
+        uploaded_at: string
+        original_name: string
+    }[] | null
+    sketch?: string | null
+    status: string
+    created_at: string
+    updated_at: string
+    deleted_at?: string | null
+    element?: {
+        id: number
+        code: string
+        name: string
+        subcategory_id: number
+        type?: string | null
+        created_at: string
+        updated_at?: string | null
+        deleted_at?: string | null
+    } | null
+    province?: {
+        id: number
+        name: string
+        code: string
+    } | null
+    regency?: {
+        id: number
+        name: string
+        code: string
+    } | null
+    district?: {
+        id: number
+        name: string
+        code: string
+    } | null
+    village?: {
+        id: number
+        name: string
+        code: string
+    } | null
 }
 
 export type PreStandarizedToponim = StandardToponim & {
@@ -164,9 +181,9 @@ export type ToponymAnnouncementTabular = {
         code: string
         name: string
     }
-    location: {
-        type: 'Points'
+    location_point?: {
+        type: 'Point'
         coordinates: [number, number]
-    }
+    } | null
     created_at: string | Date
 }

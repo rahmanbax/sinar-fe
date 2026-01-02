@@ -9,8 +9,14 @@ import { NRB } from "@/types";
 import POIDetailSidebar from "@/components/nav/POIDetailbar";
 import FilterDialog from "@/components/FilterDialog";
 import { LngLatBounds, ViewState } from "@vis.gl/react-maplibre";
-import { ToponimMarkerItem } from "@/types/Toponim";
+import { BoundingBoxToponymItem, ToponimMarkerItem } from "@/types/Toponim";
 import { useSearchParams } from "next/navigation";
+
+type BoundingBoxApiResponse = {
+  count: number
+  results: BoundingBoxToponymItem[]
+}
+
 const Home = () => {
   const searchParams = useSearchParams()
   const lng = searchParams.get('lng')
@@ -28,12 +34,23 @@ const Home = () => {
 
   const isInitialLoad = useRef(true)
   const [loading, setLoading] = useState(false)
-  const apiHandler = useApiHandler<{results: ToponimMarkerItem[]}>({ setLoading, shouldHandleError: false })
+  const apiHandler = useApiHandler<BoundingBoxApiResponse>({ setLoading, shouldHandleError: false })
   const [apiData, setData] = useState<ToponimMarkerItem[]>([])
-  const [markerData, setMarkerData] = useState<ToponimMarkerItem | null>()
+  const [markerData, setMarkerData] = useState<ToponimMarkerItem | null>(() => {
+    if (markerId && lng && lat) {
+      return {
+        id: parseInt(markerId),
+        name: '',
+        category: '',
+        element: '',
+        coordinates: { lng: parseFloat(lng), lat: parseFloat(lat) }
+      }
+    }
+    return null
+  })
   const [openFilter, setOpenFilter] = useState(false)
   const [viewState, setViewState] = useState<ViewState>({
-    longitude: lng ? parseFloat(lng) : 119.450 ,
+    longitude: lng ? parseFloat(lng) : 119.450,
     latitude: lat ? parseFloat(lat) : -6.900,
     zoom: zoom ? parseFloat(zoom) : 4.55,
     bearing: 0,
@@ -41,7 +58,7 @@ const Home = () => {
     padding: { bottom: 0 }
   })
 
-  const refresh = useCallback(async (viewState:((ViewState & {bounds: LngLatBounds}) | undefined)) => {
+  const refresh = useCallback(async (viewState: ((ViewState & { bounds: LngLatBounds }) | undefined)) => {
     const bounds = viewState?.bounds
     const zoom = viewState?.zoom
 
@@ -49,12 +66,22 @@ const Home = () => {
       'GET',
       `/toponyms/spatial/bounding-box?min_lat=${bounds?._sw.lat}&max_lat=${bounds?._ne.lat}&min_lng=${bounds?._sw.lng}&max_lng=${bounds?._ne.lng}&limit=${zoom && zoom > 8 ? Math.ceil(zoom) : 8}`
     ).then((r) => {
-        setData(r.results) 
-        return r.results
-      }).then((r) => {
-      if (markerId && !isNaN(parseInt(markerId))) {
+      const mappedResults: ToponimMarkerItem[] = r.results.map((item) => ({
+        id: item.id,
+        name: item.local_name,
+        category: item.category_name,
+        element: item.element_name,
+        coordinates: {
+          lng: parseFloat(item.lng),
+          lat: parseFloat(item.lat)
+        }
+      }))
+      setData(mappedResults)
+      return mappedResults
+    }).then((r) => {
+      if (isInitialLoad.current && markerId && !isNaN(parseInt(markerId))) {
         const found = r.find(r => r.id === parseInt(markerId))
-        if (found) setMarkerData(found) 
+        if (found) setMarkerData(found)
       }
     })
 

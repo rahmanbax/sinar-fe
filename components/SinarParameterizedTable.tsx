@@ -47,7 +47,7 @@ const SinarParameterizedTable = <T extends Record<string, any>>({
                             {showedColumns[col].label}
                         </TableHead>
                     ))}
-                    {actHandler && <TableHead className="pb-3">Aksi</TableHead> }
+                    {actHandler && <TableHead className="pb-3">Aksi</TableHead>}
                 </TableRow>
             </TableHeader>
 
@@ -70,7 +70,7 @@ const SinarParameterizedTable = <T extends Record<string, any>>({
                                         {showedColumns[col].render ? showedColumns[col].render(d[col]) : d[col]}
                                     </TableCell>
                                 ))}
-                            {actHandler && 
+                            {actHandler &&
                                 <TableCell className="pb-3">
                                     <button onClick={() => actHandler(data[i])} className="group flex items-center justify-center rounded-full p-1 bg-transparent hover:bg-gray-200 transition">
                                         <Search
@@ -80,7 +80,7 @@ const SinarParameterizedTable = <T extends Record<string, any>>({
                                     </button>
                                 </TableCell>
                             }
-                            
+
                         </TableRow>
                     ))
                 ) : (

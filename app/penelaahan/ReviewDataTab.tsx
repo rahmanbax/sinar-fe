@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, CircleUserRound, LayoutGrid, List, Map, Plus, Search, SlidersVertical } from "lucide-react"
+import { ChevronLeft, ChevronRight, CircleUserRound, LayoutGrid, List, MapPin, Plus, Search, SlidersVertical } from "lucide-react"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Chart as ChartJS, ChartData, ArcElement, Tooltip, Legend, Plugin } from 'chart.js';
@@ -145,8 +146,21 @@ const reviewData = [
     { id: 4, title: 'Penelaahan Kabupaten Konoha Tahap 8', startDate: '2025-04-01', endDate: '2025-04-30', reviewerCnt: 5, reviewedCnt: 100, elementTypeCnt: 3, districtCnt: 10, acceptedCnt: 30, rejectedCnt: 10, status: 'Direkomendasikan Provinsi' },
 ]
 
+// Sample toponym data with coordinates (based on the image)
+const toponymData = [
+    { idToponim: '123456', jenisUnsur: 'Pendidikan Menengah Umum', namaRupabumi: 'SMA Negeri 1 Jakarta', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.1665598, 106.8375645', status: 'Direkomendasikan' },
+    { idToponim: '716523', jenisUnsur: 'Pendidikan Menengah Umum', namaRupabumi: 'SMA Negeri 2 Jakarta', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.1485546, 106.8161015', status: 'Proses Penelaahan' },
+    { idToponim: '425172', jenisUnsur: 'Pendidikan Menengah Umum', namaRupabumi: 'SMA Negeri 11 Jakarta', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.1484623, 106.7774755', status: 'Ditolak' },
+    { idToponim: '324142', jenisUnsur: 'Sekolah Tinggi', namaRupabumi: 'Universitas Indonesia', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.1939694, 106.8435385', status: 'Direkomendasikan' },
+    { idToponim: '4131451', jenisUnsur: 'Pendidikan Menengah Pertama', namaRupabumi: 'SMP Negeri 139 Jakarta', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.2218886, 106.9310451', status: 'Proses Penelaahan' },
+    { idToponim: '251927', jenisUnsur: 'Pendidikan Dasar', namaRupabumi: 'SD Negeri 01 Kebon Manggis', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.2109377, 106.8552961', status: 'Direkomendasikan' },
+    { idToponim: '513214', jenisUnsur: 'Pendidikan Anak Usia Dini', namaRupabumi: 'TK Bina Taqwa', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.2218402, 106.9130201', status: 'Proses Penelaahan' },
+    { idToponim: '192702', jenisUnsur: 'Pendidikan Menengah Pertama', namaRupabumi: 'SMP Negeri 194 Jakarta', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.2377491, 106.9189513', status: 'Ditolak' },
+]
+
 const ReviewDataTab: React.FC = () => {
-    const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
+    const router = useRouter()
+    const [viewMode, setViewMode] = useState<'card' | 'table' | 'koordinat'>('card')
 
     const columns: ColumnConfig = {
         id: { label: 'ID Penelaahan' },
@@ -156,6 +170,18 @@ const ReviewDataTab: React.FC = () => {
         acceptedCnt: { label: 'Jumlah Diterima' },
         rejectedCnt: { label: 'Jumlah Ditolak' },
         status: { label: 'Progres Penelaahan' },
+    }
+
+    // Columns for koordinat view
+    const koordinatColumns: ColumnConfig = {
+        idToponim: { label: 'ID Toponim' },
+        jenisUnsur: { label: 'Jenis Unsur' },
+        namaRupabumi: { label: 'Nama Rupabumi' },
+        namaLain: { label: 'Nama Lain' },
+        artiNama: { label: 'Arti Nama' },
+        asalBahasa: { label: 'Asal Bahasa' },
+        koordinat: { label: 'Koordinat' },
+        status: { label: 'Status' },
     }
 
     // Transform data for table view with dateRange field
@@ -169,11 +195,17 @@ const ReviewDataTab: React.FC = () => {
         label: columns[c].label
     }))
 
+    const koordinatOptions: Option[] = Object.keys(koordinatColumns).map((c) => ({
+        value: c,
+        label: koordinatColumns[c].label
+    }))
+
     const [showCols, setShowCols] = useState<Option[]>(options)
+    const [showKoordinatCols, setShowKoordinatCols] = useState<Option[]>(koordinatOptions)
 
     return (
         <div className="block px-4">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-end items-center mb-4 gap-2">
                 <Button>
                     <Link href="/penelaahan/buat-penelaahan">
                         <div className="flex gap-1 items-center">
@@ -184,15 +216,16 @@ const ReviewDataTab: React.FC = () => {
                 </Button>
 
                 {/* View Toggle */}
-                <div className="flex bg-gray-100 rounded-lg p-1">
+                <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
                     <Button
                         size="icon"
                         variant={viewMode === 'card' ? 'default' : 'ghost'}
                         className={cn(
                             "rounded-md",
-                            viewMode === 'card' ? 'bg-white text-blackshadow-sm hover:bg-gray-50' : 'hover:bg-white'
+                            viewMode === 'card' ? 'bg-white text-black shadow-sm hover:bg-gray-50' : 'hover:bg-white'
                         )}
                         onClick={() => setViewMode('card')}
+                        title="Tampilan Kartu"
                     >
                         <LayoutGrid size={18} />
                     </Button>
@@ -204,8 +237,21 @@ const ReviewDataTab: React.FC = () => {
                             viewMode === 'table' ? 'bg-white text-black shadow-sm hover:bg-gray-50' : 'hover:bg-white'
                         )}
                         onClick={() => setViewMode('table')}
+                        title="Tampilan Tabel Penelaahan"
                     >
                         <List size={18} />
+                    </Button>
+                    <Button
+                        size="icon"
+                        variant={viewMode === 'koordinat' ? 'default' : 'ghost'}
+                        className={cn(
+                            "rounded-md",
+                            viewMode === 'koordinat' ? 'bg-white text-black shadow-sm hover:bg-gray-50' : 'hover:bg-white'
+                        )}
+                        onClick={() => setViewMode('koordinat')}
+                        title="Tampilan Tabel Koordinat"
+                    >
+                        <MapPin size={18} />
                     </Button>
                 </div>
             </div>
@@ -226,13 +272,29 @@ const ReviewDataTab: React.FC = () => {
                         />
                     ))}
                 </div>
-            ) : (
+            ) : viewMode === 'table' ? (
                 <Card className="mt-4">
                     <CardContent className="p-6">
                         <SinarParameterizedTable
                             data={tableData}
                             columns={columns}
                             showCols={showCols}
+                        />
+                    </CardContent>
+                </Card>
+            ) : (
+                <Card className="mt-4">
+                    {/* <CardHeader>
+                        <CardTitle>Data Toponim dengan Koordinat</CardTitle>
+                    </CardHeader> */}
+                    <CardContent className="p-6">
+                        <SinarParameterizedTable
+                            data={toponymData}
+                            columns={koordinatColumns}
+                            showCols={showKoordinatCols}
+                            actHandler={(item) => {
+                                router.push(`/penelaahan/detail-toponim?id=${item.idToponim}`)
+                            }}
                         />
                     </CardContent>
                 </Card>

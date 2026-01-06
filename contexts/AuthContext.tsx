@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 import { UserType, Role, getRoleDefaultRoute } from "@/types/User"
-import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from "react"
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback, useRef } from "react"
 import { API_URL } from "@/lib/config"
 import { useRouter } from "next/navigation"
 
@@ -17,15 +17,89 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Helper to decode JWT and get expiration time
+function getTokenExpiry(token: string): number | null {
+  try {
+    const payload = token.split('.')[1]
+    const decoded = JSON.parse(atob(payload))
+    return decoded.exp ? decoded.exp * 1000 : null // Convert to milliseconds
+  } catch {
+    return null
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [token, setToken] = useState<string | null>(null)
   const [user, setUser] = useState<UserType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Refresh token function
+  const refreshToken = useCallback(async (currentToken: string) => {
+    try {
+      const res = await fetch(`${API_URL}/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${currentToken}`
+        },
+      })
+
+      const result = await res.json()
+
+      if (!result.error && result.token) {
+        setToken(result.token)
+        localStorage.setItem("token", result.token)
+
+        // Update user data if provided
+        if (result.data) {
+          setUser(result.data)
+          localStorage.setItem("user", JSON.stringify(result.data))
+        }
+
+        return result.token
+      }
+      return null
+    } catch {
+      return null
+    }
+  }, [])
+
+  // Schedule token refresh
+  const scheduleRefresh = useCallback((authToken: string) => {
+    // Clear any existing timeout
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current)
+    }
+
+    const expiry = getTokenExpiry(authToken)
+    if (!expiry) return
+
+    // Calculate time until refresh (1 minute before expiry)
+    const now = Date.now()
+    const refreshTime = expiry - now - 60000 // 1 minute before expiry
+
+    if (refreshTime > 0) {
+      refreshTimeoutRef.current = setTimeout(async () => {
+        const newToken = await refreshToken(authToken)
+        if (newToken) {
+          scheduleRefresh(newToken)
+        }
+      }, refreshTime)
+    } else if (expiry > now) {
+      // Token will expire in less than 1 minute, refresh immediately
+      refreshToken(authToken).then((newToken) => {
+        if (newToken) {
+          scheduleRefresh(newToken)
+        }
+      })
+    }
+  }, [refreshToken])
 
   // Fetch profile from API to validate token and get fresh user data
-  async function fetchProfile(storedToken: string) {
+  async function fetchProfile(storedToken: string): Promise<UserType | null> {
     try {
       const res = await fetch(`${API_URL}/auth/profile`, {
         method: "GET",
@@ -35,23 +109,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       })
 
-      if (!res.ok) {
+      // Only clear token on auth errors (401, 403)
+      if (res.status === 401 || res.status === 403) {
         localStorage.removeItem("token")
         localStorage.removeItem("user")
         return null
+      }
+
+      // For other errors, use cached user data
+      if (!res.ok) {
+        const cachedUser = localStorage.getItem("user")
+        return cachedUser ? JSON.parse(cachedUser) : null
       }
 
       const result = await res.json()
 
       if (result.error) {
-        localStorage.removeItem("token")
-        localStorage.removeItem("user")
-        return null
+        // If API returns error but not auth issue, use cached data
+        const cachedUser = localStorage.getItem("user")
+        return cachedUser ? JSON.parse(cachedUser) : null
       }
 
-      return result.data.user
+      // Handle different response structures
+      return result.data?.user || result.data || null
     } catch {
-      return null
+      // Network error - use cached user data
+      const cachedUser = localStorage.getItem("user")
+      return cachedUser ? JSON.parse(cachedUser) : null
     }
   }
 
@@ -60,6 +144,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const storedToken = localStorage.getItem("token")
 
       if (storedToken) {
+        // Check if token is expired
+        const expiry = getTokenExpiry(storedToken)
+        if (expiry && expiry < Date.now()) {
+          // Token expired, clear it
+          localStorage.removeItem("token")
+          localStorage.removeItem("user")
+          setIsLoading(false)
+          return
+        }
+
         setToken(storedToken)
 
         // Fetch fresh profile data
@@ -67,6 +161,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (userData) {
           setUser(userData)
           localStorage.setItem("user", JSON.stringify(userData))
+          // Schedule token refresh
+          scheduleRefresh(storedToken)
         } else {
           // Token invalid
           setToken(null)
@@ -77,7 +173,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     initAuth()
-  }, [])
+
+    // Cleanup on unmount
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current)
+      }
+    }
+  }, [scheduleRefresh])
 
   async function login(email: string, password: string) {
     const res = await fetch(`${API_URL}/auth/login`, {
@@ -92,12 +195,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(result.message || "Login gagal")
     }
 
-    const { authorization, user: userData } = result.data
+    // New response structure: token at root level, user data in result.data
+    const authToken = result.token
+    const userData = result.data
 
-    setToken(authorization.token)
+    setToken(authToken)
     setUser(userData)
-    localStorage.setItem("token", authorization.token)
+    localStorage.setItem("token", authToken)
     localStorage.setItem("user", JSON.stringify(userData))
+
+    // Schedule token refresh
+    scheduleRefresh(authToken)
 
     // Redirect berdasarkan role
     const redirectPath = getRoleDefaultRoute(userData.role as Role)
@@ -120,6 +228,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         // Continue with local logout even if API fails
       }
+    }
+
+    // Clear refresh timeout
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current)
+      refreshTimeoutRef.current = null
     }
 
     setToken(null)

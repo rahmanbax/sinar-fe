@@ -26,8 +26,7 @@ const ReviewerLayout: React.FC<React.PropsWithChildren<IReviewerLayout>> = ({ ch
 
     const menuItems: ISurveyorNav['menuItems'] = [
         { label: 'Penelaahan', href: '/penelaahan' },
-        { label: 'Gazeter', href: '/gazeter', variant: 'ghost' },
-        { label: 'Pengumuman Nama Rupabumi', href: '/pengumuman', variant: 'ghost' }
+        { label: 'Bantuan', href: '/bantuan', variant: 'ghost' },
     ]
 
     return (

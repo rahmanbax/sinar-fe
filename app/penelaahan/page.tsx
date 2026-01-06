@@ -1,6 +1,7 @@
 "use client"
 import { useState, useRef, useEffect } from "react";
 import { PiPencilSimpleLineDuotone } from 'react-icons/pi'
+import { useAuth } from "@/contexts/AuthContext";
 
 import { Button } from "@/components/ui/button";
 import { ChevronsDown, ChevronsUp, CircleUserRound, Database } from "lucide-react";
@@ -26,6 +27,7 @@ import MyTeamTab from "./MyTeamTab";
 import ReviewDataTab from "./ReviewDataTab";
 
 const Page = () => {
+    const { user } = useAuth()
     const [fullTab, setFulltab] = useState(false)
     const navbarRef = useRef<HTMLDivElement>(null);
     const [navbarHeight, setNavbarHeight] = useState(0);
@@ -65,12 +67,12 @@ const Page = () => {
                         </Avatar>
                         <div className="flex flex-col gap-1">
                             <h3 className="uppercase font-bold text-xl inline-flex gap-2">
-                                Username
+                                {user?.name || 'Username'}
                                 <Link href="/profile">
                                     <PiPencilSimpleLineDuotone size={18} className="mt-1" />
                                 </Link>
                             </h3>
-                            <h5 className="font-medium text-md">Role</h5>
+                            <h5 className="font-medium text-md capitalize">{user?.role || 'Role'}</h5>
                             <h5 className="font-medium text-md">City</h5>
                         </div>
                     </div>

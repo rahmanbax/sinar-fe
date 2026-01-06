@@ -13,7 +13,15 @@ import {
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
-import { Menu } from "lucide-react"
+import { ChevronDown, CircleUserRound, Loader2, LogOut, Menu } from "lucide-react"
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarTrigger,
+} from "@/components/ui/menubar"
 
 
 interface Sidebar {
@@ -24,7 +32,7 @@ interface Sidebar {
 const Sidebar: React.FC<React.PropsWithChildren<Sidebar>> = ({ menuItems, setOpenLoginDialog }) => {
   const [open, setOpen] = useState(false)
 
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, logout, isLoggingOut } = useAuth()
 
   const pathname = usePathname()
 
@@ -47,7 +55,19 @@ const Sidebar: React.FC<React.PropsWithChildren<Sidebar>> = ({ menuItems, setOpe
               </SheetTitle>
             </Link>
           </SheetHeader>
-          <div className="flex flex-col gap-3 mt-8">
+
+          {/* User Info Section */}
+          {user && (
+            <div className="flex items-center gap-3 mt-4 p-3 bg-gray-100 rounded-lg">
+              <CircleUserRound size={40} />
+              <div className="flex-1">
+                <p className="font-semibold">{user.name}</p>
+                <p className="text-sm text-gray-500">{user.role}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3 mt-4">
             {menuItems.map((item) => (
               <div key={item.href}>
                 <Button variant='ghost' className="block w-full text-start" onClick={() => { if (item.href === pathname) setOpen(!open) }}>
@@ -64,6 +84,20 @@ const Sidebar: React.FC<React.PropsWithChildren<Sidebar>> = ({ menuItems, setOpe
                 </Button>
                 <Separator />
               </>)}
+
+            {user && (
+              <>
+                <Button
+                  variant='ghost'
+                  className="block w-full text-start"
+                  onClick={logout}
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? 'Logging out...' : 'Keluar'}
+                </Button>
+                <Separator />
+              </>
+            )}
 
           </div>
         </SheetContent>
@@ -82,7 +116,7 @@ export interface IPublicNav {
 const PublicNav: React.FC<React.PropsWithChildren<IPublicNav>> = ({ isMobile, menuItems = [], setOpenLoginDialog }) => {
 
   const pathname = usePathname()
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, logout, isLoggingOut } = useAuth()
 
   const [hovered, setHovered] = useState<string | null>(null)
 
@@ -127,6 +161,36 @@ const PublicNav: React.FC<React.PropsWithChildren<IPublicNav>> = ({ isMobile, me
             >
               Login
             </Button>
+          </NavigationMenuItem>
+        )}
+
+        {/* User Menu when logged in */}
+        {!isLoading && user && (
+          <NavigationMenuItem>
+            <Menubar className="w-fit h-10 p-0 items-center border-none bg-transparent">
+              <MenubarMenu>
+                <MenubarTrigger className="hover:bg-accent justify-between h-full py-0 px-3 gap-2">
+                  <CircleUserRound size={24} />
+                  <span className="hidden min-[1250px]:inline">{user.name}</span>
+                  <ChevronDown size={16} className="text-muted-foreground" />
+                </MenubarTrigger>
+                <MenubarContent>
+                  <MenubarItem disabled>
+                    Halo, {user.name}!
+                  </MenubarItem>
+                  <MenubarItem asChild>
+                    <Link href="/profile">
+                      <CircleUserRound size={16} className="mr-2" /> Ubah Profil
+                    </Link>
+                  </MenubarItem>
+                  <MenubarSeparator />
+                  <MenubarItem onClick={logout} disabled={isLoggingOut}>
+                    {isLoggingOut ? <Loader2 className="animate-spin mr-2" size={16} /> : <LogOut size={16} className="mr-2" />}
+                    {isLoggingOut ? 'Logging out...' : 'Keluar'}
+                  </MenubarItem>
+                </MenubarContent>
+              </MenubarMenu>
+            </Menubar>
           </NavigationMenuItem>
         )}
 

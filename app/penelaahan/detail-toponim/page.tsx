@@ -168,10 +168,10 @@ const Page = () => {
             <div className="flex flex-col overflow-hidden grow pt-23 h-full">
                 <div className="flex grow">
                     <div className="block w-3/4 py-4 px-6 overflow-y-scroll max-h-[83vh]">
-                        <div className="flex items-center gap-3 mb-5">
+                        <Link href="/penelaahan" className="flex items-center gap-3 mb-5">
                             <Button size='icon-sm'><ChevronLeft /></Button>
                             Kembali
-                        </div>
+                        </Link>
                         <h3 className="text-xl font-bold mb-3">ID Toponim</h3>
                         <div className="flex gap-3 mb-3">
                             <Button className="bg-red-600 hover:bg-red-800">

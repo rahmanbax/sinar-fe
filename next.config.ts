@@ -19,11 +19,11 @@ const nextConfig: NextConfig = {
       fs: './empty.ts'
     }
   },
-  rewrites: () => {
+  rewrites: async () => {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8000/api/*' 
+        destination: `${process.env.NEXT_PUBLIC_API}/:path*`
       }
     ]
   }

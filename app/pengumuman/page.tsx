@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import PublicLayout from "@/layouts/PublicLayout";
 import { cn } from "@/lib/utils";
 import { useGeolocated } from "react-geolocated";
-import { useApiHandlerWithPagination } from "@/utils/apiHandler";
+import { useApiHandlerWithPagination, useApiHandler } from "@/utils/apiHandler";
 import { NRB } from "@/types";
 import { PiChatTeardropDots, PiChatTeardropDotsBold } from 'react-icons/pi'
 import {

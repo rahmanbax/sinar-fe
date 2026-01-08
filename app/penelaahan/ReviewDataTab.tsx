@@ -9,7 +9,8 @@ import { ChevronLeft, ChevronRight, CircleUserRound, LayoutGrid, List, MapPin, P
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { API_URL } from "@/lib/config"
 
 import { Chart as ChartJS, ChartData, ArcElement, Tooltip, Legend, Plugin } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
@@ -17,6 +18,51 @@ import { Progress } from "@/components/ui/progress"
 import dayjs from "dayjs"
 
 ChartJS.register(ArcElement, Tooltip, Legend);
+
+// API Response Type
+interface VerificationTransaction {
+    id: string
+    title: string
+    due_at: string
+    status: string
+    total_data: number
+    handled_data: number
+    accepted_data: number
+    rejected_data: number
+    element_count: number
+    district_count: number
+    verificator_count: number
+}
+
+// Toponym API Response Type
+interface ToponymData {
+    id: string
+    element_id: string
+    map_name: string
+    local_name: string
+    other_name: string
+    name_meaning: string | null
+    language_origin: string
+    review_transaction_data: {
+        transaction_id: string
+        toponym_id: string
+        accepted: string | null
+        user: string | null
+        handledts: string | null
+        notes: string | null
+    }[]
+    location_point: {
+        type: string
+        coordinates: [number, number]
+    }
+    utm_zone: string
+    element: {
+        code: string
+        name: string
+        subcategory_id: string
+        type: string | null
+    }
+}
 
 const CenterTextPlugin: Plugin = {
     id: "centerText",
@@ -139,28 +185,141 @@ const ReviewCard:
         )
     }
 
-const reviewData = [
-    { id: 1, title: 'Penelaahan Kabupaten Konoha Tahap 8', startDate: '2025-01-01', endDate: '2025-01-31', reviewerCnt: 5, reviewedCnt: 100, elementTypeCnt: 3, districtCnt: 10, acceptedCnt: 30, rejectedCnt: 10, status: 'Direkomendasikan Provinsi' },
-    { id: 2, title: 'Penelaahan Kabupaten Konoha Tahap 8', startDate: '2025-02-01', endDate: '2025-02-28', reviewerCnt: 5, reviewedCnt: 100, elementTypeCnt: 3, districtCnt: 10, acceptedCnt: 30, rejectedCnt: 10, status: 'Proses Penelaahan' },
-    { id: 3, title: 'Penelaahan Kabupaten Konoha Tahap 8', startDate: '2025-03-01', endDate: '2025-03-31', reviewerCnt: 5, reviewedCnt: 100, elementTypeCnt: 3, districtCnt: 10, acceptedCnt: 30, rejectedCnt: 10, status: 'Selesai Penelaahan' },
-    { id: 4, title: 'Penelaahan Kabupaten Konoha Tahap 8', startDate: '2025-04-01', endDate: '2025-04-30', reviewerCnt: 5, reviewedCnt: 100, elementTypeCnt: 3, districtCnt: 10, acceptedCnt: 30, rejectedCnt: 10, status: 'Direkomendasikan Provinsi' },
-]
-
-// Sample toponym data with coordinates (based on the image)
-const toponymData = [
-    { idToponim: '123456', jenisUnsur: 'Pendidikan Menengah Umum', namaRupabumi: 'SMA Negeri 1 Jakarta', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.1665598, 106.8375645', status: 'Direkomendasikan' },
-    { idToponim: '716523', jenisUnsur: 'Pendidikan Menengah Umum', namaRupabumi: 'SMA Negeri 2 Jakarta', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.1485546, 106.8161015', status: 'Proses Penelaahan' },
-    { idToponim: '425172', jenisUnsur: 'Pendidikan Menengah Umum', namaRupabumi: 'SMA Negeri 11 Jakarta', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.1484623, 106.7774755', status: 'Ditolak' },
-    { idToponim: '324142', jenisUnsur: 'Sekolah Tinggi', namaRupabumi: 'Universitas Indonesia', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.1939694, 106.8435385', status: 'Direkomendasikan' },
-    { idToponim: '4131451', jenisUnsur: 'Pendidikan Menengah Pertama', namaRupabumi: 'SMP Negeri 139 Jakarta', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.2218886, 106.9310451', status: 'Proses Penelaahan' },
-    { idToponim: '251927', jenisUnsur: 'Pendidikan Dasar', namaRupabumi: 'SD Negeri 01 Kebon Manggis', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.2109377, 106.8552961', status: 'Direkomendasikan' },
-    { idToponim: '513214', jenisUnsur: 'Pendidikan Anak Usia Dini', namaRupabumi: 'TK Bina Taqwa', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.2218402, 106.9130201', status: 'Proses Penelaahan' },
-    { idToponim: '192702', jenisUnsur: 'Pendidikan Menengah Pertama', namaRupabumi: 'SMP Negeri 194 Jakarta', namaLain: '-', artiNama: '-', asalBahasa: '-', koordinat: '-6.2377491, 106.9189513', status: 'Ditolak' },
-]
-
 const ReviewDataTab: React.FC = () => {
     const router = useRouter()
-    const [viewMode, setViewMode] = useState<'card' | 'table' | 'koordinat'>('card')
+    const [viewMode, setViewMode] = useState<'card' | 'table' | 'all-koordinat'>('card')
+    const [showKoordinatTable, setShowKoordinatTable] = useState(false)
+
+    // API State
+    const [reviewData, setReviewData] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    // Koordinat view state (per transaction)
+    const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
+    const [toponymData, setToponymData] = useState<any[]>([])
+    const [loadingToponyms, setLoadingToponyms] = useState(false)
+
+    // All toponyms state
+    const [allToponymsData, setAllToponymsData] = useState<any[]>([])
+    const [loadingAllToponyms, setLoadingAllToponyms] = useState(false)
+
+    // Fetch data from API
+    useEffect(() => {
+        const fetchReviewData = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                const response = await fetch(`${API_URL}/verifications/transaction`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                const result = await response.json()
+
+                if (!result.error && result.data) {
+                    // Transform API data to match component structure
+                    const transformedData = result.data.map((item: VerificationTransaction) => ({
+                        id: item.id,
+                        title: item.title,
+                        startDate: null, // Not provided by API
+                        endDate: item.due_at,
+                        reviewerCnt: item.verificator_count,
+                        reviewedCnt: item.total_data,
+                        elementTypeCnt: item.element_count,
+                        districtCnt: item.district_count,
+                        acceptedCnt: item.accepted_data,
+                        rejectedCnt: item.rejected_data,
+                        status: item.status
+                    }))
+                    setReviewData(transformedData)
+                }
+            } catch (error) {
+                console.error('Failed to fetch review data:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchReviewData()
+    }, [])
+
+    // Fetch all toponyms data
+    useEffect(() => {
+        if (viewMode !== 'all-koordinat') return
+
+        const fetchAllToponyms = async () => {
+            setLoadingAllToponyms(true)
+            try {
+                const token = localStorage.getItem('token')
+                const response = await fetch(`${API_URL}/verifications/transaction/toponyms`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                const result = await response.json()
+
+                if (!result.error && result.data) {
+                    // Transform API data to match table structure
+                    const transformedData = result.data.map((item: ToponymData) => ({
+                        idToponim: item.id,
+                        jenisUnsur: item.element?.name || '-',
+                        namaRupabumi: item.map_name,
+                        namaLain: item.other_name || '-',
+                        artiNama: item.name_meaning || '-',
+                        asalBahasa: item.language_origin || '-',
+                        reviewTransaction: item.review_transaction_data?.[0],
+                        koordinat: item.location_point ? `${item.location_point.coordinates[0]}, ${item.location_point.coordinates[1]}` : '-',
+                        status: 'Proses Penelaahan' // Default status
+                    }))
+                    setAllToponymsData(transformedData)
+                }
+            } catch (error) {
+                console.error('Failed to fetch all toponyms:', error)
+            } finally {
+                setLoadingAllToponyms(false)
+            }
+        }
+
+        fetchAllToponyms()
+    }, [viewMode])
+
+    // Fetch toponym data when transaction is selected
+    useEffect(() => {
+        if (!selectedTransactionId) return
+
+        const fetchToponymData = async () => {
+            setLoadingToponyms(true)
+            try {
+                const token = localStorage.getItem('token')
+                const response = await fetch(`${API_URL}/verifications/transaction/${selectedTransactionId}/toponyms`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                const result = await response.json()
+
+                if (!result.error && result.data) {
+                    // Transform API data to match table structure
+                    const transformedData = result.data.map((item: ToponymData) => ({
+                        idToponim: item.id,
+                        jenisUnsur: item.element?.name || '-',
+                        namaRupabumi: item.map_name,
+                        namaLain: item.other_name || '-',
+                        artiNama: item.name_meaning || '-',
+                        asalBahasa: item.language_origin || '-',
+                        koordinat: item.location_point ? `${item.location_point.coordinates[0]}, ${item.location_point.coordinates[1]}` : '-',
+                        status: 'Proses Penelaahan' // Default status
+                    }))
+                    setToponymData(transformedData)
+                }
+            } catch (error) {
+                console.error('Failed to fetch toponym data:', error)
+            } finally {
+                setLoadingToponyms(false)
+            }
+        }
+
+        fetchToponymData()
+    }, [selectedTransactionId])
 
     const columns: ColumnConfig = {
         id: { label: 'ID Penelaahan' },
@@ -170,6 +329,7 @@ const ReviewDataTab: React.FC = () => {
         acceptedCnt: { label: 'Jumlah Diterima' },
         rejectedCnt: { label: 'Jumlah Ditolak' },
         status: { label: 'Progres Penelaahan' },
+        actions: { label: 'Aksi' },
     }
 
     // Columns for koordinat view
@@ -203,6 +363,11 @@ const ReviewDataTab: React.FC = () => {
     const [showCols, setShowCols] = useState<Option[]>(options)
     const [showKoordinatCols, setShowKoordinatCols] = useState<Option[]>(koordinatOptions)
 
+    const handleBackToReview = () => {
+        setShowKoordinatTable(false)
+        setSelectedTransactionId(null)
+    }
+
     return (
         <div className="block px-4">
             <div className="flex justify-end items-center mb-4 gap-2">
@@ -215,48 +380,108 @@ const ReviewDataTab: React.FC = () => {
                     </Link>
                 </Button>
 
-                {/* View Toggle */}
-                <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
-                    <Button
-                        size="icon"
-                        variant={viewMode === 'card' ? 'default' : 'ghost'}
-                        className={cn(
-                            "rounded-md",
-                            viewMode === 'card' ? 'bg-white text-black shadow-sm hover:bg-gray-50' : 'hover:bg-white'
-                        )}
-                        onClick={() => setViewMode('card')}
-                        title="Tampilan Kartu"
-                    >
-                        <LayoutGrid size={18} />
-                    </Button>
-                    <Button
-                        size="icon"
-                        variant={viewMode === 'table' ? 'default' : 'ghost'}
-                        className={cn(
-                            "rounded-md",
-                            viewMode === 'table' ? 'bg-white text-black shadow-sm hover:bg-gray-50' : 'hover:bg-white'
-                        )}
-                        onClick={() => setViewMode('table')}
-                        title="Tampilan Tabel Penelaahan"
-                    >
-                        <List size={18} />
-                    </Button>
-                    <Button
-                        size="icon"
-                        variant={viewMode === 'koordinat' ? 'default' : 'ghost'}
-                        className={cn(
-                            "rounded-md",
-                            viewMode === 'koordinat' ? 'bg-white text-black shadow-sm hover:bg-gray-50' : 'hover:bg-white'
-                        )}
-                        onClick={() => setViewMode('koordinat')}
-                        title="Tampilan Tabel Koordinat"
-                    >
-                        <MapPin size={18} />
-                    </Button>
-                </div>
+                {/* View Toggle - Only show if not in koordinat table */}
+                {!showKoordinatTable && (
+                    <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
+                        <Button
+                            size="icon"
+                            variant={viewMode === 'card' ? 'default' : 'ghost'}
+                            className={cn(
+                                "rounded-md",
+                                viewMode === 'card' ? 'bg-white text-black shadow-sm hover:bg-gray-50' : 'hover:bg-white'
+                            )}
+                            onClick={() => setViewMode('card')}
+                            title="Tampilan Kartu"
+                        >
+                            <LayoutGrid size={18} />
+                        </Button>
+                        <Button
+                            size="icon"
+                            variant={viewMode === 'table' ? 'default' : 'ghost'}
+                            className={cn(
+                                "rounded-md",
+                                viewMode === 'table' ? 'bg-white text-black shadow-sm hover:bg-gray-50' : 'hover:bg-white'
+                            )}
+                            onClick={() => setViewMode('table')}
+                            title="Tampilan Tabel Penelaahan"
+                        >
+                            <List size={18} />
+                        </Button>
+                        <Button
+                            size="icon"
+                            variant={viewMode === 'all-koordinat' ? 'default' : 'ghost'}
+                            className={cn(
+                                "rounded-md",
+                                viewMode === 'all-koordinat' ? 'bg-white text-black shadow-sm hover:bg-gray-50' : 'hover:bg-white'
+                            )}
+                            onClick={() => setViewMode('all-koordinat')}
+                            title="Tampilan Semua Koordinat"
+                        >
+                            <MapPin size={18} />
+                        </Button>
+                    </div>
+                )}
             </div>
 
-            {viewMode === 'card' ? (
+            {loading ? (
+                <div className="flex items-center justify-center py-20">
+                    <p className="text-gray-500">Memuat data...</p>
+                </div>
+            ) : showKoordinatTable ? (
+                <Card className="mt-4">
+                    <CardHeader className="flex flex-row items-center gap-3">
+                        <Button
+                            size="icon-sm"
+                            variant="outline"
+                            onClick={handleBackToReview}
+                        >
+                            <ChevronLeft />
+                        </Button>
+                        <CardTitle>
+                            {reviewData.find(item => item.id === selectedTransactionId)?.title || 'Data Toponim'} - ID Transaksi: {selectedTransactionId}
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        {loadingToponyms ? (
+                            <div className="flex items-center justify-center py-20">
+                                <p className="text-gray-500">Memuat data toponim...</p>
+                            </div>
+                        ) : (
+                            <SinarParameterizedTable
+                                data={toponymData}
+                                columns={koordinatColumns}
+                                showCols={showKoordinatCols}
+                                actHandler={(item) => {
+                                    router.push(`/penelaahan/detail-toponim?transactionId=${selectedTransactionId}&toponymId=${item.idToponim}`)
+                                }}
+                            />
+                        )}
+                    </CardContent>
+                </Card>
+            ) : viewMode === 'all-koordinat' ? (
+                <Card className="mt-4">
+                    <CardHeader>
+                        <CardTitle>Semua Data Toponim</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        {loadingAllToponyms ? (
+                            <div className="flex items-center justify-center py-20">
+                                <p className="text-gray-500">Memuat semua data toponim...</p>
+                            </div>
+                        ) : (
+                            <SinarParameterizedTable
+                                data={allToponymsData}
+                                columns={koordinatColumns}
+                                showCols={showKoordinatCols}
+                                actHandler={(item) => {
+                                    // Navigate to detail without transactionId since this is all toponyms view
+                                    router.push(`/penelaahan/detail-toponim?transactionId=${item.reviewTransaction?.transaction_id || ''}&toponymId=${item.idToponim}`)
+                                }}
+                            />
+                        )}
+                    </CardContent>
+                </Card>
+            ) : viewMode === 'card' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mt-4 gap-5">
                     {reviewData.map((item) => (
                         <ReviewCard
@@ -272,28 +497,16 @@ const ReviewDataTab: React.FC = () => {
                         />
                     ))}
                 </div>
-            ) : viewMode === 'table' ? (
+            ) : (
                 <Card className="mt-4">
                     <CardContent className="p-6">
                         <SinarParameterizedTable
                             data={tableData}
                             columns={columns}
                             showCols={showCols}
-                        />
-                    </CardContent>
-                </Card>
-            ) : (
-                <Card className="mt-4">
-                    {/* <CardHeader>
-                        <CardTitle>Data Toponim dengan Koordinat</CardTitle>
-                    </CardHeader> */}
-                    <CardContent className="p-6">
-                        <SinarParameterizedTable
-                            data={toponymData}
-                            columns={koordinatColumns}
-                            showCols={showKoordinatCols}
                             actHandler={(item) => {
-                                router.push(`/penelaahan/detail-toponim?id=${item.idToponim}`)
+                                setSelectedTransactionId(item.id)
+                                setShowKoordinatTable(true)
                             }}
                         />
                     </CardContent>

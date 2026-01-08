@@ -13,32 +13,17 @@ import { Bar } from 'react-chartjs-2'
 import { API_URL } from "@/lib/config"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
-// Sample data for different chart types
-const chartDataSets = {
-    'jenis-unsur': {
-        labels: ['Pelabuhan Laut', 'Pelabuhan Penyeberangan', 'Terminal Bus', 'Bandara', 'Stasiun KA', 'Pelabuhan Sungai'],
-        data: [45, 28, 62, 15, 38, 22],
-        label: 'Jumlah Data per Jenis Unsur'
-    },
-    'wilayah': {
-        labels: ['Jawa Barat', 'Jawa Tengah', 'Jawa Timur', 'DKI Jakarta', 'Banten', 'Bali'],
-        data: [85, 72, 95, 45, 38, 28],
-        label: 'Jumlah Data per Wilayah'
-    },
-    'status': {
-        labels: ['Belum Verifikasi', 'Dalam Proses', 'Selesai', 'Ditolak', 'Pending Review'],
-        data: [120, 45, 280, 15, 32],
-        label: 'Jumlah Data per Status'
-    },
-    'bulan': {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-        data: [32, 45, 28, 52, 68, 42],
-        label: 'Jumlah Data per Bulan'
-    }
+// Type for statistics data from API
+interface StatisticsData {
+    count: number
+    element_code: string
+    element_name: string
 }
 
 // Province type from API
@@ -49,81 +34,162 @@ interface Province {
     level: string
 }
 
-// Category type from API
-interface Category {
-    id: number
+// Element type from API
+interface Element {
     code: string
     name: string
+    subcategory_id: string
+    type: string | null
+    created_at: string
+    updated_at: string | null
+    deleted_at: string | null
 }
 
 const Page = () => {
-    const [tanggalAwal, setTanggalAwal] = useState('')
+    const router = useRouter()
+
+    const [title, setTitle] = useState('')
+    // const [tanggalAwal, setTanggalAwal] = useState('') // Not needed for API
     const [tanggalAkhir, setTanggalAkhir] = useState('')
-    const [jenisUnsur, setJenisUnsur] = useState('')
+    const [jenisUnsur, setJenisUnsur] = useState<string[]>([]) // Array for multi-select
     const [wilayahAdministrasi, setWilayahAdministrasi] = useState('')
     const [verifikator, setVerifikator] = useState('')
-    const [chartType, setChartType] = useState<keyof typeof chartDataSets>('jenis-unsur')
+    const [isSubmitting, setIsSubmitting] = useState(false)
+
+    // Statistics data from API
+    const [statisticsData, setStatisticsData] = useState<StatisticsData[]>([])
+    const [loadingStatistics, setLoadingStatistics] = useState(true)
 
     // Province data from API
     const [provinces, setProvinces] = useState<Province[]>([])
     const [loadingProvinces, setLoadingProvinces] = useState(true)
     const [openProvinceCombobox, setOpenProvinceCombobox] = useState(false)
 
-    // Category data from API
-    const [categories, setCategories] = useState<Category[]>([])
-    const [loadingCategories, setLoadingCategories] = useState(true)
+    // Element data from API
+    const [elements, setElements] = useState<Element[]>([])
+    const [loadingElements, setLoadingElements] = useState(true)
+    const [openElementPopover, setOpenElementPopover] = useState(false)
 
-    // Fetch provinces on mount
+    // Fetch data on mount
     useEffect(() => {
-        const fetchProvinces = async () => {
+        const fetchStatistics = async () => {
             try {
-                const res = await fetch(`${API_URL}/regions?level=PROVINCE&limit=50`)
+                const token = localStorage.getItem('token')
+                const res = await fetch(`${API_URL}/verifications/transaction/candidates`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
                 const result = await res.json()
                 if (!result.error && result.data) {
-                    setProvinces(result.data)
+                    setStatisticsData(result.data)
                 }
             } catch (err) {
-                console.error('Failed to fetch provinces:', err)
+                console.error('Failed to fetch statistics:', err)
             } finally {
-                setLoadingProvinces(false)
+                setLoadingStatistics(false)
             }
         }
-        fetchProvinces()
+        fetchStatistics()
 
-        const fetchCategories = async () => {
+        // const fetchProvinces = async () => {
+        //     try {
+        //         const res = await fetch(`${API_URL}/regions?level=PROVINCE&limit=50`)
+        //         const result = await res.json()
+        //         if (!result.error && result.data) {
+        //             setProvinces(result.data)
+        //         }
+        //     } catch (err) {
+        //         console.error('Failed to fetch provinces:', err)
+        //     } finally {
+        //         setLoadingProvinces(false)
+        //     }
+        // }
+        // fetchProvinces()
+
+        const fetchElements = async () => {
             try {
-                const res = await fetch(`${API_URL}/classification/categories?sort_by=name&sort_order=asc`)
+                const res = await fetch(`${API_URL}/classification/elements`)
                 const result = await res.json()
                 if (!result.error && result.data) {
-                    setCategories(result.data)
+                    setElements(result.data)
                 }
             } catch (err) {
-                console.error('Failed to fetch categories:', err)
+                console.error('Failed to fetch elements:', err)
             } finally {
-                setLoadingCategories(false)
+                setLoadingElements(false)
             }
         }
-        fetchCategories()
+        fetchElements()
     }, [])
 
-    const handleSubmit = () => {
-        // TODO: Submit form
-        console.log({
-            tanggalAwal,
-            tanggalAkhir,
-            jenisUnsur,
-            wilayahAdministrasi,
-            verifikator
-        })
+    const handleSubmit = async () => {
+        // Validation
+        if (!title.trim()) {
+            alert('Judul penelaahan harus diisi')
+            return
+        }
+
+        if (!tanggalAkhir) {
+            alert('Tanggal akhir harus diisi')
+            return
+        }
+
+        if (jenisUnsur.length === 0) {
+            alert('Minimal pilih satu jenis unsur')
+            return
+        }
+
+        setIsSubmitting(true)
+
+        try {
+            // Format due_at to match required format: "2026-01-01 07:00:00.000 +0700"
+            const dueDate = new Date(tanggalAkhir)
+            const due_at = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}-${String(dueDate.getDate()).padStart(2, '0')} 07:00:00.000 +0700`
+
+            const requestBody = {
+                title: title,
+                elements: jenisUnsur, // Array of selected element codes
+                due_at: due_at
+            }
+
+            const token = localStorage.getItem('token')
+            const response = await fetch(`${API_URL}/verifications/transaction
+`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(requestBody)
+            })
+
+            const result = await response.json()
+
+            if (!response.ok || result.error) {
+                throw new Error(result.message || 'Gagal membuat penelaahan')
+            }
+
+            alert('Penelaahan berhasil dibuat!')
+
+            // Redirect to penelaahan list page
+            router.push('/penelaahan')
+
+        } catch (error) {
+            console.error('Submit error:', error)
+            alert(error instanceof Error ? error.message : 'Gagal membuat penelaahan')
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
-    const currentData = chartDataSets[chartType]
+    // Transform API data for chart
     const chartData = {
-        labels: currentData.labels,
+        labels: statisticsData.map(item => item.element_name),
         datasets: [
             {
-                label: currentData.label,
-                data: currentData.data,
+                label: 'Jumlah Data per Jenis Unsur',
+                data: statisticsData.map(item => item.count),
                 backgroundColor: 'rgba(59, 130, 246, 0.7)',
                 borderColor: 'rgb(59, 130, 246)',
                 borderWidth: 1,
@@ -140,7 +206,7 @@ const Page = () => {
             },
             title: {
                 display: true,
-                text: currentData.label,
+                text: 'Jumlah Data per Jenis Unsur',
                 font: {
                     size: 14,
                     weight: 'bold' as const,
@@ -173,28 +239,50 @@ const Page = () => {
                     <CardContent className="space-y-6">
                         {/* Ringkasan Statistik Chart */}
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <Label>Ringkasan Statistik</Label>
-                                <Select value={chartType} onValueChange={(v) => setChartType(v as keyof typeof chartDataSets)}>
-                                    <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Pilih Data" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="jenis-unsur">Jenis Unsur</SelectItem>
-                                        <SelectItem value="wilayah">Wilayah Administrasi</SelectItem>
-                                        <SelectItem value="status">Status Verifikasi</SelectItem>
-                                        <SelectItem value="bulan">Per Bulan</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                            <Label>Ringkasan Statistik - Jenis Unsur</Label>
                             <div className="h-[200px] w-full bg-gray-50 rounded-lg p-3">
-                                <Bar data={chartData} options={chartOptions} />
+                                {loadingStatistics ? (
+                                    <div className="flex items-center justify-center h-full">
+                                        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                                    </div>
+                                ) : statisticsData.length > 0 ? (
+                                    <Bar data={chartData} options={chartOptions} />
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-gray-400">
+                                        Tidak ada data
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* Tanggal Awal & Akhir */}
+                        {/* Buat Penelaahan Section */}
                         <h2 className="font-semibold">Buat Penelaahan</h2>
-                        <div className="grid grid-cols-2 gap-4">
+
+                        {/* Title */}
+                        <div className="space-y-2">
+                            <Label htmlFor="title">Judul Penelaahan</Label>
+                            <Input
+                                id="title"
+                                type="text"
+                                placeholder="Masukkan judul penelaahan"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Tanggal Akhir */}
+                        <div className="space-y-2">
+                            <Label htmlFor="tanggal-akhir">Tanggal Akhir</Label>
+                            <Input
+                                id="tanggal-akhir"
+                                type="date"
+                                value={tanggalAkhir}
+                                onChange={(e) => setTanggalAkhir(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Tanggal Awal - Not needed for API */}
+                        {/* <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="tanggal-awal">Tanggal Awal</Label>
                                 <Input
@@ -213,34 +301,79 @@ const Page = () => {
                                     onChange={(e) => setTanggalAkhir(e.target.value)}
                                 />
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Jenis Unsur */}
                         <div className="space-y-2">
                             <Label>Jenis Unsur</Label>
-                            <Select value={jenisUnsur} onValueChange={setJenisUnsur} disabled={loadingCategories}>
-                                <SelectTrigger>
-                                    {loadingCategories ? (
-                                        <div className="flex items-center gap-2">
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            <span>Memuat...</span>
-                                        </div>
-                                    ) : (
-                                        <SelectValue placeholder="Pilih Jenis Unsur" />
-                                    )}
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map((category) => (
-                                        <SelectItem key={category.id} value={category.code}>
-                                            {category.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Popover open={openElementPopover} onOpenChange={setOpenElementPopover}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={openElementPopover}
+                                        className="w-full justify-between font-normal"
+                                        disabled={loadingElements}
+                                    >
+                                        {loadingElements ? (
+                                            <div className="flex items-center gap-2">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                <span>Memuat...</span>
+                                            </div>
+                                        ) : jenisUnsur.length > 0 ? (
+                                            <span>{jenisUnsur.length} unsur dipilih</span>
+                                        ) : (
+                                            <span className="text-muted-foreground">Pilih Jenis Unsur</span>
+                                        )}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0" align="start">
+                                    <Command>
+                                        <CommandInput placeholder="Cari jenis unsur..." />
+                                        <CommandList>
+                                            <CommandEmpty>Jenis unsur tidak ditemukan.</CommandEmpty>
+                                            <CommandGroup>
+                                                {elements
+                                                    .sort((a, b) => {
+                                                        const aSelected = jenisUnsur.includes(a.code)
+                                                        const bSelected = jenisUnsur.includes(b.code)
+                                                        // Selected items first
+                                                        if (aSelected && !bSelected) return -1
+                                                        if (!aSelected && bSelected) return 1
+                                                        return 0
+                                                    })
+                                                    .map((element) => {
+                                                        const isSelected = jenisUnsur.includes(element.code)
+                                                        return (
+                                                            <CommandItem
+                                                                key={element.code}
+                                                                value={element.name}
+                                                                onSelect={() => {
+                                                                    if (isSelected) {
+                                                                        setJenisUnsur(jenisUnsur.filter(code => code !== element.code))
+                                                                    } else {
+                                                                        setJenisUnsur([...jenisUnsur, element.code])
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Checkbox
+                                                                    checked={isSelected}
+                                                                    className="mr-2"
+                                                                />
+                                                                {element.name}
+                                                            </CommandItem>
+                                                        )
+                                                    })}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
 
                         {/* Wilayah Administrasi */}
-                        <div className="space-y-2">
+                        {/* <div className="space-y-2">
                             <Label>Wilayah Administrasi</Label>
                             <Popover open={openProvinceCombobox} onOpenChange={setOpenProvinceCombobox}>
                                 <PopoverTrigger asChild>
@@ -293,10 +426,10 @@ const Page = () => {
                                     </Command>
                                 </PopoverContent>
                             </Popover>
-                        </div>
+                        </div> */}
 
                         {/* Verifikator */}
-                        <div className="space-y-2">
+                        {/* <div className="space-y-2">
                             <Label>Verifikator</Label>
                             <Select value={verifikator} onValueChange={setVerifikator}>
                                 <SelectTrigger>
@@ -310,20 +443,28 @@ const Page = () => {
                                     <SelectItem value="tim-5">Tim Verifikator 5</SelectItem>
                                 </SelectContent>
                             </Select>
-                        </div>
+                        </div> */}
 
                         {/* Submit Buttons */}
                         <div className="flex gap-4 pt-4">
                             <Link href="/penelaahan" className="flex-1">
-                                <Button variant="outline" className="w-full">
+                                <Button variant="outline" className="w-full" disabled={isSubmitting}>
                                     Batal
                                 </Button>
                             </Link>
                             <Button
                                 className="flex-1 bg-blue-600 hover:bg-blue-700"
                                 onClick={handleSubmit}
+                                disabled={isSubmitting}
                             >
-                                Buat Transaksi
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Memproses...
+                                    </>
+                                ) : (
+                                    'Buat Penelaahan'
+                                )}
                             </Button>
                         </div>
                     </CardContent>

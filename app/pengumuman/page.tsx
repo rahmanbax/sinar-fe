@@ -27,7 +27,25 @@ import dayjs from "dayjs";
 import { ToponymAnnouncementTabular } from "@/types/Toponim";
 import { useRouter } from "next/navigation";
 
-const Pengumuman: React.FC = () => {
+// Hook to debounce value
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+interface SearchProps {
+  search?: string
+}
+
+const Pengumuman: React.FC<SearchProps> = ({ search }) => {
   const columns: ColumnConfig = {
     id: { label: 'ID' },
     element: { label: 'Jenis Unsur', render: (v) => v?.name ?? '-' },
@@ -45,7 +63,7 @@ const Pengumuman: React.FC = () => {
   const [dataId, setDataId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(5)
-  const [searchString, setSearchString] = useState<string | undefined>()
+  // const [searchString, setSearchString] = useState<string | undefined>() // Lifted up
   const [filters, setFilters] = useState([])
 
   const [totalPages, setTotalPages] = useState(1)
@@ -65,8 +83,12 @@ const Pengumuman: React.FC = () => {
   }
 
   const refresh = useCallback(() => {
+    let url = `/toponyms?page=${page}&per_page=${limit}`
+    if (search) {
+      url += `&search=${search}`
+    }
 
-    apiHandler('GET', `/toponyms?page=${page}&per_page=${limit}`)
+    apiHandler('GET', url)
       .then(r => {
         if (!r?.data || !Array.isArray(r.data)) return
         setData(r.data)
@@ -76,7 +98,7 @@ const Pengumuman: React.FC = () => {
       })
 
     isInitialLoad.current = false
-  }, [apiHandler, page, limit, searchString])
+  }, [apiHandler, page, limit, search])
 
   useEffect(refresh, [refresh])
 
@@ -125,7 +147,7 @@ const Pengumuman: React.FC = () => {
 
 }
 
-const Tanggapan: React.FC = () => {
+const Tanggapan: React.FC<SearchProps> = ({ search }) => {
   const isInitialLoad = useRef(true)
   const [loading, setLoading] = useState(false)
   const apiHandler = useApiHandler<NRB[]>({ setLoading, shouldHandleError: true })
@@ -133,7 +155,7 @@ const Tanggapan: React.FC = () => {
   const [dataId, setDataId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(5)
-  const [searchString, setSearchString] = useState<string | undefined>()
+  // const [searchString, setSearchString] = useState<string | undefined>() // Lifted up
   const [filters, setFilters] = useState([])
   const totalPages = 2
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -156,14 +178,18 @@ const Tanggapan: React.FC = () => {
   }
 
   const refresh = useCallback(() => {
+    let url = `/nrb?page=${page}&limit=${limit}`
+    if (search) {
+      url += `&search=${search}`
+    }
 
-    apiHandler('GET', `/nrb?page=${page}&limit=${limit}`)
+    apiHandler('GET', url)
       .then(r => {
         setData(r)
       })
 
     isInitialLoad.current = false
-  }, [apiHandler, page, limit, searchString])
+  }, [apiHandler, page, limit, search])
 
   useEffect(refresh, [refresh])
 
@@ -284,6 +310,8 @@ const Tanggapan: React.FC = () => {
 const Page = () => {
 
   const [panel, setPanel] = useState('pengumuman')
+  const [searchVal, setSearchVal] = useState('')
+  const debouncedSearch = useDebounce(searchVal, 500)
 
   return (
     <PublicLayout>
@@ -324,14 +352,18 @@ const Page = () => {
                 <Button variant='ghost' className="shadow-md"><Download />Unduh</Button>
               </div>
               <InputGroup className='shadow-md w-72'>
-                <InputGroupInput placeholder="Cari nama..." />
+                <InputGroupInput
+                  placeholder="Cari nama..."
+                  value={searchVal}
+                  onChange={(e) => setSearchVal(e.target.value)}
+                />
                 <InputGroupAddon align='inline-end'>
                   <Search />
                 </InputGroupAddon>
               </InputGroup>
             </div>
           </div>
-          {panel === 'tanggapan' ? <Tanggapan /> : <Pengumuman />}
+          {panel === 'tanggapan' ? <Tanggapan search={debouncedSearch} /> : <Pengumuman search={debouncedSearch} />}
         </div>
       </div>
     </PublicLayout>

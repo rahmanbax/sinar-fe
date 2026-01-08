@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { PiPencilSimpleLineDuotone } from 'react-icons/pi'
 import { useSearchParams } from "next/navigation";
 import { API_URL } from "@/lib/config";
@@ -217,7 +217,7 @@ interface ToponymDetail {
     status: string
 }
 
-const Page = () => {
+const DetailToponimContent = () => {
     const searchParams = useSearchParams()
     const transactionId = searchParams.get('transactionId')
     const toponymId = searchParams.get('toponymId')
@@ -728,6 +728,14 @@ const Page = () => {
         </ReviewerLayout>
 
     );
+}
+
+const Page = () => {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <DetailToponimContent />
+        </Suspense>
+    )
 }
 
 export default Page

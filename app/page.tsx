@@ -1,11 +1,10 @@
 "use client"
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import PublicLayout from "../layouts/PublicLayout";
 import MapDefault from "@/components/map/Map";
 
 import { useGeolocated } from "react-geolocated";
 import { useApiHandler } from "@/utils/apiHandler";
-import { NRB } from "@/types";
 import POIDetailSidebar from "@/components/nav/POIDetailbar";
 import FilterDialog from "@/components/FilterDialog";
 import { LngLatBounds, ViewState } from "@vis.gl/react-maplibre";
@@ -17,7 +16,7 @@ type BoundingBoxApiResponse = {
   results: BoundingBoxToponymItem[]
 }
 
-const Home = () => {
+const HomeContent = () => {
   const searchParams = useSearchParams()
   const lng = searchParams.get('lng')
   const lat = searchParams.get('lat')
@@ -65,8 +64,8 @@ const Home = () => {
     apiHandler(
       'GET',
       `/toponyms/spatial/bounding-box?min_lat=${bounds?._sw.lat}&max_lat=${bounds?._ne.lat}&min_lng=${bounds?._sw.lng}&max_lng=${bounds?._ne.lng}&limit=${zoom && zoom > 8 ? Math.ceil(zoom) : 8}`
-    ).then((r) => {
-      const mappedResults: ToponimMarkerItem[] = r.results.map((item) => ({
+    ).then((r: BoundingBoxApiResponse) => {
+      const mappedResults: ToponimMarkerItem[] = r.results.map((item: BoundingBoxToponymItem) => ({
         id: item.id,
         name: item.local_name,
         category: item.category_name,
@@ -78,9 +77,9 @@ const Home = () => {
       }))
       setData(mappedResults)
       return mappedResults
-    }).then((r) => {
+    }).then((r: ToponimMarkerItem[]) => {
       if (isInitialLoad.current && markerId && !isNaN(parseInt(markerId))) {
-        const found = r.find(r => r.id === parseInt(markerId))
+        const found = r.find(i => i.id === parseInt(markerId))
         if (found) setMarkerData(found)
       }
     })
@@ -94,8 +93,15 @@ const Home = () => {
       <POIDetailSidebar markerData={markerData} setMarkerData={setMarkerData} />
       <FilterDialog open={openFilter} setOpen={setOpenFilter} />
     </PublicLayout>
-
   );
+}
+
+const Home = () => {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent />
+    </Suspense>
+  )
 }
 
 export default Home

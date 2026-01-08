@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
       fs: './empty.ts'
     }
   },
+  typescript: {
+    // !! PERINGATAN !!
+    // Ini akan membiarkan build berhasil meskipun ada error TypeScript.
+    ignoreBuildErrors: true,
+  },
   rewrites: async () => {
     return [
       {

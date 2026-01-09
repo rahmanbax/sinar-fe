@@ -1,27 +1,51 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Database } from "lucide-react";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-// import * as d3 from 'd3'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import type { ChartData, ChartOptions } from 'chart.js';
-import { Map, type MapRef, type ViewState,  } from '@vis.gl/react-maplibre'
+import { Map, type MapRef, type ViewState } from '@vis.gl/react-maplibre'
 import { big_office_coord, MapStyles } from "@/components/map/Map";
 import { IoLocationOutline } from "react-icons/io5";
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import Image from "next/image";
+import { API_URL } from "@/lib/config";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const DemoChart: React.FC = () => {
+// API Response Types
+interface PerformanceData {
+    user_id: string
+    summary: {
+        submitted_data: number
+        survey_data: number
+        antara_data: number
+        standarized: number
+    }
+    five_top_elements: Array<{
+        element_code: string
+        element_name: string
+        count: number
+    }>
+}
+
+interface ElementChartProps {
+    elements: Array<{
+        element_code: string
+        element_name: string
+        count: number
+    }>
+}
+
+const ElementChart: React.FC<ElementChartProps> = ({ elements }) => {
     const data: ChartData<'bar'> = {
-        labels: ['Kampung/Dusun', 'Kantor Camat', 'Bukit', 'Masjid', 'Gunung'],
+        labels: elements.map(e => e.element_name),
         datasets: [
             {
-                label: 'Dataset 1',
-                data: [917, 159, 180, 181, 256],
+                label: 'Jumlah Data',
+                data: elements.map(e => e.count),
                 backgroundColor: 'rgba(54, 162, 235, 1)',
             },
         ],
@@ -30,11 +54,11 @@ const DemoChart: React.FC = () => {
     const options: ChartOptions<'bar'> = {
         responsive: true,
         indexAxis: 'y',
-        maintainAspectRatio: false, // ✅ allow chart to resize properly
+        maintainAspectRatio: false,
         scales: {
             x: {
                 grid: {
-                    display: false // Hide x-axis grid lines
+                    display: false
                 }
             },
             y: {
@@ -43,11 +67,11 @@ const DemoChart: React.FC = () => {
                     maxRotation: 0,
                     minRotation: 0,
                     font: {
-                        size: 10, // adjust for small screens
+                        size: 10,
                     },
                 },
                 grid: {
-                    display: false // Hide y-axis grid lines
+                    display: false
                 }
             }
         },
@@ -57,7 +81,7 @@ const DemoChart: React.FC = () => {
             },
             title: {
                 display: true,
-                text: 'Chart.js Bar Chart',
+                text: '5 Elemen Teratas',
             },
         },
     };
@@ -65,10 +89,8 @@ const DemoChart: React.FC = () => {
     return <Bar data={data} options={options} />
 }
 
-
 const StatMap = () => {
     const mapRef = useRef<MapRef>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const geoRef = useRef<maplibregl.GeolocateControl>(null);
 
     const [bearing, setBearing] = useState(0)
@@ -99,8 +121,8 @@ const StatMap = () => {
                     setBearing(e.viewState.bearing)
                 }}
                 maxBounds={[
-                    [91, -12],   // Sudut barat daya Indonesia (lon, lat) + 5
-                    [142, 12]     // Sudut timur laut Indonesia (lon, lat) + 5
+                    [91, -12],
+                    [142, 12]
                 ]}
             ></Map>
         </div>
@@ -108,6 +130,41 @@ const StatMap = () => {
 }
 
 const StatisticTab: React.FC = () => {
+    const [performanceData, setPerformanceData] = useState<PerformanceData | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchPerformance = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                const response = await fetch(`${API_URL}/personal/performance`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                const result = await response.json()
+
+                if (!result.error && result.data) {
+                    setPerformanceData(result.data)
+                }
+            } catch (error) {
+                console.error('Failed to fetch performance data:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchPerformance()
+    }, [])
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <p className="text-gray-500">Memuat statistik...</p>
+            </div>
+        )
+    }
+
     return (
         <div className="block px-4">
             <div className="flex flex-col lg:flex-row w-full gap-4">
@@ -124,10 +181,12 @@ const StatisticTab: React.FC = () => {
                                 </div>
                             </CardContent>
                             <Separator />
-                            <CardFooter className="text-center justify-center font-bold">1500</CardFooter>
+                            <CardFooter className="text-center justify-center font-bold">
+                                {performanceData?.summary.submitted_data || 0}
+                            </CardFooter>
                         </Card>
                         <Card className="bg-[#DBECFD] text-black text-center gap-2 py-4">
-                            <CardTitle className="sr-only">Total Data</CardTitle>
+                            <CardTitle className="sr-only">Data Survei</CardTitle>
                             <CardContent className="px-3 h-[70%]">
                                 <div className="flex flex-col items-center">
                                     <IoLocationOutline size={35} className="mx-auto mb-2" />
@@ -135,10 +194,12 @@ const StatisticTab: React.FC = () => {
                                 </div>
                             </CardContent>
                             <Separator className="border border-black" />
-                            <CardFooter className="text-center justify-center font-bold">300</CardFooter>
+                            <CardFooter className="text-center justify-center font-bold">
+                                {performanceData?.summary.survey_data || 0}
+                            </CardFooter>
                         </Card>
                         <Card className="bg-[#DBECFD] text-black text-center gap-2 py-4">
-                            <CardTitle className="sr-only">Total Data</CardTitle>
+                            <CardTitle className="sr-only">Data Antara</CardTitle>
                             <CardContent className="px-3 h-[70%]">
                                 <div className="flex flex-col items-center">
                                     <Image
@@ -152,10 +213,12 @@ const StatisticTab: React.FC = () => {
                                 </div>
                             </CardContent>
                             <Separator className="border border-black" />
-                            <CardFooter className="text-center justify-center font-bold">300</CardFooter>
+                            <CardFooter className="text-center justify-center font-bold">
+                                {performanceData?.summary.antara_data || 0}
+                            </CardFooter>
                         </Card>
                         <Card className="bg-[#DBECFD] text-black text-center gap-2 py-4">
-                            <CardTitle className="sr-only">Total Data</CardTitle>
+                            <CardTitle className="sr-only">Data Dibakukan</CardTitle>
                             <CardContent className="px-3 h-[70%]">
                                 <div className="flex flex-col items-center">
                                     <Image
@@ -169,13 +232,21 @@ const StatisticTab: React.FC = () => {
                                 </div>
                             </CardContent>
                             <Separator className="border border-black" />
-                            <CardFooter className="text-center justify-center font-bold">300</CardFooter>
+                            <CardFooter className="text-center justify-center font-bold">
+                                {performanceData?.summary.standarized || 0}
+                            </CardFooter>
                         </Card>
                     </div>
 
                     {/* Chart */}
                     <div className="w-full h-auto md:h-[300px]">
-                        <DemoChart />
+                        {performanceData?.five_top_elements && performanceData.five_top_elements.length > 0 ? (
+                            <ElementChart elements={performanceData.five_top_elements} />
+                        ) : (
+                            <div className="flex items-center justify-center h-full">
+                                <p className="text-gray-500">Belum ada data elemen</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 

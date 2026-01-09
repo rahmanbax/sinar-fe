@@ -182,7 +182,10 @@ const PreviewMap: React.FC<PreviewMapProps> = ({ coordinates }) => {
 // Toponym Detail API Response Type
 interface ToponymDetail {
     id: string
-    element_id: string
+    element: {
+        code: string
+        name: string
+    }
     local_name: string
     map_name: string
     other_name: string | null
@@ -245,7 +248,7 @@ const DetailToponimContent = () => {
             setEditedData({
                 local_name: toponymData.local_name,
                 map_name: toponymData.map_name,
-                element_id: toponymData.element_id,
+                element: toponymData.element,
                 name_meaning: toponymData.name_meaning,
                 other_name: toponymData.other_name,
                 language_origin: toponymData.language_origin,
@@ -289,7 +292,7 @@ const DetailToponimContent = () => {
                 name_history: editedData.name_history || toponymData.name_history,
                 pronounciation: editedData.pronounciation || toponymData.pronounciation,
                 spelling: editedData.spelling || toponymData.spelling,
-                element: editedData.element_id || toponymData.element_id,
+                element: (editedData.element?.code || toponymData.element.code),
                 province_code: toponymData.province_id,
                 regency_code: toponymData.regency_id,
                 district_code: toponymData.district_id,
@@ -301,7 +304,8 @@ const DetailToponimContent = () => {
                 geometry: toponymData.location_point ? {
                     type: toponymData.geometry_type || toponymData.location_point.type,
                     coordinates: toponymData.location_point.coordinates
-                } : null
+                } : null,
+                element_id: editedData.element?.code || toponymData.element.code,
             }
 
             const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms/${toponymId}`, {
@@ -542,9 +546,8 @@ const DetailToponimContent = () => {
                                                         <Input
                                                             id="element_type"
                                                             name="element_type"
-                                                            value={isEditMode ? (editedData.element_id || '') : (toponymData.element_id || '')}
-                                                            onChange={(e) => handleInputChange('element_id', e.target.value)}
-                                                            readOnly={!isEditMode}
+                                                            value={toponymData.element?.name || '-'}
+                                                            readOnly
                                                         />
                                                     </Field>
                                                     <FieldGroup className="flex flex-row">

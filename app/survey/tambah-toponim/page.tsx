@@ -42,6 +42,7 @@ interface Province {
     name: string
     code: string
     level: string
+    path: string
 }
 
 // Region type for regency/district
@@ -51,6 +52,7 @@ interface Region {
     code: string
     level: string
     parent_id: number
+    path: string
 }
 
 // Element type from API
@@ -534,7 +536,7 @@ const Page = () => {
     useEffect(() => {
         const fetchProvinces = async () => {
             try {
-                const res = await fetch(`${API_URL}/regions?level=PROVINCE&limit=50`)
+                const res = await fetch(`${API_URL}/regions?level=PROVINCE&limit=100`)
                 const result = await res.json()
                 if (!result.error && result.data) {
                     setProvinces(result.data)
@@ -580,7 +582,7 @@ const Page = () => {
         const fetchRegencies = async () => {
             setLoadingRegencies(true)
             try {
-                const res = await fetch(`${API_URL}/regions?level=CITY&parent_id=${selectedProvince.id}&limit=100`)
+                const res = await fetch(`${API_URL}/regions?level=CITY&parent=${selectedProvince.path}&limit=100`)
                 const result = await res.json()
                 if (!result.error && result.data) {
                     setRegencies(result.data)
@@ -609,7 +611,7 @@ const Page = () => {
         const fetchDistricts = async () => {
             setLoadingDistricts(true)
             try {
-                const res = await fetch(`${API_URL}/regions?level=DISTRICT&parent_id=${selectedRegency.id}&limit=100`)
+                const res = await fetch(`${API_URL}/regions?level=DISTRICT&parent=${selectedRegency.path}&limit=100`)
                 const result = await res.json()
                 if (!result.error && result.data) {
                     setDistricts(result.data)
@@ -636,7 +638,7 @@ const Page = () => {
         const fetchVillages = async () => {
             setLoadingVillages(true)
             try {
-                const res = await fetch(`${API_URL}/regions?level=VILLAGE&parent_id=${selectedDistrict.id}&limit=100`)
+                const res = await fetch(`${API_URL}/regions?level=DISTRICT&parent=${selectedDistrict.path}&limit=100`)
                 const result = await res.json()
                 if (!result.error && result.data) {
                     setVillages(result.data)
@@ -768,7 +770,7 @@ const Page = () => {
             if (nameHistory) payload.name_history = nameHistory
             if (pronounciation) payload.pronounciation = pronounciation
             if (spelling) payload.spelling = spelling
-            if (elementCode) payload.element = elementCode
+            if (elementCode) payload.element_id = elementCode
             if (provinceCode) payload.province_code = provinceCode
             if (regencyCode) payload.regency_code = regencyCode
             if (districtCode) payload.district_code = districtCode

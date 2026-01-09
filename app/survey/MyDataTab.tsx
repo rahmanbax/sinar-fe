@@ -54,7 +54,7 @@ const MyDataTab: React.FC = () => {
     }
 
     const refresh = useCallback(() => {
-        apiHandler('GET', `/toponyms?page=${page}&per_page=${limit}`)
+        apiHandler('GET', `/survey/toponyms?page=${page}&per_page=${limit}`)
             .then(r => {
                 if (!r?.data || !Array.isArray(r.data)) return
                 const mapped = r.data.map(item => ({

@@ -46,7 +46,7 @@ interface ToponymData {
     review_transaction_data: {
         transaction_id: string
         toponym_id: string
-        accepted: string | null
+        accepted: boolean | null
         user: string | null
         handledts: string | null
         notes: string | null
@@ -259,17 +259,28 @@ const ReviewDataTab: React.FC = () => {
 
                 if (!result.error && result.data) {
                     // Transform API data to match table structure
-                    const transformedData = result.data.map((item: ToponymData) => ({
-                        idToponim: item.id,
-                        jenisUnsur: item.element?.name || '-',
-                        namaRupabumi: item.map_name,
-                        namaLain: item.other_name || '-',
-                        artiNama: item.name_meaning || '-',
-                        asalBahasa: item.language_origin || '-',
-                        reviewTransaction: item.review_transaction_data?.[0],
-                        koordinat: item.location_point ? `${item.location_point.coordinates[0]}, ${item.location_point.coordinates[1]}` : '-',
-                        status: 'Proses Penelaahan' // Default status
-                    }))
+                    const transformedData = result.data.map((item: ToponymData) => {
+                        // Determine status from accepted field
+                        const accepted = item.review_transaction_data?.[0]?.accepted
+                        let status = 'Proses Penelaahan'
+                        if (accepted === true) {
+                            status = 'Disetujui'
+                        } else if (accepted === false) {
+                            status = 'Ditolak'
+                        }
+
+                        return {
+                            idToponim: item.id,
+                            jenisUnsur: item.element?.name || '-',
+                            namaRupabumi: item.map_name,
+                            namaLain: item.other_name || '-',
+                            artiNama: item.name_meaning || '-',
+                            asalBahasa: item.language_origin || '-',
+                            reviewTransaction: item.review_transaction_data?.[0],
+                            koordinat: item.location_point ? `${item.location_point.coordinates[0]}, ${item.location_point.coordinates[1]}` : '-',
+                            status: status
+                        }
+                    })
                     setAllToponymsData(transformedData)
                 }
             } catch (error) {
@@ -299,16 +310,27 @@ const ReviewDataTab: React.FC = () => {
 
                 if (!result.error && result.data) {
                     // Transform API data to match table structure
-                    const transformedData = result.data.map((item: ToponymData) => ({
-                        idToponim: item.id,
-                        jenisUnsur: item.element?.name || '-',
-                        namaRupabumi: item.map_name,
-                        namaLain: item.other_name || '-',
-                        artiNama: item.name_meaning || '-',
-                        asalBahasa: item.language_origin || '-',
-                        koordinat: item.location_point ? `${item.location_point.coordinates[0]}, ${item.location_point.coordinates[1]}` : '-',
-                        status: 'Proses Penelaahan' // Default status
-                    }))
+                    const transformedData = result.data.map((item: ToponymData) => {
+                        // Determine status from accepted field
+                        const accepted = item.review_transaction_data?.[0]?.accepted
+                        let status = 'Proses Penelaahan'
+                        if (accepted === true) {
+                            status = 'Disetujui'
+                        } else if (accepted === false) {
+                            status = 'Ditolak'
+                        }
+
+                        return {
+                            idToponim: item.id,
+                            jenisUnsur: item.element?.name || '-',
+                            namaRupabumi: item.map_name,
+                            namaLain: item.other_name || '-',
+                            artiNama: item.name_meaning || '-',
+                            asalBahasa: item.language_origin || '-',
+                            koordinat: item.location_point ? `${item.location_point.coordinates[0]}, ${item.location_point.coordinates[1]}` : '-',
+                            status: status
+                        }
+                    })
                     setToponymData(transformedData)
                 }
             } catch (error) {

@@ -656,12 +656,23 @@ const Page = () => {
     const getGeometry = (): { type: string, coordinates: number[] | number[][] } | null => {
         if (savedGeometry && savedGeometry.features.length > 0) {
             const feature = savedGeometry.features[0]
-            return feature.geometry as { type: string, coordinates: number[] | number[][] }
+            const geom = feature.geometry as { type: string, coordinates: number[] | number[][] }
+
+            // API expects [lat, lng] format (non-standard), so we need to reverse coordinates
+            if (geom.type === 'Point') {
+                const coords = geom.coordinates as number[]
+                return {
+                    type: 'Point',
+                    coordinates: [coords[1], coords[0]] // Reverse from [lng, lat] to [lat, lng]
+                }
+            }
+            return geom
         }
         if (drawnPoints.length > 0) {
+            // drawnPoints are in [lng, lat] format from map, reverse to [lat, lng] for API
             return {
                 type: 'Point',
-                coordinates: [drawnPoints[0][0], drawnPoints[0][1]]
+                coordinates: [drawnPoints[0][1], drawnPoints[0][0]] // Reverse to [lat, lng]
             }
         }
         return null
@@ -740,12 +751,58 @@ const Page = () => {
             alert('Silakan gambar lokasi titik terlebih dahulu')
             return
         }
+
+        // Validate all required fields
         if (!localName) {
-            alert('Silakan isi nama lokal toponim')
+            alert('Silakan isi Nama Lokal')
+            return
+        }
+        if (!mapName) {
+            alert('Silakan isi Nama di Peta')
+            return
+        }
+        if (!otherName) {
+            alert('Silakan isi Nama Lain')
+            return
+        }
+        if (!languageOrigin) {
+            alert('Silakan isi Asal Bahasa')
+            return
+        }
+        if (!nameMeaning) {
+            alert('Silakan isi Arti Nama')
+            return
+        }
+        if (!nameHistory) {
+            alert('Silakan isi Sejarah Nama')
+            return
+        }
+        if (!pronounciation) {
+            alert('Silakan isi Pelafalan')
+            return
+        }
+        if (!spelling) {
+            alert('Silakan isi Ejaan')
+            return
+        }
+        if (!elementCode) {
+            alert('Silakan pilih Elemen')
             return
         }
         if (!provinceCode) {
-            alert('Silakan pilih provinsi')
+            alert('Silakan pilih Provinsi')
+            return
+        }
+        if (!regencyCode) {
+            alert('Silakan pilih Kabupaten/Kota')
+            return
+        }
+        if (!districtCode) {
+            alert('Silakan pilih Kecamatan')
+            return
+        }
+        if (!villageCode) {
+            alert('Silakan pilih Desa/Kelurahan')
             return
         }
 
@@ -928,81 +985,89 @@ const Page = () => {
                                         placeholder="Contoh: Gunung Merapi"
                                         value={localName}
                                         onChange={(e) => setLocalName(e.target.value)}
+                                        required
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="map-name">Nama di Peta </Label>
+                                    <Label htmlFor="map-name">Nama di Peta <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="map-name"
                                         placeholder="Contoh: Gunung Merapi"
                                         value={mapName}
                                         onChange={(e) => setMapName(e.target.value)}
+                                        required
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="other-name">Nama Lain </Label>
+                                    <Label htmlFor="other-name">Nama Lain <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="other-name"
                                         placeholder="Contoh: Mt. Merapi"
                                         value={otherName}
                                         onChange={(e) => setOtherName(e.target.value)}
+                                        required
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="language-origin">Asal Bahasa </Label>
+                                    <Label htmlFor="language-origin">Asal Bahasa <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="language-origin"
                                         placeholder="Contoh: Jawa"
                                         value={languageOrigin}
                                         onChange={(e) => setLanguageOrigin(e.target.value)}
+                                        required
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="name-meaning">Arti Nama </Label>
+                                    <Label htmlFor="name-meaning">Arti Nama <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="name-meaning"
                                         placeholder="Contoh: Gunung berapi"
                                         value={nameMeaning}
                                         onChange={(e) => setNameMeaning(e.target.value)}
+                                        required
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="name-history">Sejarah Nama </Label>
+                                    <Label htmlFor="name-history">Sejarah Nama <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="name-history"
                                         placeholder="Contoh: Digunakan sejak abad ke-15"
                                         value={nameHistory}
                                         onChange={(e) => setNameHistory(e.target.value)}
+                                        required
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="pronounciation">Pelafalan </Label>
+                                    <Label htmlFor="pronounciation">Pelafalan <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="pronounciation"
                                         placeholder="Contoh: Gu-nung Me-ra-pi"
                                         value={pronounciation}
                                         onChange={(e) => setPronounciation(e.target.value)}
+                                        required
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="spelling">Ejaan </Label>
+                                    <Label htmlFor="spelling">Ejaan <span className="text-red-500">*</span></Label>
                                     <Input
                                         id="spelling"
                                         placeholder="Contoh: Gunung Merapi"
                                         value={spelling}
                                         onChange={(e) => setSpelling(e.target.value)}
+                                        required
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Elemen </Label>
+                                    <Label>Elemen <span className="text-red-500">*</span></Label>
                                     <Popover open={openElementCombobox} onOpenChange={setOpenElementCombobox}>
                                         <PopoverTrigger asChild>
                                             <Button
@@ -1080,7 +1145,7 @@ const Page = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Kabupaten/Kota </Label>
+                                    <Label>Kabupaten/Kota <span className="text-red-500">*</span></Label>
                                     <Select value={regencyCode} onValueChange={setRegencyCode} disabled={loadingRegencies || !provinceCode}>
                                         <SelectTrigger>
                                             {loadingRegencies ? (
@@ -1103,7 +1168,7 @@ const Page = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Kecamatan </Label>
+                                    <Label>Kecamatan <span className="text-red-500">*</span></Label>
                                     <Select value={districtCode} onValueChange={setDistrictCode} disabled={loadingDistricts || !regencyCode}>
                                         <SelectTrigger>
                                             {loadingDistricts ? (
@@ -1126,8 +1191,8 @@ const Page = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>Kelurahan/Desa </Label>
-                                    <Select value={villageCode} onValueChange={setVillageCode} disabled={loadingVillages || !districtCode}>
+                                    <Label>Desa/Kelurahan <span className="text-red-500">*</span></Label>
+                                    <Select required value={villageCode} onValueChange={setVillageCode} disabled={loadingVillages || !districtCode}>
                                         <SelectTrigger>
                                             {loadingVillages ? (
                                                 <div className="flex items-center gap-2">
@@ -1160,7 +1225,7 @@ const Page = () => {
 
                                 {/* Photo Upload */}
                                 <div className="space-y-2">
-                                    <Label>Foto (Maksimal 5MB)</Label>
+                                    <Label>Foto Pendukung (Maksimal 5MB)</Label>
                                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                                         <input
                                             type="file"

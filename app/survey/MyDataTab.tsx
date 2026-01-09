@@ -11,6 +11,23 @@ import { ChevronLeft, ChevronRight, Map, Search, SlidersVertical } from "lucide-
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 
+// Custom debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value)
+        }, delay)
+
+        return () => {
+            clearTimeout(handler)
+        }
+    }, [value, delay])
+
+    return debouncedValue
+}
+
 type ApiResponse = {
     data: StandardToponim[]
     pagination: {
@@ -41,7 +58,8 @@ const MyDataTab: React.FC = () => {
     const [loading, setLoading] = useState(false)
     const apiHandler = useApiHandlerWithPagination<StandardToponim>({ setLoading, shouldHandleError: true })
     const [data, setData] = useState<Record<string, unknown>[]>([])
-    const [searchString, setSearchString] = useState<string>()
+    const [searchString, setSearchString] = useState<string>('')
+    const debouncedSearch = useDebounce(searchString, 500)
     const [limit, setLimit] = useState(5)
     const [showCols, setShowCols] = useState<Option[]>(options)
     const [page, setPage] = useState(1)
@@ -54,7 +72,8 @@ const MyDataTab: React.FC = () => {
     }
 
     const refresh = useCallback(() => {
-        apiHandler('GET', `/survey/toponyms?page=${page}&per_page=${limit}`)
+        const searchParam = debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ''
+        apiHandler('GET', `/survey/toponyms?page=${page}&per_page=${limit}${searchParam}`)
             .then(r => {
                 if (!r?.data || !Array.isArray(r.data)) return
                 const mapped = r.data.map(item => ({
@@ -72,7 +91,7 @@ const MyDataTab: React.FC = () => {
                     setTotalPages(r.pagination.last_page)
                 }
             })
-    }, [apiHandler, page, limit])
+    }, [apiHandler, page, limit, debouncedSearch])
 
     useEffect(refresh, [refresh])
 
@@ -145,22 +164,77 @@ const MyDataTab: React.FC = () => {
                             >
                                 <ChevronLeft />
                             </Button>
-                            {pages.map((p) => (
-                                <Button
-                                    key={p}
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => onPageChange(p)}
-                                    className={cn(
-                                        "text-sm transition-all",
-                                        page === p
-                                            ? "font-bold text-black"
-                                            : "font-normal text-muted-foreground"
-                                    )}
-                                >
-                                    {p}
-                                </Button>
-                            ))}
+
+                            {/* Smart Pagination Logic */}
+                            {(() => {
+                                const pageNumbers: (number | string)[] = []
+                                const showEllipsisStart = page > 3
+                                const showEllipsisEnd = page < totalPages - 2
+
+                                // Always show first page
+                                pageNumbers.push(1)
+
+                                // Show ellipsis or pages before current
+                                if (showEllipsisStart) {
+                                    pageNumbers.push('...')
+                                    // Show 2 pages before current
+                                    if (page - 1 > 1) pageNumbers.push(page - 1)
+                                } else {
+                                    // Show all pages from 2 to current-1
+                                    for (let i = 2; i < page; i++) {
+                                        pageNumbers.push(i)
+                                    }
+                                }
+
+                                // Show current page (if not first or last)
+                                if (page !== 1 && page !== totalPages) {
+                                    pageNumbers.push(page)
+                                }
+
+                                // Show ellipsis or pages after current
+                                if (showEllipsisEnd) {
+                                    // Show 2 pages after current
+                                    if (page + 1 < totalPages) pageNumbers.push(page + 1)
+                                    pageNumbers.push('...')
+                                } else {
+                                    // Show all pages from current+1 to totalPages-1
+                                    for (let i = page + 1; i < totalPages; i++) {
+                                        pageNumbers.push(i)
+                                    }
+                                }
+
+                                // Always show last page (if more than 1 page)
+                                if (totalPages > 1) {
+                                    pageNumbers.push(totalPages)
+                                }
+
+                                return pageNumbers.map((p, idx) => {
+                                    if (p === '...') {
+                                        return (
+                                            <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground">
+                                                ...
+                                            </span>
+                                        )
+                                    }
+                                    return (
+                                        <Button
+                                            key={p}
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => onPageChange(p as number)}
+                                            className={cn(
+                                                "text-sm transition-all",
+                                                page === p
+                                                    ? "font-bold text-black"
+                                                    : "font-normal text-muted-foreground"
+                                            )}
+                                        >
+                                            {p}
+                                        </Button>
+                                    )
+                                })
+                            })()}
+
                             <Button
                                 size="icon-sm"
                                 disabled={page === totalPages}

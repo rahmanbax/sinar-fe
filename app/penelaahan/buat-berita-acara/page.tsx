@@ -141,28 +141,6 @@ const Page = () => {
                     </div>
 
                     <div className="space-y-6">
-                        {/* Upload Kop Surat */}
-                        <div className="space-y-2">
-                            <Label>Unggah Kop Surat</Label>
-                            <div className="relative">
-                                <Input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleFileUpload}
-                                    className="hidden"
-                                    id="kop-surat"
-                                />
-                                <label
-                                    htmlFor="kop-surat"
-                                    className="flex items-center justify-between w-full border rounded-md p-3 cursor-pointer hover:bg-gray-50"
-                                >
-                                    <span className="text-gray-500">
-                                        {kopSurat ? kopSurat.name : 'Unggah Kop Surat'}
-                                    </span>
-                                    <Upload size={20} className="text-gray-400" />
-                                </label>
-                            </div>
-                        </div>
 
                         {/* Nomor Berita Acara */}
                         <div className="space-y-2">

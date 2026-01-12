@@ -24,16 +24,18 @@ import StatisticTab from "./StatisticTab";
 import MyDataTab from "./MyDataTab";
 import MyTeamTab from "./MyTeamTab";
 import DataDeliveryTab from "./DataDeliveryTab";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Page = () => {
+    const { user } = useAuth()
     const [fullTab, setFulltab] = useState(false)
     const navbarRef = useRef<HTMLDivElement>(null);
     const [navbarHeight, setNavbarHeight] = useState(0);
     const tabs = [
-        { key: 'statistic', label: 'Statistik', component: <StatisticTab/> },
-        { key: 'my-data', label: 'Data Saya', component: <MyDataTab/> },
-        { key: 'data-delivery', label: 'Penyampaian Data', component: <DataDeliveryTab/> },
-        { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab/> }
+        { key: 'statistic', label: 'Statistik', component: <StatisticTab /> },
+        { key: 'my-data', label: 'Data Saya', component: <MyDataTab /> },
+        { key: 'data-delivery', label: 'Penyampaian Data', component: <DataDeliveryTab /> },
+        { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab /> }
     ]
 
     useEffect(() => {
@@ -65,12 +67,12 @@ const Page = () => {
                         </Avatar>
                         <div className="flex flex-col gap-1">
                             <h3 className="uppercase font-bold text-xl inline-flex gap-2">
-                                Username
+                                {user?.name || 'Username'}
                                 <Link href="/profile">
                                     <PiPencilSimpleLineDuotone size={18} className="mt-1" />
                                 </Link>
                             </h3>
-                            <h5 className="font-medium text-md">Role</h5>
+                            <h5 className="font-medium text-md capitalize">{user?.role || 'Role'}</h5>
                             <h5 className="font-medium text-md">City</h5>
                         </div>
                     </div>

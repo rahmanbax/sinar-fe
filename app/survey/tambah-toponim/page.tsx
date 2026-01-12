@@ -745,64 +745,12 @@ const Page = () => {
     }, [])
 
     // Submit toponym
-    const handleSubmit = async () => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+
         const geometry = getGeometry()
         if (!geometry) {
             alert('Silakan gambar lokasi titik terlebih dahulu')
-            return
-        }
-
-        // Validate all required fields
-        if (!localName) {
-            alert('Silakan isi Nama Lokal')
-            return
-        }
-        if (!mapName) {
-            alert('Silakan isi Nama di Peta')
-            return
-        }
-        if (!otherName) {
-            alert('Silakan isi Nama Lain')
-            return
-        }
-        if (!languageOrigin) {
-            alert('Silakan isi Asal Bahasa')
-            return
-        }
-        if (!nameMeaning) {
-            alert('Silakan isi Arti Nama')
-            return
-        }
-        if (!nameHistory) {
-            alert('Silakan isi Sejarah Nama')
-            return
-        }
-        if (!pronounciation) {
-            alert('Silakan isi Pelafalan')
-            return
-        }
-        if (!spelling) {
-            alert('Silakan isi Ejaan')
-            return
-        }
-        if (!elementCode) {
-            alert('Silakan pilih Elemen')
-            return
-        }
-        if (!provinceCode) {
-            alert('Silakan pilih Provinsi')
-            return
-        }
-        if (!regencyCode) {
-            alert('Silakan pilih Kabupaten/Kota')
-            return
-        }
-        if (!districtCode) {
-            alert('Silakan pilih Kecamatan')
-            return
-        }
-        if (!villageCode) {
-            alert('Silakan pilih Desa/Kelurahan')
             return
         }
 
@@ -978,319 +926,326 @@ const Page = () => {
                                 Informasi Toponim
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-4 ml-6 space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="local-name">Nama Lokal <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="local-name"
-                                        placeholder="Contoh: Gunung Merapi"
-                                        value={localName}
-                                        onChange={(e) => setLocalName(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="local-name">Nama Lokal <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="local-name"
+                                            placeholder="Contoh: Gunung Merapi"
+                                            value={localName}
+                                            onChange={(e) => setLocalName(e.target.value)}
+                                            required
+                                        />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="map-name">Nama di Peta <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="map-name"
-                                        placeholder="Contoh: Gunung Merapi"
-                                        value={mapName}
-                                        onChange={(e) => setMapName(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="map-name">Nama di Peta <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="map-name"
+                                            placeholder="Contoh: Gunung Merapi"
+                                            value={mapName}
+                                            onChange={(e) => setMapName(e.target.value)}
+                                            required
+                                        />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="other-name">Nama Lain <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="other-name"
-                                        placeholder="Contoh: Mt. Merapi"
-                                        value={otherName}
-                                        onChange={(e) => setOtherName(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="other-name">Nama Lain <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="other-name"
+                                            placeholder="Contoh: Mt. Merapi"
+                                            value={otherName}
+                                            onChange={(e) => setOtherName(e.target.value)}
+                                            required
+                                        />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="language-origin">Asal Bahasa <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="language-origin"
-                                        placeholder="Contoh: Jawa"
-                                        value={languageOrigin}
-                                        onChange={(e) => setLanguageOrigin(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="language-origin">Asal Bahasa <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="language-origin"
+                                            placeholder="Contoh: Jawa"
+                                            value={languageOrigin}
+                                            onChange={(e) => setLanguageOrigin(e.target.value)}
+                                            required
+                                        />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="name-meaning">Arti Nama <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="name-meaning"
-                                        placeholder="Contoh: Gunung berapi"
-                                        value={nameMeaning}
-                                        onChange={(e) => setNameMeaning(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="name-meaning">Arti Nama <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="name-meaning"
+                                            placeholder="Contoh: Gunung berapi"
+                                            value={nameMeaning}
+                                            onChange={(e) => setNameMeaning(e.target.value)}
+                                            required
+                                        />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="name-history">Sejarah Nama <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="name-history"
-                                        placeholder="Contoh: Digunakan sejak abad ke-15"
-                                        value={nameHistory}
-                                        onChange={(e) => setNameHistory(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="name-history">Sejarah Nama <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="name-history"
+                                            placeholder="Contoh: Digunakan sejak abad ke-15"
+                                            value={nameHistory}
+                                            onChange={(e) => setNameHistory(e.target.value)}
+                                            required
+                                        />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="pronounciation">Pelafalan <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="pronounciation"
-                                        placeholder="Contoh: Gu-nung Me-ra-pi"
-                                        value={pronounciation}
-                                        onChange={(e) => setPronounciation(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="pronounciation">Pelafalan <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="pronounciation"
+                                            placeholder="Contoh: Gu-nung Me-ra-pi"
+                                            value={pronounciation}
+                                            onChange={(e) => setPronounciation(e.target.value)}
+                                            required
+                                        />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="spelling">Ejaan <span className="text-red-500">*</span></Label>
-                                    <Input
-                                        id="spelling"
-                                        placeholder="Contoh: Gunung Merapi"
-                                        value={spelling}
-                                        onChange={(e) => setSpelling(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="spelling">Ejaan <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="spelling"
+                                            placeholder="Contoh: Gunung Merapi"
+                                            value={spelling}
+                                            onChange={(e) => setSpelling(e.target.value)}
+                                            required
+                                        />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label>Elemen <span className="text-red-500">*</span></Label>
-                                    <Popover open={openElementCombobox} onOpenChange={setOpenElementCombobox}>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                role="combobox"
-                                                aria-expanded={openElementCombobox}
-                                                className="w-full justify-between font-normal"
-                                                disabled={loadingElements}
-                                            >
-                                                {loadingElements ? (
+                                    <div className="space-y-2">
+                                        <Label>Elemen <span className="text-red-500">*</span></Label>
+                                        <input type="hidden" value={elementCode} required />
+                                        <Popover open={openElementCombobox} onOpenChange={setOpenElementCombobox}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={openElementCombobox}
+                                                    className="w-full justify-between font-normal"
+                                                    disabled={loadingElements}
+                                                >
+                                                    {loadingElements ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                            <span>Memuat...</span>
+                                                        </div>
+                                                    ) : elementCode ? (
+                                                        elements.find((e) => e.code === elementCode)?.name
+                                                    ) : (
+                                                        "Pilih Elemen"
+                                                    )}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-full p-0" align="start">
+                                                <Command>
+                                                    <CommandInput placeholder="Cari elemen..." />
+                                                    <CommandList>
+                                                        <CommandEmpty>Elemen tidak ditemukan.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {elements.map((element) => (
+                                                                <CommandItem
+                                                                    key={element.id}
+                                                                    value={element.name}
+                                                                    onSelect={() => {
+                                                                        setElementCode(element.code)
+                                                                        setOpenElementCombobox(false)
+                                                                    }}
+                                                                >
+                                                                    <Check
+                                                                        className={cn(
+                                                                            "mr-2 h-4 w-4",
+                                                                            elementCode === element.code ? "opacity-100" : "opacity-0"
+                                                                        )}
+                                                                    />
+                                                                    {element.name}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>Provinsi <span className="text-red-500">*</span></Label>
+                                        <input type="hidden" value={provinceCode} required />
+                                        <Select value={provinceCode} onValueChange={setProvinceCode} disabled={loadingProvinces}>
+                                            <SelectTrigger>
+                                                {loadingProvinces ? (
                                                     <div className="flex items-center gap-2">
                                                         <Loader2 className="h-4 w-4 animate-spin" />
                                                         <span>Memuat...</span>
                                                     </div>
-                                                ) : elementCode ? (
-                                                    elements.find((e) => e.code === elementCode)?.name
                                                 ) : (
-                                                    "Pilih Elemen"
+                                                    <SelectValue placeholder="Pilih Provinsi" />
                                                 )}
-                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-full p-0" align="start">
-                                            <Command>
-                                                <CommandInput placeholder="Cari elemen..." />
-                                                <CommandList>
-                                                    <CommandEmpty>Elemen tidak ditemukan.</CommandEmpty>
-                                                    <CommandGroup>
-                                                        {elements.map((element) => (
-                                                            <CommandItem
-                                                                key={element.id}
-                                                                value={element.name}
-                                                                onSelect={() => {
-                                                                    setElementCode(element.code)
-                                                                    setOpenElementCombobox(false)
-                                                                }}
-                                                            >
-                                                                <Check
-                                                                    className={cn(
-                                                                        "mr-2 h-4 w-4",
-                                                                        elementCode === element.code ? "opacity-100" : "opacity-0"
-                                                                    )}
-                                                                />
-                                                                {element.name}
-                                                            </CommandItem>
-                                                        ))}
-                                                    </CommandGroup>
-                                                </CommandList>
-                                            </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Provinsi <span className="text-red-500">*</span></Label>
-                                    <Select value={provinceCode} onValueChange={setProvinceCode} disabled={loadingProvinces}>
-                                        <SelectTrigger>
-                                            {loadingProvinces ? (
-                                                <div className="flex items-center gap-2">
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                    <span>Memuat...</span>
-                                                </div>
-                                            ) : (
-                                                <SelectValue placeholder="Pilih Provinsi" />
-                                            )}
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {provinces.map((province) => (
-                                                <SelectItem key={province.id} value={province.code}>
-                                                    {province.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Kabupaten/Kota <span className="text-red-500">*</span></Label>
-                                    <Select value={regencyCode} onValueChange={setRegencyCode} disabled={loadingRegencies || !provinceCode}>
-                                        <SelectTrigger>
-                                            {loadingRegencies ? (
-                                                <div className="flex items-center gap-2">
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                    <span>Memuat...</span>
-                                                </div>
-                                            ) : (
-                                                <SelectValue placeholder={provinceCode ? "Pilih Kabupaten/Kota" : "Pilih Provinsi terlebih dahulu"} />
-                                            )}
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {regencies.map((regency) => (
-                                                <SelectItem key={regency.id} value={regency.code}>
-                                                    {regency.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Kecamatan <span className="text-red-500">*</span></Label>
-                                    <Select value={districtCode} onValueChange={setDistrictCode} disabled={loadingDistricts || !regencyCode}>
-                                        <SelectTrigger>
-                                            {loadingDistricts ? (
-                                                <div className="flex items-center gap-2">
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                    <span>Memuat...</span>
-                                                </div>
-                                            ) : (
-                                                <SelectValue placeholder={regencyCode ? "Pilih Kecamatan" : "Pilih Kabupaten/Kota terlebih dahulu"} />
-                                            )}
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {districts.map((district) => (
-                                                <SelectItem key={district.id} value={district.code}>
-                                                    {district.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Desa/Kelurahan <span className="text-red-500">*</span></Label>
-                                    <Select required value={villageCode} onValueChange={setVillageCode} disabled={loadingVillages || !districtCode}>
-                                        <SelectTrigger>
-                                            {loadingVillages ? (
-                                                <div className="flex items-center gap-2">
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                    <span>Memuat...</span>
-                                                </div>
-                                            ) : (
-                                                <SelectValue placeholder={districtCode ? "Pilih Kelurahan/Desa" : "Pilih Kecamatan terlebih dahulu"} />
-                                            )}
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {villages.map((village) => (
-                                                <SelectItem key={village.id} value={village.code}>
-                                                    {village.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="survey-at">Tanggal Survei </Label>
-                                    <Input
-                                        id="survey-at"
-                                        type="date"
-                                        value={surveyAt}
-                                        onChange={(e) => setSurveyAt(e.target.value)}
-                                    />
-                                </div>
-
-                                {/* Photo Upload */}
-                                <div className="space-y-2">
-                                    <Label>Foto Pendukung (Maksimal 5MB)</Label>
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            multiple
-                                            onChange={handlePhotoSelect}
-                                            className="hidden"
-                                            id="photo-upload"
-                                        />
-                                        <label
-                                            htmlFor="photo-upload"
-                                            className="flex flex-col items-center justify-center cursor-pointer"
-                                        >
-                                            <Camera className="h-8 w-8 text-gray-400 mb-2" />
-                                            <span className="text-sm text-gray-500">Klik untuk pilih foto</span>
-                                            <span className="text-xs text-gray-400 mt-1">Pilih beberapa foto sekaligus</span>
-                                        </label>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {provinces.map((province) => (
+                                                    <SelectItem key={province.id} value={province.code}>
+                                                        {province.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
 
-                                    {/* Selected photos grid */}
-                                    {selectedFiles.length > 0 && (
-                                        <div className="grid grid-cols-3 gap-2 mt-3">
-                                            {selectedFiles.map((photo, index) => (
-                                                <div key={index} className="relative group">
-                                                    <img
-                                                        src={photo.previewUrl}
-                                                        alt={photo.file.name}
-                                                        className="w-full h-24 object-cover rounded-lg"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemovePhoto(index)}
-                                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
-                                                    <p className="text-xs text-gray-500 truncate mt-1">{photo.file.name}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                                    <div className="space-y-2">
+                                        <Label>Kabupaten/Kota <span className="text-red-500">*</span></Label>
+                                        <input type="hidden" value={regencyCode} required />
+                                        <Select value={regencyCode} onValueChange={setRegencyCode} disabled={loadingRegencies || !provinceCode}>
+                                            <SelectTrigger>
+                                                {loadingRegencies ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                        <span>Memuat...</span>
+                                                    </div>
+                                                ) : (
+                                                    <SelectValue placeholder={provinceCode ? "Pilih Kabupaten/Kota" : "Pilih Provinsi terlebih dahulu"} />
+                                                )}
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {regencies.map((regency) => (
+                                                    <SelectItem key={regency.id} value={regency.code}>
+                                                        {regency.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
 
-                                {/* Submit Buttons */}
-                                <div className="flex gap-4 pt-4">
-                                    <Link href="/survey" className="flex-1">
-                                        <Button variant="outline" className="w-full">
-                                            Batal
-                                        </Button>
-                                    </Link>
-                                    <Button
-                                        className="flex-1 bg-green-600 hover:bg-green-700"
-                                        onClick={handleSubmit}
-                                        disabled={isSubmitting}
-                                    >
-                                        {isSubmitting ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                                Menyimpan...
-                                            </>
-                                        ) : (
-                                            'Simpan Toponim'
+                                    <div className="space-y-2">
+                                        <Label>Kecamatan <span className="text-red-500">*</span></Label>
+                                        <input type="hidden" value={districtCode} required />
+                                        <Select value={districtCode} onValueChange={setDistrictCode} disabled={loadingDistricts || !regencyCode}>
+                                            <SelectTrigger>
+                                                {loadingDistricts ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                        <span>Memuat...</span>
+                                                    </div>
+                                                ) : (
+                                                    <SelectValue placeholder={regencyCode ? "Pilih Kecamatan" : "Pilih Kabupaten/Kota terlebih dahulu"} />
+                                                )}
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {districts.map((district) => (
+                                                    <SelectItem key={district.id} value={district.code}>
+                                                        {district.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>Desa/Kelurahan <span className="text-red-500">*</span></Label>
+                                        <input type="hidden" value={villageCode} required />
+                                        <Select required value={villageCode} onValueChange={setVillageCode} disabled={loadingVillages || !districtCode}>
+                                            <SelectTrigger>
+                                                {loadingVillages ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                        <span>Memuat...</span>
+                                                    </div>
+                                                ) : (
+                                                    <SelectValue placeholder={districtCode ? "Pilih Kelurahan/Desa" : "Pilih Kecamatan terlebih dahulu"} />
+                                                )}
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {villages.map((village) => (
+                                                    <SelectItem key={village.id} value={village.code}>
+                                                        {village.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="survey-at">Tanggal Survei </Label>
+                                        <Input
+                                            id="survey-at"
+                                            type="date"
+                                            value={surveyAt}
+                                            onChange={(e) => setSurveyAt(e.target.value)}
+                                        />
+                                    </div>
+
+                                    {/* Photo Upload */}
+                                    <div className="space-y-2">
+                                        <Label>Foto Pendukung (Maksimal 5MB)</Label>
+                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={handlePhotoSelect}
+                                                className="hidden"
+                                                id="photo-upload"
+                                            />
+                                            <label
+                                                htmlFor="photo-upload"
+                                                className="flex flex-col items-center justify-center cursor-pointer"
+                                            >
+                                                <Camera className="h-8 w-8 text-gray-400 mb-2" />
+                                                <span className="text-sm text-gray-500">Klik untuk pilih foto</span>
+                                                <span className="text-xs text-gray-400 mt-1">Pilih beberapa foto sekaligus</span>
+                                            </label>
+                                        </div>
+
+                                        {/* Selected photos grid */}
+                                        {selectedFiles.length > 0 && (
+                                            <div className="grid grid-cols-3 gap-2 mt-3">
+                                                {selectedFiles.map((photo, index) => (
+                                                    <div key={index} className="relative group">
+                                                        <img
+                                                            src={photo.previewUrl}
+                                                            alt={photo.file.name}
+                                                            className="w-full h-24 object-cover rounded-lg"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemovePhoto(index)}
+                                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                        <p className="text-xs text-gray-500 truncate mt-1">{photo.file.name}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         )}
-                                    </Button>
-                                </div>
+                                    </div>
+
+                                    {/* Submit Buttons */}
+                                    <div className="flex gap-4 pt-4">
+                                        <Link href="/survey" className="flex-1">
+                                            <Button type="button" variant="outline" className="w-full">
+                                                Batal
+                                            </Button>
+                                        </Link>
+                                        <Button
+                                            type="submit"
+                                            className="flex-1 bg-green-600 hover:bg-green-700"
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                    Menyimpan...
+                                                </>
+                                            ) : (
+                                                'Simpan Toponim'
+                                            )}
+                                        </Button>
+                                    </div>
+                                </form>
                             </CollapsibleContent>
                         </Collapsible>
                     </div>

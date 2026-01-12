@@ -32,6 +32,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Layers, Minus, Plus } from "lucide-react";
 import { Marker } from '@vis.gl/react-maplibre'
 import { IoLocationSharp } from 'react-icons/io5'
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 interface PreviewMapProps {
     coordinates?: [number, number] | null
@@ -239,8 +244,34 @@ const DetailToponimContent = () => {
     const [editedData, setEditedData] = useState<Partial<ToponymDetail>>({})
     const [saving, setSaving] = useState(false)
 
+    // Elements dropdown state
+    const [elements, setElements] = useState<Array<{ id: number, code: string, name: string }>>([])
+    const [loadingElements, setLoadingElements] = useState(false)
+    const [openElementCombobox, setOpenElementCombobox] = useState(false)
+
+    // Photo modal state
+    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null)
+    const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false)
+
     const handleOpenCollapsible = (key: keyof typeof openCollapsible) => {
         setOpenCollapsible({ ...openCollapsible, [key]: !openCollapsible[key] })
+    }
+
+    const handlePhotoClick = (index: number) => {
+        setSelectedPhotoIndex(index)
+        setIsPhotoModalOpen(true)
+    }
+
+    const handleNextPhoto = () => {
+        if (selectedPhotoIndex !== null && toponymData?.photos) {
+            setSelectedPhotoIndex((selectedPhotoIndex + 1) % toponymData.photos.length)
+        }
+    }
+
+    const handlePrevPhoto = () => {
+        if (selectedPhotoIndex !== null && toponymData?.photos) {
+            setSelectedPhotoIndex((selectedPhotoIndex - 1 + toponymData.photos.length) % toponymData.photos.length)
+        }
     }
 
     const handleEditClick = () => {
@@ -260,6 +291,28 @@ const DetailToponimContent = () => {
                 survey_at: toponymData.survey_at
             })
             setIsEditMode(true)
+            // Fetch elements when entering edit mode
+            fetchElements()
+        }
+    }
+
+    const fetchElements = async () => {
+        setLoadingElements(true)
+        try {
+            const token = localStorage.getItem('token')
+            const response = await fetch(`${API_URL}/classification/elements`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            const result = await response.json()
+            if (!result.error && result.data) {
+                setElements(result.data)
+            }
+        } catch (error) {
+            console.error('Failed to fetch elements:', error)
+        } finally {
+            setLoadingElements(false)
         }
     }
 
@@ -539,17 +592,6 @@ const DetailToponimContent = () => {
                                                             />
                                                         </Field>
                                                     </FieldGroup>
-                                                    <Field>
-                                                        <FieldLabel htmlFor="element_type">
-                                                            Jenis Unsur Rupabumi
-                                                        </FieldLabel>
-                                                        <Input
-                                                            id="element_type"
-                                                            name="element_type"
-                                                            value={toponymData.element?.name || '-'}
-                                                            readOnly
-                                                        />
-                                                    </Field>
                                                     <FieldGroup className="flex flex-row">
                                                         <Field>
                                                             <FieldLabel htmlFor="decimal_coordinate">
@@ -574,6 +616,74 @@ const DetailToponimContent = () => {
                                                             />
                                                         </Field>
                                                     </FieldGroup>
+                                                    <Field>
+                                                        <FieldLabel htmlFor="element_type">
+                                                            Elemen
+                                                        </FieldLabel>
+                                                        {isEditMode ? (
+                                                            <Popover open={openElementCombobox} onOpenChange={setOpenElementCombobox}>
+                                                                <PopoverTrigger asChild>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        role="combobox"
+                                                                        aria-expanded={openElementCombobox}
+                                                                        className="w-full justify-between font-normal"
+                                                                        disabled={loadingElements}
+                                                                    >
+                                                                        {loadingElements ? (
+                                                                            <span>Memuat...</span>
+                                                                        ) : (editedData.element?.code || toponymData.element?.code) ? (
+                                                                            elements.find((e) => e.code === (editedData.element?.code || toponymData.element?.code))?.name
+                                                                        ) : (
+                                                                            "Pilih Elemen"
+                                                                        )}
+                                                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                                    </Button>
+                                                                </PopoverTrigger>
+                                                                <PopoverContent className="w-full p-0" align="start">
+                                                                    <Command>
+                                                                        <CommandInput placeholder="Cari elemen..." />
+                                                                        <CommandList>
+                                                                            <CommandEmpty>Elemen tidak ditemukan.</CommandEmpty>
+                                                                            <CommandGroup>
+                                                                                {elements.map((element) => (
+                                                                                    <CommandItem
+                                                                                        key={element.code}
+                                                                                        value={element.name}
+                                                                                        onSelect={() => {
+                                                                                            setEditedData(prev => ({
+                                                                                                ...prev,
+                                                                                                element: {
+                                                                                                    code: element.code,
+                                                                                                    name: element.name
+                                                                                                }
+                                                                                            }))
+                                                                                            setOpenElementCombobox(false)
+                                                                                        }}
+                                                                                    >
+                                                                                        <Check
+                                                                                            className={cn(
+                                                                                                "mr-2 h-4 w-4",
+                                                                                                (editedData.element?.code || toponymData.element?.code) === element.code ? "opacity-100" : "opacity-0"
+                                                                                            )}
+                                                                                        />
+                                                                                        {element.name}
+                                                                                    </CommandItem>
+                                                                                ))}
+                                                                            </CommandGroup>
+                                                                        </CommandList>
+                                                                    </Command>
+                                                                </PopoverContent>
+                                                            </Popover>
+                                                        ) : (
+                                                            <Input
+                                                                id="element_type"
+                                                                name="element_type"
+                                                                value={toponymData.element?.name || '-'}
+                                                                readOnly
+                                                            />
+                                                        )}
+                                                    </Field>
                                                     <Field>
                                                         <FieldLabel htmlFor="name_meaning">
                                                             Arti Nama
@@ -705,12 +815,16 @@ const DetailToponimContent = () => {
                                         <CollapsibleContent className="grid grid-cols-2 gap-x-6 gap-y-8 place-items-center px-6 mt-3">
                                             {toponymData.photos && toponymData.photos.length > 0 ? (
                                                 toponymData.photos.map((photo, index) => (
-                                                    <div key={index} className="w-48 h-32 relative">
+                                                    <div
+                                                        key={index}
+                                                        className="w-48 h-32 relative cursor-pointer hover:scale-103 transition-all ease-in-out"
+                                                        onClick={() => handlePhotoClick(index)}
+                                                    >
                                                         <Image
                                                             src={photo.url}
                                                             alt={photo.filename}
                                                             fill
-                                                            className="object-cover"
+                                                            className="object-cover rounded-lg"
                                                         />
                                                     </div>
                                                 ))
@@ -720,9 +834,60 @@ const DetailToponimContent = () => {
                                         </CollapsibleContent>
                                     </Collapsible>
                                 </div>
+
+                                {/* Photo Modal */}
+                                <Dialog open={isPhotoModalOpen} onOpenChange={setIsPhotoModalOpen}>
+                                    <DialogContent className="max-w-4xl p-0">
+                                        <DialogTitle className="sr-only">Foto</DialogTitle>
+                                        {selectedPhotoIndex !== null && toponymData?.photos && (
+                                            <div className="relative">
+                                                <div className="relative w-full h-[70vh]">
+                                                    <Image
+                                                        src={toponymData.photos[selectedPhotoIndex].url}
+                                                        alt={toponymData.photos[selectedPhotoIndex].filename}
+                                                        fill
+                                                        className="object-contain"
+                                                    />
+                                                </div>
+                                                <div className="p-4 bg-white">
+                                                    <p className="text-sm text-gray-600">
+                                                        {toponymData.photos[selectedPhotoIndex].filename}
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        Foto {selectedPhotoIndex + 1} dari {toponymData.photos.length}
+                                                    </p>
+                                                </div>
+                                                {/* Navigation buttons */}
+                                                {toponymData.photos.length > 1 && (
+                                                    <>
+                                                        <Button
+                                                            size="icon"
+                                                            variant="secondary"
+                                                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white"
+                                                            onClick={handlePrevPhoto}
+                                                        >
+                                                            <ChevronLeft />
+                                                        </Button>
+                                                        <Button
+                                                            size="icon"
+                                                            variant="secondary"
+                                                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                handleNextPhoto()
+                                                            }}
+                                                        >
+                                                            <ChevronLeft className="rotate-180" />
+                                                        </Button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </DialogContent>
+                                </Dialog>
                             </>
                         ) : (
-                            <p className="text-gray-500">Data tidak ditemukan</p>
+                            <p className="text-gray-500">Data tidak ditemukan atau sudah melalui proses penelaahan</p>
                         )}
                     </div>
                     <PreviewMap coordinates={toponymData?.location_point?.coordinates || null} />

@@ -100,6 +100,13 @@ const Pengumuman: React.FC<SearchProps> = ({ search }) => {
     isInitialLoad.current = false
   }, [apiHandler, page, limit, search])
 
+  // Reset page to 1 when search changes
+  useEffect(() => {
+    if (search !== undefined && !isInitialLoad.current) {
+      setPage(1)
+    }
+  }, [search])
+
   useEffect(refresh, [refresh])
 
   return (
@@ -190,6 +197,13 @@ const Tanggapan: React.FC<SearchProps> = ({ search }) => {
 
     isInitialLoad.current = false
   }, [apiHandler, page, limit, search])
+
+  // Reset page to 1 when search changes
+  useEffect(() => {
+    if (search !== undefined && !isInitialLoad.current) {
+      setPage(1)
+    }
+  }, [search])
 
   useEffect(refresh, [refresh])
 

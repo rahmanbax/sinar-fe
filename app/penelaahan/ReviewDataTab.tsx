@@ -203,6 +203,16 @@ const ReviewDataTab: React.FC = () => {
     const [allToponymsData, setAllToponymsData] = useState<any[]>([])
     const [loadingAllToponyms, setLoadingAllToponyms] = useState(false)
 
+    // Pagination state for individual transaction toponyms
+    const [toponymPage, setToponymPage] = useState(1)
+    const [toponymTotalPages, setToponymTotalPages] = useState(1)
+    const [toponymLimit, setToponymLimit] = useState(10)
+
+    // Pagination state for all toponyms
+    const [allToponymsPage, setAllToponymsPage] = useState(1)
+    const [allToponymsTotalPages, setAllToponymsTotalPages] = useState(1)
+    const [allToponymsLimit, setAllToponymsLimit] = useState(10)
+
     // Fetch data from API
     useEffect(() => {
         const fetchReviewData = async () => {
@@ -250,7 +260,7 @@ const ReviewDataTab: React.FC = () => {
             setLoadingAllToponyms(true)
             try {
                 const token = localStorage.getItem('token')
-                const response = await fetch(`${API_URL}/verifications/transaction/toponyms`, {
+                const response = await fetch(`${API_URL}/verifications/transaction/toponyms?page=${allToponymsPage}&per_page=${allToponymsLimit}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -282,6 +292,11 @@ const ReviewDataTab: React.FC = () => {
                         }
                     })
                     setAllToponymsData(transformedData)
+
+                    // Set pagination info
+                    if (result.pagination) {
+                        setAllToponymsTotalPages(result.pagination.last_page)
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch all toponyms:', error)
@@ -291,7 +306,7 @@ const ReviewDataTab: React.FC = () => {
         }
 
         fetchAllToponyms()
-    }, [viewMode])
+    }, [viewMode, allToponymsPage, allToponymsLimit])
 
     // Fetch toponym data when transaction is selected
     useEffect(() => {
@@ -301,7 +316,7 @@ const ReviewDataTab: React.FC = () => {
             setLoadingToponyms(true)
             try {
                 const token = localStorage.getItem('token')
-                const response = await fetch(`${API_URL}/verifications/transaction/${selectedTransactionId}/toponyms`, {
+                const response = await fetch(`${API_URL}/verifications/transaction/${selectedTransactionId}/toponyms?page=${toponymPage}&per_page=${toponymLimit}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -332,6 +347,11 @@ const ReviewDataTab: React.FC = () => {
                         }
                     })
                     setToponymData(transformedData)
+
+                    // Set pagination info
+                    if (result.pagination) {
+                        setToponymTotalPages(result.pagination.last_page)
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch toponym data:', error)
@@ -341,7 +361,7 @@ const ReviewDataTab: React.FC = () => {
         }
 
         fetchToponymData()
-    }, [selectedTransactionId])
+    }, [selectedTransactionId, toponymPage, toponymLimit])
 
     const columns: ColumnConfig = {
         id: { label: 'ID Penelaahan' },
@@ -351,7 +371,6 @@ const ReviewDataTab: React.FC = () => {
         acceptedCnt: { label: 'Jumlah Diterima' },
         rejectedCnt: { label: 'Jumlah Ditolak' },
         status: { label: 'Progres Penelaahan' },
-        actions: { label: 'Aksi' },
     }
 
     // Columns for koordinat view
@@ -388,6 +407,93 @@ const ReviewDataTab: React.FC = () => {
     const handleBackToReview = () => {
         setShowKoordinatTable(false)
         setSelectedTransactionId(null)
+        setToponymPage(1) // Reset pagination when going back
+    }
+
+    // Pagination helper function
+    const renderPagination = (currentPage: number, totalPages: number, onPageChange: (page: number) => void) => {
+        const pageNumbers: (number | string)[] = []
+        const showEllipsisStart = currentPage > 3
+        const showEllipsisEnd = currentPage < totalPages - 2
+
+        // Always show first page
+        pageNumbers.push(1)
+
+        // Show ellipsis or pages before current
+        if (showEllipsisStart) {
+            pageNumbers.push('...')
+            if (currentPage - 1 > 1) pageNumbers.push(currentPage - 1)
+        } else {
+            for (let i = 2; i < currentPage; i++) {
+                pageNumbers.push(i)
+            }
+        }
+
+        // Show current page (if not first or last)
+        if (currentPage !== 1 && currentPage !== totalPages) {
+            pageNumbers.push(currentPage)
+        }
+
+        // Show ellipsis or pages after current
+        if (showEllipsisEnd) {
+            if (currentPage + 1 < totalPages) pageNumbers.push(currentPage + 1)
+            pageNumbers.push('...')
+        } else {
+            for (let i = currentPage + 1; i < totalPages; i++) {
+                pageNumbers.push(i)
+            }
+        }
+
+        // Always show last page (if more than 1 page)
+        if (totalPages > 1) {
+            pageNumbers.push(totalPages)
+        }
+
+        return (
+            <div className="flex items-center justify-center gap-1 p-1">
+                <Button
+                    size="icon-sm"
+                    disabled={currentPage === 1}
+                    variant='ghost'
+                    onClick={() => onPageChange(currentPage - 1)}
+                >
+                    <ChevronLeft />
+                </Button>
+                {pageNumbers.map((p, idx) => {
+                    if (p === '...') {
+                        return (
+                            <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground">
+                                ...
+                            </span>
+                        )
+                    }
+                    return (
+                        <Button
+                            key={p}
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onPageChange(p as number)}
+                            className={cn(
+                                "text-sm transition-all",
+                                currentPage === p
+                                    ? "font-bold text-black"
+                                    : "font-normal text-muted-foreground"
+                            )}
+                        >
+                            {p}
+                        </Button>
+                    )
+                })}
+                <Button
+                    size="icon-sm"
+                    disabled={currentPage === totalPages}
+                    variant='ghost'
+                    onClick={() => onPageChange(currentPage + 1)}
+                >
+                    <ChevronRight />
+                </Button>
+            </div>
+        )
     }
 
     return (
@@ -469,37 +575,78 @@ const ReviewDataTab: React.FC = () => {
                                 <p className="text-gray-500">Memuat data toponim...</p>
                             </div>
                         ) : (
-                            <SinarParameterizedTable
-                                data={toponymData}
-                                columns={koordinatColumns}
-                                showCols={showKoordinatCols}
-                                actHandler={(item) => {
-                                    router.push(`/penelaahan/detail-toponim?transactionId=${selectedTransactionId}&toponymId=${item.idToponim}`)
-                                }}
-                            />
+                            <>
+                                <div className="flex justify-end items-center mb-4 gap-2">
+                                    <Select value={toponymLimit.toString()} onValueChange={(v) => {
+                                        setToponymLimit(parseInt(v))
+                                        setToponymPage(1)
+                                    }}>
+                                        <SelectTrigger className="w-32">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem value="5">5 Baris</SelectItem>
+                                                <SelectItem value="10">10 Baris</SelectItem>
+                                                <SelectItem value="20">20 Baris</SelectItem>
+                                                <SelectItem value="50">50 Baris</SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {renderPagination(toponymPage, toponymTotalPages, setToponymPage)}
+                                </div>
+                                <SinarParameterizedTable
+                                    data={toponymData}
+                                    columns={koordinatColumns}
+                                    showCols={showKoordinatCols}
+                                    actHandler={(item) => {
+                                        router.push(`/penelaahan/detail-toponim?transactionId=${selectedTransactionId}&toponymId=${item.idToponim}`)
+                                    }}
+                                />
+                            </>
                         )}
                     </CardContent>
                 </Card>
             ) : viewMode === 'all-koordinat' ? (
-                <Card className="mt-4">
-                    <CardHeader>
+                <Card className="mt-4 gap-1">
+                    {/* <CardHeader>
                         <CardTitle>Semua Data Toponim</CardTitle>
-                    </CardHeader>
+                    </CardHeader> */}
                     <CardContent className="p-6">
                         {loadingAllToponyms ? (
                             <div className="flex items-center justify-center py-20">
                                 <p className="text-gray-500">Memuat semua data toponim...</p>
                             </div>
                         ) : (
-                            <SinarParameterizedTable
-                                data={allToponymsData}
-                                columns={koordinatColumns}
-                                showCols={showKoordinatCols}
-                                actHandler={(item) => {
-                                    // Navigate to detail without transactionId since this is all toponyms view
-                                    router.push(`/penelaahan/detail-toponim?transactionId=${item.reviewTransaction?.transaction_id || ''}&toponymId=${item.idToponim}`)
-                                }}
-                            />
+                            <>
+                                <div className="flex justify-end items-center mb-4 gap-2">
+                                    <Select value={allToponymsLimit.toString()} onValueChange={(v) => {
+                                        setAllToponymsLimit(parseInt(v))
+                                        setAllToponymsPage(1)
+                                    }}>
+                                        <SelectTrigger className="w-32">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem value="5">5 Baris</SelectItem>
+                                                <SelectItem value="10">10 Baris</SelectItem>
+                                                <SelectItem value="20">20 Baris</SelectItem>
+                                                <SelectItem value="50">50 Baris</SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {renderPagination(allToponymsPage, allToponymsTotalPages, setAllToponymsPage)}
+                                </div>
+                                <SinarParameterizedTable
+                                    data={allToponymsData}
+                                    columns={koordinatColumns}
+                                    showCols={showKoordinatCols}
+                                    actHandler={(item) => {
+                                        router.push(`/penelaahan/detail-toponim?transactionId=${item.reviewTransaction?.transaction_id || ''}&toponymId=${item.idToponim}`)
+                                    }}
+                                />
+                            </>
                         )}
                     </CardContent>
                 </Card>

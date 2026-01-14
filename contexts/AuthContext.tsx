@@ -11,6 +11,7 @@ interface AuthContextType {
   isLoading: boolean
   isLoggingOut: boolean
   login: (email: string, password: string) => Promise<void>
+  register: (name: string, email: string, password: string, passwordConfirmation: string, phone: string) => Promise<void>
   logout: () => void
   hasRole: (role: Role) => boolean
 }
@@ -212,6 +213,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push(redirectPath)
   }
 
+  async function register(
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string,
+    phone: string,
+    orgId: number
+  ) {
+    const res = await fetch(`${API_URL}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        password_confirmation: passwordConfirmation,
+        phone,
+      }),
+    })
+
+    const result = await res.json()
+
+    if (result.error) {
+      throw new Error(result.message || "Registrasi gagal")
+    }
+
+    // Response structure: authorization.token and user in result.data
+    const authToken = result.data?.authorization?.token
+    const userData = result.data?.user
+
+    if (!authToken || !userData) {
+      throw new Error("Invalid response from server")
+    }
+
+    setToken(authToken)
+    setUser(userData)
+    localStorage.setItem("token", authToken)
+    localStorage.setItem("user", JSON.stringify(userData))
+
+    // Schedule token refresh
+    scheduleRefresh(authToken)
+
+    // Redirect berdasarkan role
+    const redirectPath = getRoleDefaultRoute(userData.role as Role)
+    router.push(redirectPath)
+  }
+
   async function logout() {
     setIsLoggingOut(true)
 
@@ -254,6 +302,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isLoggingOut,
     login,
+    register,
     logout,
     hasRole
   }), [user, token, isLoading, isLoggingOut, hasRole])

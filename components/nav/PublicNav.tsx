@@ -68,6 +68,58 @@ const Sidebar: React.FC<React.PropsWithChildren<Sidebar>> = ({ menuItems, setOpe
           )}
 
           <div className="flex flex-col gap-3 mt-4">
+            {/* Role-based menu items */}
+            {user && (
+              <>
+                {(user?.role === 'surveyor' || user?.role === 'contributor') && (
+                  <div>
+                    <Button variant='ghost' className="block w-full text-start" onClick={() => { if ('/survey' === pathname) setOpen(!open) }}>
+                      <Link href="/survey">Menu Surveyor</Link>
+                    </Button>
+                    <Separator className="mt-2" />
+                  </div>
+                )}
+                {user?.role === 'verificator' && (
+                  <div>
+                    <Button variant='ghost' className="block w-full text-start" onClick={() => { if ('/penelaahan' === pathname) setOpen(!open) }}>
+                      <Link href="/penelaahan">Menu Penelaahan</Link>
+                    </Button>
+                    <Separator className="mt-2" />
+                  </div>
+                )}
+                {user?.role === 'big' && (
+                  <div>
+                    <Button variant='ghost' className="block w-full text-start" onClick={() => { if ('/big' === pathname) setOpen(!open) }}>
+                      <Link href="/big">Menu BIG</Link>
+                    </Button>
+                    <Separator className="mt-2" />
+                  </div>
+                )}
+                {user?.role === 'admin' && (
+                  <>
+                    <div>
+                      <Button variant='ghost' className="block w-full text-start" onClick={() => { if ('/survey' === pathname) setOpen(!open) }}>
+                        <Link href="/survey">Menu Surveyor</Link>
+                      </Button>
+                      <Separator className="mt-2" />
+                    </div>
+                    <div>
+                      <Button variant='ghost' className="block w-full text-start" onClick={() => { if ('/penelaahan' === pathname) setOpen(!open) }}>
+                        <Link href="/penelaahan">Menu Penelaahan</Link>
+                      </Button>
+                      <Separator className="mt-2" />
+                    </div>
+                    <div>
+                      <Button variant='ghost' className="block w-full text-start" onClick={() => { if ('/big' === pathname) setOpen(!open) }}>
+                        <Link href="/big">Menu BIG</Link>
+                      </Button>
+                      <Separator className="mt-2" />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
             {menuItems.map((item) => (
               <div key={item.href}>
                 <Button variant='ghost' className="block w-full text-start" onClick={() => { if (item.href === pathname) setOpen(!open) }}>
@@ -178,6 +230,48 @@ const PublicNav: React.FC<React.PropsWithChildren<IPublicNav>> = ({ isMobile, me
                   <MenubarItem disabled>
                     Halo, {user.name}!
                   </MenubarItem>
+                  <MenubarSeparator />
+                  {(user?.role === 'surveyor' || user?.role === 'contributor') && (
+                    <MenubarItem asChild>
+                      <Link href="/survey">
+                        Menu Surveyor
+                      </Link>
+                    </MenubarItem>
+                  )}
+                  {user?.role === 'verificator' && (
+                    <MenubarItem asChild>
+                      <Link href="/penelaahan">
+                        Menu Penelaahan
+                      </Link>
+                    </MenubarItem>
+                  )}
+                  {user?.role === 'big' && (
+                    <MenubarItem asChild>
+                      <Link href="/big">
+                        Menu BIG
+                      </Link>
+                    </MenubarItem>
+                  )}
+                  {user?.role === 'admin' && (
+                    <>
+                      <MenubarItem asChild>
+                        <Link href="/survey">
+                          Menu Surveyor
+                        </Link>
+                      </MenubarItem>
+                      <MenubarItem asChild>
+                        <Link href="/penelaahan">
+                          Menu Penelaahan
+                        </Link>
+                      </MenubarItem>
+                      <MenubarItem asChild>
+                        <Link href="/big">
+                          Menu BIG
+                        </Link>
+                      </MenubarItem>
+                    </>
+                  )}
+                  <MenubarSeparator />
                   <MenubarItem asChild>
                     <Link href="/profile">
                       <CircleUserRound size={16} className="mr-2" /> Ubah Profil

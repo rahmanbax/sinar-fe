@@ -153,7 +153,7 @@ const Page = () => {
                 <div className="w-1/2 p-6 overflow-y-auto bg-gray-100">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                            <Link href="/penelaahan/buat-berita-acara">
+                            <Link href="/penelaahan/cetak-berita-acara">
                                 <Button size='icon-sm' variant="ghost">
                                     <ChevronLeft />
                                 </Button>

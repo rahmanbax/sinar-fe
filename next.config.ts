@@ -16,8 +16,20 @@ const nextConfig: NextConfig = {
   },
   turbopack: {
     resolveAlias: {
-      fs: './empty.ts'
+      fs: './empty.ts',
+      canvas: './empty.ts'
     }
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        canvas: 'commonjs canvas',
+        'html2canvas': 'commonjs html2canvas',
+        'jspdf': 'commonjs jspdf'
+      });
+    }
+    return config;
   },
   typescript: {
     // !! PERINGATAN !!

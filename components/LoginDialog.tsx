@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, Loader2 } from "lucide-react"
+import { X, Loader2, Eye, EyeOff } from "lucide-react"
 import { FaGoogle } from "react-icons/fa6"
 import { Form } from "react-hook-form"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
@@ -112,47 +112,143 @@ const LoginForm: React.FC<IFormMode> = ({ handleChangeMode, onClose }) => {
 }
 
 const RegisterForm: React.FC<IFormMode> = ({ handleChangeMode, onClose }) => {
-    return (
-        <form>
-            <DialogContent className="bg-neutral-50 sm:max-w-[355px] px-2 pt-4" showCloseButton={false}>
-                <DialogHeader className="relative flex items-center justify-center mb-3">
-                    <DialogTitle className="text-2xl text-center">Masuk</DialogTitle>
-                    <DialogClose asChild>
-                        <Button size='icon' variant="ghost" onClick={onClose} className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-inherit hover:border hover:border-accent-foreground">
-                            <X />
-                        </Button>
-                    </DialogClose>
-                </DialogHeader>
-                <div className="px-4 flex flex-col gap-3 justify-center">
-                    <Select>
-                        <SelectTrigger className="w-full rounded-md border border-gray-500">
-                            <SelectValue placeholder="Pilih Jenis Pengguna" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectLabel>Fruits</SelectLabel>
-                                <SelectItem value="apple">Apple</SelectItem>
-                                <SelectItem value="banana">Banana</SelectItem>
-                                <SelectItem value="blueberry">Blueberry</SelectItem>
-                                <SelectItem value="grapes">Grapes</SelectItem>
-                                <SelectItem value="pineapple">Pineapple</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                    <Input placeholder="Email" className="bg-neutral-50" />
-                    <Input placeholder="Nama Pengguna" className="bg-neutral-50" />
-                    <Input placeholder="Nama Organisasi" className="bg-neutral-50" />
-                    <Input placeholder="Nomor Telepon" className="bg-neutral-50" />
-                    <Input placeholder="Kata Sandi" className="bg-neutral-50" />
-                    <Button variant="outline" className="hover:bg-[#CFF7D3] border-2">Daftar</Button>
-                    <div className="flex justify-between mt-1 px-8">
-                        <p className="text-center">Sudah punya akun?</p>
-                        <span className="text-[#1378B7] cursor-pointer" onClick={() => handleChangeMode('login')}>Masuk Disini</span>
-                    </div>
-                </div>
+    const { register } = useAuth()
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const [name, setName] = useState('')
+    const [phone, setPhone] = useState('')
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [passwordConfirmation, setPasswordConfirmation] = useState('')
+    const [error, setError] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
 
-            </DialogContent>
-        </form>
+    const handleRegister = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setError('')
+
+        // Validate password match
+        if (password !== passwordConfirmation) {
+            setError('Password dan konfirmasi password tidak sama')
+            return
+        }
+
+        setIsLoading(true)
+
+        try {
+            // org_id is hardcoded to 1 as per the API example
+            await register(name, email, password, passwordConfirmation, phone)
+            onClose()
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Registrasi gagal')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    return (
+        <DialogContent className="bg-neutral-50 sm:max-w-[355px] px-2 pt-4" showCloseButton={false}>
+            <DialogHeader className="relative flex items-center justify-center mb-3">
+                <DialogTitle className="text-2xl text-center">Daftar Akun</DialogTitle>
+                <DialogClose asChild>
+                    <Button size='icon' variant="ghost" onClick={onClose} className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-inherit hover:border hover:border-accent-foreground">
+                        <X />
+                    </Button>
+                </DialogClose>
+            </DialogHeader>
+            <form onSubmit={handleRegister} className="px-4 flex flex-col gap-3 justify-center">
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
+                        {error}
+                    </div>
+                )}
+                <Input
+                    placeholder="Nama"
+                    className="bg-neutral-50"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                />
+                <Input
+                    placeholder="Nomor Telepon"
+                    className="bg-neutral-50"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                />
+                <Input
+                    placeholder="Email"
+                    className="bg-neutral-50"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+                <div className="relative">
+                    <Input
+                        placeholder="Kata Sandi"
+                        className="bg-neutral-50 pr-10"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                    >
+                        {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-gray-500" />
+                        ) : (
+                            <Eye className="h-4 w-4 text-gray-500" />
+                        )}
+                    </Button>
+                </div>
+                <div className="relative">
+                    <Input
+                        placeholder="Konfirmasi Kata Sandi"
+                        className="bg-neutral-50 pr-10"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={passwordConfirmation}
+                        onChange={(e) => setPasswordConfirmation(e.target.value)}
+                        required
+                    />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                        {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4 text-gray-500" />
+                        ) : (
+                            <Eye className="h-4 w-4 text-gray-500" />
+                        )}
+                    </Button>
+                </div>
+                <Button
+                    type="submit"
+                    className="bg-[#1378B7] hover:bg-blue-400"
+                    disabled={isLoading}
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Memproses...
+                        </>
+                    ) : 'Daftar Akun'}
+                </Button>
+            </form>
+            <div className="flex justify-between mt-1 px-8">
+                <p className="text-center">Sudah punya akun?</p>
+                <span className="text-[#1378B7] cursor-pointer" onClick={() => handleChangeMode('login')}>Masuk Disini</span>
+            </div>
+        </DialogContent>
     )
 }
 

@@ -1,7 +1,7 @@
 "use client"
 import { useState, useRef, useEffect, Suspense } from "react";
 import { PiPencilSimpleLineDuotone } from 'react-icons/pi'
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { API_URL } from "@/lib/config";
 
 import { Button } from "@/components/ui/button";
@@ -227,6 +227,7 @@ interface ToponymDetail {
 
 const DetailToponimContent = () => {
     const searchParams = useSearchParams()
+    const router = useRouter()
     const transactionId = searchParams.get('transactionId')
     const toponymId = searchParams.get('toponymId')
 
@@ -408,8 +409,8 @@ const DetailToponimContent = () => {
 
             if (!result.error) {
                 alert('Toponim berhasil diterima!')
-                // Optionally redirect back to list
-                // window.location.href = '/penelaahan'
+                // redirect back to list
+                router.push('/penelaahan')
             } else {
                 alert('Gagal menerima toponim: ' + result.message)
             }
@@ -440,8 +441,8 @@ const DetailToponimContent = () => {
 
             if (!result.error) {
                 alert('Toponim berhasil ditolak!')
-                // Optionally redirect back to list
-                // window.location.href = '/penelaahan'
+                // router push to penelaahan
+                router.push('/penelaahan')
             } else {
                 alert('Gagal menolak toponim: ' + result.message)
             }

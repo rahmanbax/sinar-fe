@@ -119,6 +119,8 @@ interface IReviewCard {
     acceptedCnt?: number
     rejectedCnt?: number
     reviewEndTs?: Date
+    totalData?: number
+    handledData?: number
 }
 
 const ReviewCard:
@@ -131,8 +133,12 @@ const ReviewCard:
         districtCnt = 0,
         acceptedCnt = 0,
         rejectedCnt = 0,
-        reviewEndTs
+        reviewEndTs,
+        totalData = 0,
+        handledData = 0
     }) => {
+        const isCompleted = totalData > 0 && totalData === handledData
+
         return (
             <Card className="p-4 rounded-none border border-black shadow-none sm:w-full">
                 <CardHeader className="flex justify-between px-0">
@@ -151,7 +157,7 @@ const ReviewCard:
                                 <span className="text-xl">{reviewerCnt}</span> Verifikator
                             </h5>
                             <h5 className="mb-3">
-                                <span className="text-xl">{reviewedCnt}</span> Data yang ditelaah
+                                <span className="text-xl">{totalData}</span> Data yang ditelaah
                             </h5>
                         </div>
                         <div className="text-end">
@@ -165,21 +171,31 @@ const ReviewCard:
                     </div>
                     <div className="flex gap-x-2 justify-center w-full h-30 mb-4">
                         <div className="text-center w-30 h-20">
-                            <DoughnutPerformance data={[acceptedCnt, reviewedCnt - acceptedCnt]} type='accepted' />
+                            <DoughnutPerformance data={[acceptedCnt, totalData - acceptedCnt]} type='accepted' />
                             <h5>{acceptedCnt}</h5>
                             <p>Data Diterima</p>
                         </div>
 
                         <div className="text-center w-30 h-20">
-                            <DoughnutPerformance data={[acceptedCnt, reviewedCnt - rejectedCnt]} type='rejected' />
+                            <DoughnutPerformance data={[acceptedCnt, totalData - rejectedCnt]} type='rejected' />
                             <h5>{rejectedCnt}</h5>
                             <p>Data Ditolak</p>
                         </div>
                     </div>
                     <div className="text-center">
-                        <Progress value={30} className="[&>*]:bg-[#0088FF]" />
+                        <Progress value={handledData / totalData * 100} className="[&>*]:bg-[#0088FF]" />
                         <p>Penelaahan akan berakhir dalam 20 hari lagi</p>
                     </div>
+
+                    {isCompleted && (
+                        <div className="mt-4">
+                            <Link href={`/penelaahan/cetak-berita-acara?transactionId=${id}`}>
+                                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                                    Cetak Berita Acara
+                                </Button>
+                            </Link>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         )
@@ -233,12 +249,13 @@ const ReviewDataTab: React.FC = () => {
                         startDate: null, // Not provided by API
                         endDate: item.due_at,
                         reviewerCnt: item.verificator_count,
-                        reviewedCnt: item.total_data,
                         elementTypeCnt: item.element_count,
                         districtCnt: item.district_count,
                         acceptedCnt: item.accepted_data,
                         rejectedCnt: item.rejected_data,
-                        status: item.status
+                        status: item.status,
+                        totalData: item.total_data,
+                        handledData: item.handled_data
                     }))
                     setReviewData(transformedData)
                 }
@@ -658,11 +675,12 @@ const ReviewDataTab: React.FC = () => {
                             id={item.id}
                             title={item.title}
                             reviewerCnt={item.reviewerCnt}
-                            reviewedCnt={item.reviewedCnt}
                             elementTypeCnt={item.elementTypeCnt}
                             districtCnt={item.districtCnt}
                             acceptedCnt={item.acceptedCnt}
                             rejectedCnt={item.rejectedCnt}
+                            totalData={item.totalData}
+                            handledData={item.handledData}
                         />
                     ))}
                 </div>

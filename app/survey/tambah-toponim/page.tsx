@@ -461,7 +461,8 @@ const Page = () => {
         const files = e.target.files
         if (!files || files.length === 0) return
 
-        const MAX_SIZE = 5 * 1024 * 1024 // 5MB in bytes
+        const sizeInMB = 3
+        const MAX_SIZE = sizeInMB * 1024 * 1024
         const validFiles: { file: File, previewUrl: string }[] = []
         const rejectedFiles: string[] = []
 
@@ -477,7 +478,7 @@ const Page = () => {
         }
 
         if (rejectedFiles.length > 0) {
-            alert(`File berikut melebihi ukuran maksimal 5MB:\n${rejectedFiles.join('\n')}`)
+            alert(`File berikut melebihi ukuran maksimal ${sizeInMB}MB:\n${rejectedFiles.join('\n')}`)
         }
 
         if (validFiles.length > 0) {
@@ -505,7 +506,7 @@ const Page = () => {
             const formData = new FormData()
             formData.append('file', file)
 
-            const res = await fetch(`${API_URL}/upload/image`, {
+            const res = await fetch(`${API_URL}/media/upload/image`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -783,7 +784,7 @@ const Page = () => {
             if (surveyAt) payload.survey_at = surveyAt
             if (uploadedPhotos.length > 0) payload.photos = uploadedPhotos
 
-            const res = await fetch(`${API_URL}/toponyms`, {
+            const res = await fetch(`${API_URL}/survey/toponyms`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1087,7 +1088,7 @@ const Page = () => {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {provinces.map((province) => (
-                                                    <SelectItem key={province.id} value={province.code}>
+                                                    <SelectItem key={province.code} value={province.code}>
                                                         {province.name}
                                                     </SelectItem>
                                                 ))}
@@ -1179,7 +1180,7 @@ const Page = () => {
 
                                     {/* Photo Upload */}
                                     <div className="space-y-2">
-                                        <Label>Foto Pendukung (Maksimal 5MB)</Label>
+                                        <Label>Foto Pendukung (Maksimal 3MB)</Label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                                             <input
                                                 type="file"

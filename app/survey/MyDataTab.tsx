@@ -10,6 +10,7 @@ import { useApiHandlerWithPagination } from "@/utils/apiHandler"
 import { ChevronLeft, ChevronRight, Map, Search, SlidersVertical } from "lucide-react"
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
 // Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -38,16 +39,30 @@ type ApiResponse = {
     }
 }
 
+const getStatusBadge = (status: string) => {
+    const statusStyles: Record<string, { bg: string; text: string }> = {
+        pengajuan: { bg: "bg-gray-100", text: "text-gray-800" },
+        penelaahan: { bg: "bg-yellow-100", text: "text-yellow-800" },
+        baku: { bg: "bg-green-100", text: "text-green-800" },
+    };
+    const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800" };
+    return <span className={`px-3 py-1 rounded-full text-sm font-medium ${style.bg} ${style.text}`}> {status}</span>;
+};
+
 const MyDataTab: React.FC = () => {
+    const router = useRouter()
+
     const columns: ColumnConfig = {
-        id: { label: 'ID' },
-        element_type: { label: 'Jenis Unsur' },
-        generic_name: { label: 'Elemen Generik' },
-        specific_name: { label: 'Elemen Spesifik' },
-        province: { label: 'Provinsi' },
-        regency: { label: 'Kota/Kabupaten' },
-        source: { label: 'Sumber Data' },
-        status: { label: 'Status' }
+        no: { label: "No" },
+        created_at: { label: "Tanggal Dibuat" },
+        survey_at: { label: "Tanggal Survei" },
+        element_type: { label: "Jenis Unsur" },
+        local_name: { label: "Elemen Generik" },
+        map_name: { label: "Elemen Spesifik" },
+        province: { label: "Provinsi" },
+        regency: { label: "Kota/Kabupaten" },
+        source: { label: "Sumber Data" },
+        status: { label: "Status", render: (value: string) => getStatusBadge(value) },
     }
 
     const options: Option[] = Object.keys(columns).map((c) => ({
@@ -76,15 +91,20 @@ const MyDataTab: React.FC = () => {
         apiHandler('GET', `/survey/toponyms?page=${page}&per_page=${limit}${searchParam}`)
             .then(r => {
                 if (!r?.data || !Array.isArray(r.data)) return
-                const mapped = r.data.map(item => ({
+                const mapped = r.data.map((item, index) => ({
+                    no: (page - 1) * limit + (index + 1),
                     id: item.id,
-                    element_type: item.element?.name ?? '-',
-                    generic_name: item.local_name,
-                    specific_name: item.map_name,
-                    province: item.province?.name ?? '-',
-                    regency: item.regency?.name ?? '-',
+                    created_at: item.created_at ? new Date(item.created_at).toLocaleDateString("id-ID") : "-",
+                    survey_at: item.survey_at ? new Date(item.survey_at).toLocaleDateString("id-ID") : "-",
+                    element_type: item.element?.name ?? "-",
+                    generic_element: item.generic_element,
+                    specific_element: item.specific_element,
+                    local_name: item.local_name,
+                    map_name: item.map_name,
+                    province: item.province?.name ?? "-",
+                    regency: item.regency?.name ?? "-",
                     source: item.source,
-                    status: item.status
+                    status: item.status,
                 }))
                 setData(mapped)
                 if (r.pagination) {
@@ -243,7 +263,7 @@ const MyDataTab: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <SinarParameterizedTable data={data} columns={columns} showCols={showCols} loading={loading} />
+                <SinarParameterizedTable data={data} columns={columns} showCols={showCols} loading={loading} actHandler={(item) => router.push(`/survey/edit-toponim?id=${item.id}`)} />
             </CardContent>
         </Card>
     )

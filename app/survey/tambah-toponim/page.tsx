@@ -819,7 +819,7 @@ const Page = () => {
                 {/* Left Side - Form */}
                 <div className="w-2/5 p-6 overflow-y-auto border-r">
                     <div className="flex items-center gap-3 mb-6">
-                        <Link href="/survey">
+                        <Link href="/survey?tab=my-data">
                             <Button size='icon-sm' variant="ghost">
                                 <ChevronLeft />
                             </Button>
@@ -945,7 +945,7 @@ const Page = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="map-name">Elemen Spesifik <span className="text-red-500">*</span></Label>
+                                        <Label htmlFor="map-name">Nama Peta <span className="text-red-500">*</span></Label>
                                         <Input
                                             id="map-name"
                                             placeholder="Contoh: Gunung Merapi"

@@ -56,7 +56,7 @@ const Page = () => {
     const [verifikator, setVerifikator] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    // Statistics data from API
+    // Statistics data (candidates) from API
     const [statisticsData, setStatisticsData] = useState<StatisticsData[]>([])
     const [loadingStatistics, setLoadingStatistics] = useState(true)
 
@@ -65,9 +65,7 @@ const Page = () => {
     const [loadingProvinces, setLoadingProvinces] = useState(true)
     const [openProvinceCombobox, setOpenProvinceCombobox] = useState(false)
 
-    // Element data from API
-    const [elements, setElements] = useState<Element[]>([])
-    const [loadingElements, setLoadingElements] = useState(true)
+    // Popover states
     const [openElementPopover, setOpenElementPopover] = useState(false)
 
     // Fetch data on mount
@@ -91,36 +89,6 @@ const Page = () => {
             }
         }
         fetchStatistics()
-
-        // const fetchProvinces = async () => {
-        //     try {
-        //         const res = await fetch(`${API_URL}/regions?level=PROVINCE&limit=50`)
-        //         const result = await res.json()
-        //         if (!result.error && result.data) {
-        //             setProvinces(result.data)
-        //         }
-        //     } catch (err) {
-        //         console.error('Failed to fetch provinces:', err)
-        //     } finally {
-        //         setLoadingProvinces(false)
-        //     }
-        // }
-        // fetchProvinces()
-
-        const fetchElements = async () => {
-            try {
-                const res = await fetch(`${API_URL}/classification/elements`)
-                const result = await res.json()
-                if (!result.error && result.data) {
-                    setElements(result.data)
-                }
-            } catch (err) {
-                console.error('Failed to fetch elements:', err)
-            } finally {
-                setLoadingElements(false)
-            }
-        }
-        fetchElements()
     }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -158,7 +126,7 @@ const Page = () => {
             alert('Penelaahan berhasil dibuat!')
 
             // Redirect to penelaahan list page
-            router.push('/penelaahan')
+            router.push('/penelaahan?tab=review-data')
 
         } catch (error) {
             console.error('Submit error:', error)
@@ -209,7 +177,7 @@ const Page = () => {
         <ReviewerLayout>
             <div className="pt-20 p-6 mt-6 h-screen">
                 <div className="flex items-center gap-3 mb-6">
-                    <Link href="/penelaahan">
+                    <Link href="/penelaahan?tab=review-data">
                         <Button size='icon-sm' variant="ghost">
                             <ChevronLeft />
                         </Button>
@@ -308,9 +276,9 @@ const Page = () => {
                                             role="combobox"
                                             aria-expanded={openElementPopover}
                                             className="w-full justify-between font-normal"
-                                            disabled={loadingElements}
+                                            disabled={loadingStatistics}
                                         >
-                                            {loadingElements ? (
+                                            {loadingStatistics ? (
                                                 <div className="flex items-center gap-2">
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                     <span>Memuat...</span>
@@ -329,26 +297,26 @@ const Page = () => {
                                             <CommandList>
                                                 <CommandEmpty>Jenis unsur tidak ditemukan.</CommandEmpty>
                                                 <CommandGroup>
-                                                    {elements
+                                                    {statisticsData
                                                         .sort((a, b) => {
-                                                            const aSelected = jenisUnsur.includes(a.code)
-                                                            const bSelected = jenisUnsur.includes(b.code)
+                                                            const aSelected = jenisUnsur.includes(a.element_code)
+                                                            const bSelected = jenisUnsur.includes(b.element_code)
                                                             // Selected items first
                                                             if (aSelected && !bSelected) return -1
                                                             if (!aSelected && bSelected) return 1
                                                             return 0
                                                         })
-                                                        .map((element) => {
-                                                            const isSelected = jenisUnsur.includes(element.code)
+                                                        .map((item) => {
+                                                            const isSelected = jenisUnsur.includes(item.element_code)
                                                             return (
                                                                 <CommandItem
-                                                                    key={element.code}
-                                                                    value={element.name}
+                                                                    key={item.element_code}
+                                                                    value={item.element_name}
                                                                     onSelect={() => {
                                                                         if (isSelected) {
-                                                                            setJenisUnsur(jenisUnsur.filter(code => code !== element.code))
+                                                                            setJenisUnsur(jenisUnsur.filter(code => code !== item.element_code))
                                                                         } else {
-                                                                            setJenisUnsur([...jenisUnsur, element.code])
+                                                                            setJenisUnsur([...jenisUnsur, item.element_code])
                                                                         }
                                                                     }}
                                                                 >
@@ -356,7 +324,7 @@ const Page = () => {
                                                                         checked={isSelected}
                                                                         className="mr-2"
                                                                     />
-                                                                    {element.name}
+                                                                    {item.element_name}
                                                                 </CommandItem>
                                                             )
                                                         })}

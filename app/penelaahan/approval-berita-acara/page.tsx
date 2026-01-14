@@ -42,7 +42,7 @@ const PDFPreview = () => {
 
             {/* Title */}
             <div className="text-center mb-6">
-                <h2 className="font-bold underline">BERITA ACARA</h2>
+                <h2 className="font-bold">BERITA ACARA</h2>
                 <p className="text-[9px]">NOMOR: 24.BPNRR-BIG/SD.02.14/1/2025</p>
                 <p className="font-bold text-[9px]">PENELAAHAN NAMA RUPABUMI TINGKAT PUSAT</p>
                 <p className="text-[9px]">TAHUN 2025</p>

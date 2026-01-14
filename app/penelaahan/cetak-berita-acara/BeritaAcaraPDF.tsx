@@ -19,20 +19,21 @@ const styles = StyleSheet.create({
         gap: 16,
     },
     logo: {
-        width: 88,
-        height: 100,
+        width: 70,
+        height: 80,
     },
     headerTextContainer: {
         flex: 1,
         textAlign: 'center',
     },
     headerTitle: {
-        fontSize: 12,
+        fontSize: 14,
         fontFamily: 'Helvetica-Bold',
     },
     headerSubtitle: {
-        fontSize: 12,
+        fontSize: 14,
         fontFamily: 'Helvetica-Bold',
+        marginBottom: 2,
     },
     headerAddress: {
         fontSize: 10,
@@ -49,11 +50,25 @@ const styles = StyleSheet.create({
     },
     // Content styles
     contentContainer: {
-        marginBottom: 4,
+        marginBottom: 0,
     },
     paragraph: {
         textAlign: 'justify',
         marginBottom: 8,
+        fontSize: 10,
+    },
+    listItem: {
+        flexDirection: 'row',
+        marginBottom: 8,
+    },
+    listItemLabel: {
+        width: 20,
+        fontFamily: 'Helvetica-Bold',
+        fontSize: 10,
+    },
+    listItemContent: {
+        flex: 1,
+        textAlign: 'justify',
         fontSize: 10,
     },
     boldText: {
@@ -62,7 +77,7 @@ const styles = StyleSheet.create({
     // Table styles
     table: {
         marginTop: 0,
-        width: '100%',
+        marginLeft: 20, // Align with listItemContent
     },
     tableRow: {
         flexDirection: 'row',
@@ -86,12 +101,15 @@ const styles = StyleSheet.create({
     tableCellWilayah: {
         width: '28%',
         textAlign: 'left',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
     },
     tableCellDataAwal: {
         width: '16%',
     },
     tableCellDitelaah: {
-        width: '24%',
+        width: '26%',
     },
     tableCellDiterima: {
         width: '13%',
@@ -194,24 +212,36 @@ const BeritaAcaraPDF = ({
                 {/* Content */}
                 <View style={styles.contentContainer}>
                     {/* Section I */}
-                    <Text style={styles.paragraph}>
-                        <Text style={styles.boldText}>I.</Text> Pada hari Senin sampai dengan Jumat, tanggal Dua Puluh sampai dengan Dua Puluh Empat bulan Januari tahun Dua Ribu Dua Puluh Lima, telah dilaksanakan kegiatan Penelaahan Nama Rupabumi Tingkat Pusat di Cibinong.
-                    </Text>
+                    <View style={styles.listItem}>
+                        <Text style={styles.listItemLabel}>I.</Text>
+                        <Text style={styles.listItemContent}>
+                            Pada hari Senin sampai dengan Jumat, tanggal Dua Puluh sampai dengan Dua Puluh Empat bulan Januari tahun Dua Ribu Dua Puluh Lima, telah dilaksanakan kegiatan Penelaahan Nama Rupabumi Tingkat Pusat di Cibinong.
+                        </Text>
+                    </View>
 
                     {/* Section II */}
-                    <Text style={styles.paragraph}>
-                        <Text style={styles.boldText}>II.</Text> Acara secara resmi dibuka oleh {namaPembukaAcara || 'Nama Pembuka Acara'} selaku {jabatanPembukaAcara || 'Jabatan Pembuka Acara'}, Badan Informasi Geospasial (BIG). Acara dihadiri oleh perwakilan dari Badan Informasi Geospasial{instansiTerlibat ? ' dan ' + instansiTerlibat : ''}.
-                    </Text>
+                    <View style={styles.listItem}>
+                        <Text style={styles.listItemLabel}>II.</Text>
+                        <Text style={styles.listItemContent}>
+                            Acara secara resmi dibuka oleh {namaPembukaAcara || 'Nama Pembuka Acara'} selaku {jabatanPembukaAcara || 'Jabatan Pembuka Acara'}, Badan Informasi Geospasial (BIG). Acara dihadiri oleh perwakilan dari Badan Informasi Geospasial{instansiTerlibat ? ' dan ' + instansiTerlibat : ''}.
+                        </Text>
+                    </View>
 
                     {/* Section III */}
-                    <Text style={styles.paragraph}>
-                        <Text style={styles.boldText}>III.</Text> Pembahasan dilakukan terhadap {handledData || '...'} dari {totalData || '...'} data nama rupabumi {elements.length > 0 ? `unsur ${elementText}` : 'semua unsur'} yang sudah mencapai status penelaahan Pusat, yang merupakan bagian dari data Tim Kerja Penyelenggaraan Nama Rupabumi Tingkat Pusat pada tanggal 15 Januari 2025.
-                    </Text>
+                    <View style={styles.listItem}>
+                        <Text style={styles.listItemLabel}>III.</Text>
+                        <Text style={styles.listItemContent}>
+                            Pembahasan dilakukan terhadap {handledData || '...'} dari {totalData || '...'} data nama rupabumi {elements.length > 0 ? `unsur ${elementText}` : 'semua unsur'} yang sudah mencapai status penelaahan Pusat, yang merupakan bagian dari data Tim Kerja Penyelenggaraan Nama Rupabumi Tingkat Pusat pada tanggal 15 Januari 2025.
+                        </Text>
+                    </View>
 
                     {/* Section IV */}
-                    <Text style={styles.paragraph}>
-                        <Text style={styles.boldText}>IV.</Text> Data yang telah ditelaah adalah sebagai berikut:
-                    </Text>
+                    <View style={styles.listItem}>
+                        <Text style={styles.listItemLabel}>IV.</Text>
+                        <Text style={styles.listItemContent}>
+                            Data yang telah ditelaah adalah sebagai berikut:
+                        </Text>
+                    </View>
                 </View>
 
                 {/* Table */}

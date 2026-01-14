@@ -322,7 +322,7 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
                                 latitude={point[1]}
                                 anchor="bottom"
                             >
-                                <IoLocationSharp className='text-3xl text-blue-600 drop-shadow-lg opacity-70' />
+                                <IoLocationSharp className='text-3xl text-blue-600 drop-shadow-lg opacity-90' />
                             </Marker>
                         ))}
                     </>
@@ -532,6 +532,11 @@ const Page = () => {
     const [elements, setElements] = useState<Element[]>([])
     const [loadingElements, setLoadingElements] = useState(true)
     const [openElementCombobox, setOpenElementCombobox] = useState(false)
+    const [openProvincePopover, setOpenProvincePopover] = useState(false)
+    const [openRegencyPopover, setOpenRegencyPopover] = useState(false)
+    const [openDistrictPopover, setOpenDistrictPopover] = useState(false)
+    const [openVillagePopover, setOpenVillagePopover] = useState(false)
+
 
     // Fetch provinces and elements on mount
     useEffect(() => {
@@ -659,21 +664,21 @@ const Page = () => {
             const feature = savedGeometry.features[0]
             const geom = feature.geometry as { type: string, coordinates: number[] | number[][] }
 
-            // API expects [lat, lng] format (non-standard), so we need to reverse coordinates
+            // API expects standard GeoJSON [lng, lat]
             if (geom.type === 'Point') {
                 const coords = geom.coordinates as number[]
                 return {
                     type: 'Point',
-                    coordinates: [coords[1], coords[0]] // Reverse from [lng, lat] to [lat, lng]
+                    coordinates: [coords[0], coords[1]] // [lng, lat]
                 }
             }
             return geom
         }
         if (drawnPoints.length > 0) {
-            // drawnPoints are in [lng, lat] format from map, reverse to [lat, lng] for API
+            // drawnPoints are in [lng, lat] format from map
             return {
                 type: 'Point',
-                coordinates: [drawnPoints[0][1], drawnPoints[0][0]] // Reverse to [lat, lng]
+                coordinates: [drawnPoints[0][0], drawnPoints[0][1]] // [lng, lat]
             }
         }
         return null
@@ -812,7 +817,7 @@ const Page = () => {
         <SurveyorLayout>
             <div className="flex h-full pt-20">
                 {/* Left Side - Form */}
-                <div className="w-1/2 p-6 overflow-y-auto border-r">
+                <div className="w-2/5 p-6 overflow-y-auto border-r">
                     <div className="flex items-center gap-3 mb-6">
                         <Link href="/survey">
                             <Button size='icon-sm' variant="ghost">
@@ -822,7 +827,7 @@ const Page = () => {
                         <h1 className="text-xl font-bold">Tambah Data Toponim</h1>
                     </div>
 
-                    <div className="space-y-4 max-w-lg">
+                    <div className="space-y-4">
                         {/* Penggambaran Spasial/Geometri */}
                         <Collapsible open={openSpasial} onOpenChange={setOpenSpasial}>
                             <CollapsibleTrigger className="flex items-center gap-2 w-full text-left font-semibold text-lg">
@@ -833,10 +838,10 @@ const Page = () => {
                                 {!isEditingDraft ? (
                                     <Button
                                         variant="outline"
-                                        className="w-full border-blue-500 text-blue-600 hover:bg-blue-50"
+                                        className="w-full border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-600"
                                         onClick={() => setIsEditingDraft(true)}
                                     >
-                                        Edit Lokasi di Peta
+                                        {savedGeometry ? 'Edit Lokasi di Peta' : 'Tambah Lokasi di Peta'}
                                     </Button>
                                 ) : (
                                     <>
@@ -883,14 +888,14 @@ const Page = () => {
 
                                         {/* Display coordinates */}
                                         {(drawnPoints.length > 0 || savedGeometry) && (
-                                            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                                            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                                                 <Label className="text-sm font-medium mb-2 block">Koordinat Titik</Label>
                                                 {drawnPoints.length > 0 && (
                                                     <div className="space-y-1 text-sm">
                                                         <p className="text-gray-500 text-xs mb-1">Titik yang sedang digambar:</p>
                                                         {drawnPoints.map((point, idx) => (
-                                                            <p key={idx} className="font-mono text-blue-600">
-                                                                {point[1].toFixed(6)}, {point[0].toFixed(6)}
+                                                            <p key={idx} className="font-mono text-blue-600 font-bold">
+                                                                Lng: {point[0].toFixed(6)}, Lat:{point[1].toFixed(6)}
                                                             </p>
                                                         ))}
                                                     </div>
@@ -908,8 +913,8 @@ const Page = () => {
                                             if (feature.geometry.type === 'Point') {
                                                 const coords = (feature.geometry as Point).coordinates
                                                 return (
-                                                    <p key={idx} className="font-mono text-green-600 text-sm">
-                                                        Lat: {coords[1].toFixed(6)}, Lng: {coords[0].toFixed(6)}
+                                                    <p key={idx} className="font-mono text-green-600 font-bold text-sm">
+                                                        Lng: {coords[0].toFixed(6)}, Lat: {coords[1].toFixed(6)}
                                                     </p>
                                                 )
                                             }
@@ -940,7 +945,7 @@ const Page = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="map-name">Nama di Peta <span className="text-red-500">*</span></Label>
+                                        <Label htmlFor="map-name">Elemen Spesifik <span className="text-red-500">*</span></Label>
                                         <Input
                                             id="map-name"
                                             placeholder="Contoh: Gunung Merapi"
@@ -1049,7 +1054,7 @@ const Page = () => {
                                                         <CommandGroup>
                                                             {elements.map((element) => (
                                                                 <CommandItem
-                                                                    key={element.id}
+                                                                    key={element.code}
                                                                     value={element.name}
                                                                     onSelect={() => {
                                                                         setElementCode(element.code)
@@ -1075,98 +1080,227 @@ const Page = () => {
                                     <div className="space-y-2">
                                         <Label>Provinsi <span className="text-red-500">*</span></Label>
                                         <input type="hidden" value={provinceCode} required />
-                                        <Select value={provinceCode} onValueChange={setProvinceCode} disabled={loadingProvinces}>
-                                            <SelectTrigger>
-                                                {loadingProvinces ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                        <span>Memuat...</span>
-                                                    </div>
-                                                ) : (
-                                                    <SelectValue placeholder="Pilih Provinsi" />
-                                                )}
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {provinces.map((province) => (
-                                                    <SelectItem key={province.code} value={province.code}>
-                                                        {province.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover open={openProvincePopover} onOpenChange={setOpenProvincePopover}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={openProvincePopover}
+                                                    className="w-full justify-between font-normal"
+                                                    disabled={loadingProvinces}
+                                                >
+                                                    {loadingProvinces ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                            <span>Memuat...</span>
+                                                        </div>
+                                                    ) : provinceCode ? (
+                                                        provinces.find((p) => p.code === provinceCode)?.name
+                                                    ) : (
+                                                        "Pilih Provinsi"
+                                                    )}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-full p-0" align="start">
+                                                <Command>
+                                                    <CommandInput placeholder="Cari provinsi..." />
+                                                    <CommandList>
+                                                        <CommandEmpty>Provinsi tidak ditemukan.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {provinces.map((province) => (
+                                                                <CommandItem
+                                                                    key={province.code}
+                                                                    value={province.name}
+                                                                    onSelect={() => {
+                                                                        setProvinceCode(province.code)
+                                                                        setOpenProvincePopover(false)
+                                                                    }}
+                                                                >
+                                                                    <Check
+                                                                        className={cn(
+                                                                            "mr-2 h-4 w-4",
+                                                                            provinceCode === province.code ? "opacity-100" : "opacity-0"
+                                                                        )}
+                                                                    />
+                                                                    {province.name}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label>Kabupaten/Kota <span className="text-red-500">*</span></Label>
                                         <input type="hidden" value={regencyCode} required />
-                                        <Select value={regencyCode} onValueChange={setRegencyCode} disabled={loadingRegencies || !provinceCode}>
-                                            <SelectTrigger>
-                                                {loadingRegencies ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                        <span>Memuat...</span>
-                                                    </div>
-                                                ) : (
-                                                    <SelectValue placeholder={provinceCode ? "Pilih Kabupaten/Kota" : "Pilih Provinsi terlebih dahulu"} />
-                                                )}
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {regencies.map((regency) => (
-                                                    <SelectItem key={regency.id} value={regency.code}>
-                                                        {regency.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover open={openRegencyPopover} onOpenChange={setOpenRegencyPopover}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={openRegencyPopover}
+                                                    className="w-full justify-between font-normal"
+                                                    disabled={loadingRegencies || !provinceCode}
+                                                >
+                                                    {loadingRegencies ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                            <span>Memuat...</span>
+                                                        </div>
+                                                    ) : regencyCode ? (
+                                                        regencies.find((r) => r.code === regencyCode)?.name
+                                                    ) : (
+                                                        provinceCode ? "Pilih Kabupaten/Kota" : "Pilih Provinsi terlebih dahulu"
+                                                    )}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-full p-0" align="start">
+                                                <Command>
+                                                    <CommandInput placeholder="Cari kabupaten/kota..." />
+                                                    <CommandList>
+                                                        <CommandEmpty>Kabupaten/Kota tidak ditemukan.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {regencies.map((regency) => (
+                                                                <CommandItem
+                                                                    key={regency.code}
+                                                                    value={regency.name}
+                                                                    onSelect={() => {
+                                                                        setRegencyCode(regency.code)
+                                                                        setOpenRegencyPopover(false)
+                                                                    }}
+                                                                >
+                                                                    <Check
+                                                                        className={cn(
+                                                                            "mr-2 h-4 w-4",
+                                                                            regencyCode === regency.code ? "opacity-100" : "opacity-0"
+                                                                        )}
+                                                                    />
+                                                                    {regency.name}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label>Kecamatan <span className="text-red-500">*</span></Label>
                                         <input type="hidden" value={districtCode} required />
-                                        <Select value={districtCode} onValueChange={setDistrictCode} disabled={loadingDistricts || !regencyCode}>
-                                            <SelectTrigger>
-                                                {loadingDistricts ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                        <span>Memuat...</span>
-                                                    </div>
-                                                ) : (
-                                                    <SelectValue placeholder={regencyCode ? "Pilih Kecamatan" : "Pilih Kabupaten/Kota terlebih dahulu"} />
-                                                )}
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {districts.map((district) => (
-                                                    <SelectItem key={district.id} value={district.code}>
-                                                        {district.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover open={openDistrictPopover} onOpenChange={setOpenDistrictPopover}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={openDistrictPopover}
+                                                    className="w-full justify-between font-normal"
+                                                    disabled={loadingDistricts || !regencyCode}
+                                                >
+                                                    {loadingDistricts ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                            <span>Memuat...</span>
+                                                        </div>
+                                                    ) : districtCode ? (
+                                                        districts.find((d) => d.code === districtCode)?.name
+                                                    ) : (
+                                                        regencyCode ? "Pilih Kecamatan" : "Pilih Kabupaten/Kota terlebih dahulu"
+                                                    )}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-full p-0" align="start">
+                                                <Command>
+                                                    <CommandInput placeholder="Cari kecamatan..." />
+                                                    <CommandList>
+                                                        <CommandEmpty>Kecamatan tidak ditemukan.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {districts.map((district) => (
+                                                                <CommandItem
+                                                                    key={district.code}
+                                                                    value={district.name}
+                                                                    onSelect={() => {
+                                                                        setDistrictCode(district.code)
+                                                                        setOpenDistrictPopover(false)
+                                                                    }}
+                                                                >
+                                                                    <Check
+                                                                        className={cn(
+                                                                            "mr-2 h-4 w-4",
+                                                                            districtCode === district.code ? "opacity-100" : "opacity-0"
+                                                                        )}
+                                                                    />
+                                                                    {district.name}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label>Desa/Kelurahan <span className="text-red-500">*</span></Label>
                                         <input type="hidden" value={villageCode} required />
-                                        <Select required value={villageCode} onValueChange={setVillageCode} disabled={loadingVillages || !districtCode}>
-                                            <SelectTrigger>
-                                                {loadingVillages ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                        <span>Memuat...</span>
-                                                    </div>
-                                                ) : (
-                                                    <SelectValue placeholder={districtCode ? "Pilih Kelurahan/Desa" : "Pilih Kecamatan terlebih dahulu"} />
-                                                )}
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {villages.map((village) => (
-                                                    <SelectItem key={village.id} value={village.code}>
-                                                        {village.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover open={openVillagePopover} onOpenChange={setOpenVillagePopover}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={openVillagePopover}
+                                                    className="w-full justify-between font-normal"
+                                                    disabled={loadingVillages || !districtCode}
+                                                >
+                                                    {loadingVillages ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                            <span>Memuat...</span>
+                                                        </div>
+                                                    ) : villageCode ? (
+                                                        villages.find((v) => v.code === villageCode)?.name
+                                                    ) : (
+                                                        districtCode ? "Pilih Kelurahan/Desa" : "Pilih Kecamatan terlebih dahulu"
+                                                    )}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-full p-0" align="start">
+                                                <Command>
+                                                    <CommandInput placeholder="Cari desa/kelurahan..." />
+                                                    <CommandList>
+                                                        <CommandEmpty>Desa/Kelurahan tidak ditemukan.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {villages.map((village) => (
+                                                                <CommandItem
+                                                                    key={village.code}
+                                                                    value={village.name}
+                                                                    onSelect={() => {
+                                                                        setVillageCode(village.code)
+                                                                        setOpenVillagePopover(false)
+                                                                    }}
+                                                                >
+                                                                    <Check
+                                                                        className={cn(
+                                                                            "mr-2 h-4 w-4",
+                                                                            villageCode === village.code ? "opacity-100" : "opacity-0"
+                                                                        )}
+                                                                    />
+                                                                    {village.name}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
+
 
                                     <div className="space-y-2">
                                         <Label htmlFor="survey-at">Tanggal Survei </Label>
@@ -1253,7 +1387,7 @@ const Page = () => {
                 </div>
 
                 {/* Right Side - Map */}
-                <div className="w-1/2">
+                <div className="flex-1">
                     <PreviewMap
                         isEditing={isEditingDraft}
                         geometriType={geometriType}

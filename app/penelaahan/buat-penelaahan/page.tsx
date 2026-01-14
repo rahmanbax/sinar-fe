@@ -207,7 +207,7 @@ const Page = () => {
 
     return (
         <ReviewerLayout>
-            <div className="pt-20 p-6">
+            <div className="pt-20 p-6 mt-6 h-screen">
                 <div className="flex items-center gap-3 mb-6">
                     <Link href="/penelaahan">
                         <Button size='icon-sm' variant="ghost">
@@ -217,7 +217,7 @@ const Page = () => {
                     <h1 className="text-xl font-bold">Buat Penelaahan</h1>
                 </div>
 
-                <Card className="max-w-2xl">
+                <Card className="max-w-1/3">
                     {/* <CardHeader>
                         <CardTitle>Form Penelaahan Baru</CardTitle>
                     </CardHeader> */}

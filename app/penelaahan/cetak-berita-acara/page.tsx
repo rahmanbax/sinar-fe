@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { ChevronDown, ChevronLeft, Upload, Loader2 } from "lucide-react"
+import { ChevronDown, ChevronLeft, Upload, Loader2, X } from "lucide-react"
 import ReviewerLayout from "@/layouts/ReviewerLayout"
 import Link from "next/link"
 import { API_URL } from "@/lib/config"
@@ -18,6 +18,92 @@ const PDFViewer = dynamic(
     () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
     { ssr: false }
 )
+
+const HTMLPreview = ({
+    nomor,
+    nama,
+    jabatan,
+    instansi,
+    tableData,
+    loading,
+    totalData,
+    handledData,
+    elements
+}: {
+    nomor: string
+    nama: string
+    jabatan: string
+    instansi: string
+    tableData: TableRow[]
+    loading: boolean
+    totalData: number
+    handledData: number
+    elements: string[]
+}) => {
+    const elementText = elements.join(', ').replace(/, ([^,]*)$/, ' dan $1');
+    return (
+        <div className="bg-white shadow-2xl mx-auto" style={{ width: '210mm', minHeight: '297mm', padding: '15mm 25mm 30mm 30mm', fontFamily: 'Arial, sans-serif' }}>
+            {/* Header */}
+            <div className="flex items-start gap-4 mb-6 border-b-2 border-black pb-4" style={{ lineHeight: 1.25 }}>
+                <Image src="/logo-wiki.png" alt="logo" width={88} height={100} className="object-contain" />
+                <div className="flex-1 text-center">
+                    <h1 className="font-bold text-lg">BADAN INFORMASI GEOSPASIAL</h1>
+                    <h2 className="font-bold text-lg">( B I G )</h2>
+                    <p className="text-[10pt]">Jalan Raya Bogor KM 46, Kawasan Sains dan Teknologi Dr. (H.C.) Ir. H. Soekarno</p>
+                    <p className="text-[10pt]">Cibinong, Bogor, Jawa Barat 16911</p>
+                    <p className="text-[10pt]">Telepon: (021) 875 2062-2063, Faksimile: (021) 875 2064</p>
+                    <p className="text-[10pt]">Situs Web: http://www.big.go.id, e-mail: info@big.go.id</p>
+                    <p className="text-[10pt]">Koordinat: 6o 29' 27.29" LS. 106o 50' 56.08" BT</p>
+                </div>
+            </div>
+
+            {/* Title */}
+            <div className="text-center mb-6 font-bold" style={{ lineHeight: 1.5 }}>
+                <h2 className="">BERITA ACARA</h2>
+                <p>NOMOR: {nomor?.toUpperCase() || '.......................'}</p>
+                <p>PENELAAHAN NAMA RUPABUMI TINGKAT PUSAT</p>
+                <p>TAHUN 2026</p>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4 text-justify text-[10pt]" style={{ lineHeight: 1.5 }}>
+                <p><span className="font-bold">I.</span> Pada hari Senin sampai dengan Jumat, tanggal Dua Puluh sampai dengan Dua Puluh Empat bulan Januari tahun Dua Ribu Dua Puluh Lima, telah dilaksanakan kegiatan Penelaahan Nama Rupabumi Tingkat Pusat di Cibinong.</p>
+                <p><span className="font-bold">II.</span> Acara secara resmi dibuka oleh {nama || '.......................'} selaku {jabatan || '.......................'}, Badan Informasi Geospasial (BIG). Acara dihadiri oleh perwakilan dari Badan Informasi Geospasial{instansi ? ' dan ' + instansi : ''}.</p>
+                <p><span className="font-bold">III.</span> Pembahasan dilakukan terhadap {handledData || '...'} dari {totalData || '...'} data nama rupabumi {elements.length > 0 ? `unsur ${elementText}` : 'semua unsur'} yang sudah mencapai status penelaahan Pusat, yang merupakan bagian dari data Tim Kerja Penyelenggaraan Nama Rupabumi Tingkat Pusat pada tanggal 15 Januari 2025.</p>
+                <p><span className="font-bold">IV.</span> Data yang telah ditelaah adalah sebagai berikut:</p>
+            </div>
+
+            {/* Table */}
+            <table className="w-full border-collapse border border-black mt-4 text-[9pt]">
+                <thead>
+                    <tr className="bg-gray-200 font-bold">
+                        <th className="border border-black p-1 text-center" rowSpan={2}>No.</th>
+                        <th className="border border-black p-1 text-left" rowSpan={2}>Keterangan Wilayah</th>
+                        <th className="border border-black p-1 text-center" rowSpan={2}>Jumlah Data Awal</th>
+                        <th className="border border-black p-1 text-center" rowSpan={2}>Jumlah Data yang Ditelaah</th>
+                        <th className="border border-black p-1 text-center" colSpan={2}>Hasil Telaah</th>
+                    </tr>
+                    <tr className="bg-gray-200 font-bold">
+                        <th className="border border-black p-1 text-center">Diterima</th>
+                        <th className="border border-black p-1 text-center">Ditolak</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {tableData.map((row) => (
+                        <tr key={row.no}>
+                            <td className="border border-black p-1 text-center">{row.no}</td>
+                            <td className="border border-black p-1">{row.wilayah}</td>
+                            <td className="border border-black p-1 text-center">{row.dataAwal}</td>
+                            <td className="border border-black p-1 text-center">{row.ditelaah}</td>
+                            <td className="border border-black p-1 text-center">{row.diterima}</td>
+                            <td className="border border-black p-1 text-center">{row.ditolak}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    )
+}
 
 // API Response Type
 interface ProvinceData {
@@ -49,6 +135,7 @@ const Page = () => {
     const [namaPembukaAcara, setNamaPembukaAcara] = useState('')
     const [jabatanPembukaAcara, setJabatanPembukaAcara] = useState('')
     const [instansiTerlibat, setInstansiTerlibat] = useState('')
+    const [showFullPreview, setShowFullPreview] = useState(false)
 
     // Debounced states for PDF Preview
     const [debouncedValues, setDebouncedValues] = useState({
@@ -137,16 +224,23 @@ const Page = () => {
                 jabatan: jabatanPembukaAcara,
                 instansi: instansiTerlibat
             })
-        }, 500) // 500ms delay
+        }, 500) // Lower back to 500ms since HTML is fast
 
         return () => clearTimeout(timer)
     }, [nomorBeritaAcara, namaPembukaAcara, jabatanPembukaAcara, instansiTerlibat])
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setKopSurat(e.target.files[0])
-        }
-    }
+    const memoizedPDF = useMemo(() => (
+        <BeritaAcaraPDF
+            nomorBeritaAcara={debouncedValues.nomor}
+            tableData={tableData}
+            namaPembukaAcara={debouncedValues.nama}
+            jabatanPembukaAcara={debouncedValues.jabatan}
+            instansiTerlibat={debouncedValues.instansi}
+            totalData={transactionMeta.total_data}
+            handledData={transactionMeta.handled_data}
+            elements={transactionMeta.elements}
+        />
+    ), [debouncedValues, tableData, transactionMeta])
 
     const handleSubmit = async () => {
         setSubmitting(true)
@@ -171,7 +265,8 @@ const Page = () => {
 
             // Step 2: Upload PDF to /api/media/upload/docs
             const formData = new FormData()
-            formData.append('file', pdfBlob, `berita-acara-${nomorBeritaAcara}.pdf`)
+            const safeNomor = nomorBeritaAcara.replace(/\//g, '-')
+            formData.append('file', pdfBlob, `berita-acara-${safeNomor}.pdf`)
 
             const token = localStorage.getItem('token')
             const uploadResponse = await fetch(`${API_URL}/media/upload/docs`, {
@@ -225,14 +320,14 @@ const Page = () => {
         <ReviewerLayout>
             <div className="flex h-full pt-20">
                 {/* Left Side - Form */}
-                <div className="w-1/2 p-6 overflow-y-auto border-r">
+                <div className="w-2/5 p-6 overflow-y-auto border-r">
                     <div className="flex items-center gap-3 mb-6">
                         <Link href="/penelaahan">
                             <Button size='icon-sm' variant="ghost">
                                 <ChevronLeft />
                             </Button>
                         </Link>
-                        <h1 className="text-xl font-bold">Buat Berita Acara</h1>
+                        <h1 className="text-xl font-bold">Cetak Berita Acara</h1>
                     </div>
 
                     {error && (
@@ -319,39 +414,68 @@ const Page = () => {
                     </div>
                 </div>
 
-                {/* Right Side - PDF Preview */}
-                <div className="w-1/2 bg-gray-100 p-6 overflow-y-auto">
+                {/* Right Side - HTML Preview */}
+                <div className="flex-1 bg-gray-200 p-6 overflow-y-auto">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold">Pratinjau Berita Acara</h2>
+                        <h2 className="text-lg font-semibold">Pratinjau Dokumen</h2>
                         <div className="flex gap-2">
-                            <Button size="icon-sm" variant="ghost">100%</Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-white"
+                                onClick={() => setShowFullPreview(true)}
+                                disabled={loading}
+                            >
+                                <Upload className="w-4 h-4 mr-2" />
+                                Lihat Dokumen PDF yang akan dicetak
+                            </Button>
                         </div>
                     </div>
-                    <div className="mx-auto w-full h-[800px] border rounded-lg overflow-hidden bg-white shadow-xl">
+
+                    <div className="transform scale-[0.65] origin-top">
                         {loading ? (
-                            <div className="flex items-center justify-center h-full">
+                            <div className="flex items-center justify-center h-[800px] bg-white rounded-lg shadow-xl">
                                 <div className="flex flex-col items-center gap-2">
                                     <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                                     <p className="text-gray-500">Memuat pratinjau...</p>
                                 </div>
                             </div>
                         ) : (
-                            <PDFViewer width="100%" height="100%" showToolbar={true} className="border-none">
-                                <BeritaAcaraPDF
-                                    nomorBeritaAcara={debouncedValues.nomor}
-                                    tableData={tableData}
-                                    namaPembukaAcara={debouncedValues.nama}
-                                    jabatanPembukaAcara={debouncedValues.jabatan}
-                                    instansiTerlibat={debouncedValues.instansi}
-                                    totalData={transactionMeta.total_data}
-                                    handledData={transactionMeta.handled_data}
-                                    elements={transactionMeta.elements}
-                                />
-                            </PDFViewer>
+                            <HTMLPreview
+                                nomor={nomorBeritaAcara}
+                                nama={namaPembukaAcara}
+                                jabatan={jabatanPembukaAcara}
+                                instansi={instansiTerlibat}
+                                tableData={tableData}
+                                loading={loading}
+                                totalData={transactionMeta.total_data}
+                                handledData={transactionMeta.handled_data}
+                                elements={transactionMeta.elements}
+                            />
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* Modal for Real PDF Preview */}
+            {showFullPreview && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-8">
+                    <div className="relative w-full h-full max-w-5xl bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col">
+                        <div className="flex items-center justify-between p-4 border-b">
+                            <h3 className="font-bold text-lg">Pratinjau Berita Acara</h3>
+                            <Button variant="ghost" size="sm" onClick={() => setShowFullPreview(false)}>
+                                <X className="w-6 h-6 rotate-180" />
+                                Tutup
+                            </Button>
+                        </div>
+                        <div className="flex-1">
+                            <PDFViewer width="100%" height="100%" className="border-none">
+                                {memoizedPDF}
+                            </PDFViewer>
+                        </div>
+                    </div>
+                </div>
+            )}
         </ReviewerLayout>
     )
 }

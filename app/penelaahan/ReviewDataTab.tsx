@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, CircleUserRound, LayoutGrid, List, MapPin, Plus, Search, SlidersVertical } from "lucide-react"
+import { ChevronLeft, ChevronRight, CircleUserRound, FileText, LayoutGrid, List, MapPin, Plus, Search, SlidersVertical } from "lucide-react"
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -187,15 +187,13 @@ const ReviewCard:
                         <p>Penelaahan akan berakhir dalam 20 hari lagi</p>
                     </div>
 
-                    {isCompleted && (
-                        <div className="mt-4">
-                            <Link href={`/penelaahan/cetak-berita-acara?transactionId=${id}`}>
-                                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                                    Cetak Berita Acara
-                                </Button>
-                            </Link>
-                        </div>
-                    )}
+                    <div className="mt-4">
+                        <Link href={`/penelaahan/cetak-berita-acara?transactionId=${id}`}>
+                            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                                <FileText />Cetak Berita Acara
+                            </Button>
+                        </Link>
+                    </div>
                 </CardContent>
             </Card>
         )
@@ -253,6 +251,7 @@ const ReviewDataTab: React.FC = () => {
                         districtCnt: item.district_count,
                         acceptedCnt: item.accepted_data,
                         rejectedCnt: item.rejected_data,
+                        reviewedCnt: item.total_data,
                         status: item.status,
                         totalData: item.total_data,
                         handledData: item.handled_data
@@ -694,6 +693,9 @@ const ReviewDataTab: React.FC = () => {
                             actHandler={(item) => {
                                 setSelectedTransactionId(item.id)
                                 setShowKoordinatTable(true)
+                            }}
+                            documentHandler={(item) => {
+                                router.push(`/penelaahan/cetak-berita-acara?transactionId=${item.id}`)
                             }}
                         />
                     </CardContent>

@@ -500,7 +500,7 @@ const DetailToponimContent = () => {
         <ReviewerLayout navbarRef={navbarRef}>
             <div className="flex flex-col overflow-hidden grow pt-23 h-full">
                 <div className="flex grow">
-                    <div className="block w-3/4 py-4 px-6 overflow-y-scroll max-h-[83vh]">
+                    <div className="block w-1/2 py-4 px-6 overflow-y-scroll max-h-[83vh]">
                         <Link href="/penelaahan" className="flex items-center gap-3 mb-5">
                             <Button size='icon-sm'><ChevronLeft /></Button>
                             Kembali
@@ -590,30 +590,6 @@ const DetailToponimContent = () => {
                                                                 value={isEditMode ? (editedData.map_name || '') : (toponymData.map_name || '')}
                                                                 onChange={(e) => handleInputChange('map_name', e.target.value)}
                                                                 readOnly={!isEditMode}
-                                                            />
-                                                        </Field>
-                                                    </FieldGroup>
-                                                    <FieldGroup className="flex flex-row">
-                                                        <Field>
-                                                            <FieldLabel htmlFor="decimal_coordinate">
-                                                                Koordinat (Derajat Desimal)
-                                                            </FieldLabel>
-                                                            <Input
-                                                                id="decimal_coordinate"
-                                                                name="decimal_coordinate"
-                                                                value={toponymData.location_point ? `${toponymData.location_point.coordinates[1]}, ${toponymData.location_point.coordinates[0]}` : '-'}
-                                                                readOnly
-                                                            />
-                                                        </Field>
-                                                        <Field>
-                                                            <FieldLabel htmlFor="utm_zone">
-                                                                Zona UTM
-                                                            </FieldLabel>
-                                                            <Input
-                                                                id="utm_zone"
-                                                                name="utm_zone"
-                                                                value={toponymData.utm_zone || ''}
-                                                                readOnly
                                                             />
                                                         </Field>
                                                     </FieldGroup>

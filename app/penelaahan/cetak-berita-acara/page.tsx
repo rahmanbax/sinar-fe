@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -126,7 +126,7 @@ interface TableRow {
 
 
 
-const Page = () => {
+const CetakBeritaAcaraContent = () => {
     const searchParams = useSearchParams()
     const router = useRouter()
     const transactionId = searchParams.get('transactionId')
@@ -477,6 +477,21 @@ const Page = () => {
                 </div>
             )}
         </ReviewerLayout>
+    )
+}
+
+const Page = () => {
+    return (
+        <Suspense fallback={
+            <div className="flex h-screen items-center justify-center bg-gray-50">
+                <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                    <p className="text-gray-500 font-medium">Memuat halaman...</p>
+                </div>
+            </div>
+        }>
+            <CetakBeritaAcaraContent />
+        </Suspense>
     )
 }
 

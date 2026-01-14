@@ -1,7 +1,7 @@
 
 export enum GeometryType {
     POINT = 'POINT',
-    LINE = 'LINE', 
+    LINE = 'LINE',
     POLYGON = 'POLYGON'
 }
 
@@ -67,7 +67,7 @@ export type BoundingBoxToponymItem = {
     lng: string
 }
 
-export type StandardToponim = { 
+export type StandardToponim = {
     id: number
     element_id: number
     utm_zone: string
@@ -81,6 +81,9 @@ export type StandardToponim = {
     name_history?: string | null
     pronunciation?: string | null
     spelling?: string | null
+    survey_at: string | null
+    generic_element: string
+    specific_element: string
     geometry_type: GeometryType
     location_point?: string | null
     location_line?: {

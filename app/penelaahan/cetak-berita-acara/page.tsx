@@ -322,7 +322,7 @@ const CetakBeritaAcaraContent = () => {
                 {/* Left Side - Form */}
                 <div className="w-2/5 p-6 overflow-y-auto border-r">
                     <div className="flex items-center gap-3 mb-6">
-                        <Link href="/penelaahan">
+                        <Link href="/penelaahan?tab=review-data">
                             <Button size='icon-sm' variant="ghost">
                                 <ChevronLeft />
                             </Button>

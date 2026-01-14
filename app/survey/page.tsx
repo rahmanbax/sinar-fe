@@ -1,56 +1,61 @@
 "use client"
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { PiPencilSimpleLineDuotone } from 'react-icons/pi'
 
-import { Button } from "@/components/ui/button";
-import { ChevronsDown, ChevronsUp, CircleUserRound, Database } from "lucide-react";
-import SurveyorLayout from "@/layouts/SurveryorLayout";
-import { Avatar } from "@/components/ui/avatar";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Link from "next/link";
-import { Separator } from "@/components/ui/separator";
-// import * as d3 from 'd3'
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
-import type { ChartData, ChartOptions } from 'chart.js';
-import { Map, type MapRef, type ViewState, } from '@vis.gl/react-maplibre'
-import { big_office_coord, MapStyles } from "@/components/map/Map";
-import { IoLocationOutline } from "react-icons/io5";
-import CalendarHeatmap from 'react-calendar-heatmap';
-import 'react-calendar-heatmap/dist/styles.css';
-import Image from "next/image";
-import StatisticTab from "./StatisticTab";
-import MyDataTab from "./MyDataTab";
-import MyTeamTab from "./MyTeamTab";
-import DataDeliveryTab from "./DataDeliveryTab";
-import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button"
+import { ChevronsDown, ChevronsUp, CircleUserRound, Loader2 } from "lucide-react"
+import SurveyorLayout from "@/layouts/SurveryorLayout"
+import { Avatar } from "@/components/ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from "next/link"
+import 'react-calendar-heatmap/dist/styles.css'
+import StatisticTab from "./StatisticTab"
+import MyDataTab from "./MyDataTab"
+import MyTeamTab from "./MyTeamTab"
+import DataDeliveryTab from "./DataDeliveryTab"
+import { useAuth } from "@/contexts/AuthContext"
 
-const Page = () => {
+const tabs = [
+    { key: 'statistic', label: 'Statistik', component: <StatisticTab /> },
+    { key: 'my-data', label: 'Data Saya', component: <MyDataTab /> },
+    { key: 'data-delivery', label: 'Penyampaian Data', component: <DataDeliveryTab /> },
+    { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab /> }
+]
+
+const SurveyContent = () => {
     const { user } = useAuth()
+    const router = useRouter()
+    const searchParams = useSearchParams()
+
     const [fullTab, setFulltab] = useState(false)
-    const navbarRef = useRef<HTMLDivElement>(null);
-    const [navbarHeight, setNavbarHeight] = useState(0);
-    const tabs = [
-        { key: 'statistic', label: 'Statistik', component: <StatisticTab /> },
-        { key: 'my-data', label: 'Data Saya', component: <MyDataTab /> },
-        { key: 'data-delivery', label: 'Penyampaian Data', component: <DataDeliveryTab /> },
-        { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab /> }
-    ]
+    const navbarRef = useRef<HTMLDivElement>(null)
+    const [navbarHeight, setNavbarHeight] = useState(0)
+
+    // Get active tab from URL, default to 'statistic'
+    const tabFromUrl = searchParams.get('tab')
+    const validTabs = tabs.map(t => t.key)
+    const activeTab = tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'statistic'
+
+    const handleTabChange = (value: string) => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.set('tab', value)
+        // Use replace for smoother experience
+        router.replace(`/survey?${params.toString()}`, { scroll: false })
+    }
 
     useEffect(() => {
-        if (!navbarRef.current) return;
+        if (!navbarRef.current) return
 
-        // Observe height changes of navbar
         const observer = new ResizeObserver(entries => {
             for (const entry of entries) {
-                setNavbarHeight(entry.contentRect.height);
+                setNavbarHeight(entry.contentRect.height)
             }
-        });
+        })
 
-        observer.observe(navbarRef.current);
-        return () => observer.disconnect();
-    }, []);
+        observer.observe(navbarRef.current)
+        return () => observer.disconnect()
+    }, [])
 
     return (
         <SurveyorLayout navbarRef={navbarRef}>
@@ -60,7 +65,6 @@ const Page = () => {
             >
                 {/* --- Profile Section --- */}
                 <div className={`flex flex-col md:flex-row md:justify-between items-center overflow-hidden px-5 md:px-20 md:gap-5 transition-all duration-500 ease-in-out ${fullTab ? 'opacity-0 h-0 py-0' : 'opacity-100 h-auto pb-4 md:py-6'}`}>
-
                     <div className="flex items-center gap-6">
                         <Avatar className="w-28 h-28 md:w-36 md:h-36">
                             <CircleUserRound size="max" />
@@ -84,7 +88,8 @@ const Page = () => {
                 {/* --- Tabs Section --- */}
                 <div className={`flex flex-col grow transition-all duration-500 ${fullTab ? 'h-full' : 'h-1/2 overflow-hidden'}`}>
                     <Tabs
-                        defaultValue="statistic"
+                        value={activeTab}
+                        onValueChange={handleTabChange}
                         className={`flex flex-col grow w-full overflow-y-hidden gap-0 ${fullTab ? 'bg-muted' : 'bg-white'}`}
                     >
                         <TabsList
@@ -132,7 +137,22 @@ const Page = () => {
                 </div>
             </div>
         </SurveyorLayout>
-    );
+    )
+}
+
+const Page = () => {
+    return (
+        <Suspense fallback={
+            <div className="flex h-screen items-center justify-center bg-gray-50">
+                <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                    <p className="text-gray-500 font-medium">Memuat halaman...</p>
+                </div>
+            </div>
+        }>
+            <SurveyContent />
+        </Suspense>
+    )
 }
 
 export default Page

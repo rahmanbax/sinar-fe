@@ -410,7 +410,7 @@ const DetailToponimContent = () => {
             if (!result.error) {
                 alert('Toponim berhasil diterima!')
                 // redirect back to list
-                router.push('/penelaahan')
+                router.push('/penelaahan?tab=review-data&view=table')
             } else {
                 alert('Gagal menerima toponim: ' + result.message)
             }
@@ -442,7 +442,7 @@ const DetailToponimContent = () => {
             if (!result.error) {
                 alert('Toponim berhasil ditolak!')
                 // router push to penelaahan
-                router.push('/penelaahan')
+                router.push('/penelaahan?tab=review-data&view=table')
             } else {
                 alert('Gagal menolak toponim: ' + result.message)
             }
@@ -501,7 +501,7 @@ const DetailToponimContent = () => {
             <div className="flex flex-col overflow-hidden grow pt-23 h-full">
                 <div className="flex grow">
                     <div className="block w-1/2 py-4 px-6 overflow-y-scroll max-h-[83vh]">
-                        <Link href="/penelaahan" className="flex items-center gap-3 mb-5">
+                        <Link href="/penelaahan?tab=review-data&view=table" className="flex items-center gap-3 mb-5">
                             <Button size='icon-sm'><ChevronLeft /></Button>
                             Kembali
                         </Link>

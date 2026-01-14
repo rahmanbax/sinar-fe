@@ -46,6 +46,7 @@ interface ToponymData {
   other_name: string
   name_meaning: string | null
   language_origin: string
+  created_at: string
   review_transaction_data: {
     transaction_id: string
     toponym_id: string
@@ -338,6 +339,7 @@ const ReviewDataTab: React.FC = () => {
 
             return {
               no: (allToponymsPage - 1) * allToponymsLimit + index + 1,
+              tanggalDibuat: item.created_at ? dayjs(item.created_at).format('DD/MM/YYYY') : '-',
               idToponim: item.id,
               jenisUnsur: item.element?.name || '-',
               namaRupabumi: item.map_name,
@@ -407,6 +409,7 @@ const ReviewDataTab: React.FC = () => {
 
             return {
               no: (toponymPage - 1) * toponymLimit + index + 1,
+              tanggalDibuat: item.created_at ? dayjs(item.created_at).format('DD/MM/YYYY') : '-',
               idToponim: item.id,
               jenisUnsur: item.element?.name || '-',
               namaRupabumi: item.map_name,
@@ -447,6 +450,7 @@ const ReviewDataTab: React.FC = () => {
   // Columns for koordinat view
   const koordinatColumns: ColumnConfig = {
     no: { label: 'No.' },
+    tanggalDibuat: { label: 'Tanggal Diajukan' },
     jenisUnsur: { label: 'Jenis Unsur' },
     namaRupabumi: { label: 'Nama Rupabumi' },
     namaLain: { label: 'Nama Lain' },

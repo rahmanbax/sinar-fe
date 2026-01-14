@@ -4,7 +4,7 @@
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "./ui/table"
 import { Button } from "./ui/button"
 import { Skeleton } from "./ui/skeleton"
-import { ChevronRight, ChevronLeft, Search } from "lucide-react"
+import { ChevronRight, ChevronLeft, Search, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 import dayjs from 'dayjs'
 
@@ -25,6 +25,7 @@ interface ISinarParameterizedTable<T extends Record<string, any>> {
     /** Optional custom render function for each row */
     renderRow?: (item: T) => React.ReactNode
     actHandler?: (item: T) => void
+    documentHandler?: (item: T) => void
 }
 
 const SinarParameterizedTable = <T extends Record<string, any>>({
@@ -33,7 +34,8 @@ const SinarParameterizedTable = <T extends Record<string, any>>({
     columns,
     showCols,
     renderRow,
-    actHandler
+    actHandler,
+    documentHandler
 }: ISinarParameterizedTable<T>) => {
 
     const showedColumns = showCols ? Object.fromEntries(Object.entries(columns).filter(([key]) => showCols.some(o => o.value === key))) : columns
@@ -47,7 +49,7 @@ const SinarParameterizedTable = <T extends Record<string, any>>({
                             {showedColumns[col].label}
                         </TableHead>
                     ))}
-                    {actHandler && <TableHead className="pb-3">Aksi</TableHead>}
+                    {(actHandler || documentHandler) && <TableHead className="pb-3">Aksi</TableHead>}
                 </TableRow>
             </TableHeader>
 
@@ -70,14 +72,26 @@ const SinarParameterizedTable = <T extends Record<string, any>>({
                                         {showedColumns[col].render ? showedColumns[col].render(d[col]) : d[col]}
                                     </TableCell>
                                 ))}
-                            {actHandler &&
+                            {(actHandler || documentHandler) &&
                                 <TableCell className="pb-3">
-                                    <button onClick={() => actHandler(data[i])} className="group flex items-center justify-center rounded-full p-1 bg-transparent hover:bg-gray-200 transition">
-                                        <Search
-                                            size={20}
-                                            className="text-gray-700 transition-all duration-300 group-hover:text-sky-500 group-hover:scale-125 group-hover:drop-shadow-lg"
-                                        />
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        {actHandler && (
+                                            <button onClick={() => actHandler(data[i])} className="group flex items-center justify-center rounded-full p-1 bg-transparent hover:bg-gray-200 transition">
+                                                <Search
+                                                    size={20}
+                                                    className="text-gray-700 transition-all duration-300 group-hover:text-sky-500 group-hover:scale-125 group-hover:drop-shadow-lg"
+                                                />
+                                            </button>
+                                        )}
+                                        {documentHandler && (
+                                            <button onClick={() => documentHandler(data[i])} className="group flex items-center justify-center rounded-full p-1 bg-transparent hover:bg-gray-200 transition">
+                                                <FileText
+                                                    size={20}
+                                                    className="text-gray-700 transition-all duration-300 group-hover:text-blue-600 group-hover:scale-125 group-hover:drop-shadow-lg"
+                                                />
+                                            </button>
+                                        )}
+                                    </div>
                                 </TableCell>
                             }
 

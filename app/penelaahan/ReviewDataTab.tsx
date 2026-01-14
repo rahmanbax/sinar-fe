@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, CircleUserRound, LayoutGrid, List, MapPin, Plus, Search, SlidersVertical } from "lucide-react"
+import { ChevronLeft, ChevronRight, CircleUserRound, FileText, LayoutGrid, List, MapPin, Plus, Search, SlidersVertical } from "lucide-react"
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -119,6 +119,8 @@ interface IReviewCard {
     acceptedCnt?: number
     rejectedCnt?: number
     reviewEndTs?: Date
+    totalData?: number
+    handledData?: number
 }
 
 const ReviewCard:
@@ -131,8 +133,12 @@ const ReviewCard:
         districtCnt = 0,
         acceptedCnt = 0,
         rejectedCnt = 0,
-        reviewEndTs
+        reviewEndTs,
+        totalData = 0,
+        handledData = 0
     }) => {
+        const isCompleted = totalData > 0 && totalData === handledData
+
         return (
             <Card className="p-4 rounded-none border border-black shadow-none sm:w-full">
                 <CardHeader className="flex justify-between px-0">
@@ -151,7 +157,7 @@ const ReviewCard:
                                 <span className="text-xl">{reviewerCnt}</span> Verifikator
                             </h5>
                             <h5 className="mb-3">
-                                <span className="text-xl">{reviewedCnt}</span> Data yang ditelaah
+                                <span className="text-xl">{totalData}</span> Data yang ditelaah
                             </h5>
                         </div>
                         <div className="text-end">
@@ -165,20 +171,28 @@ const ReviewCard:
                     </div>
                     <div className="flex gap-x-2 justify-center w-full h-30 mb-4">
                         <div className="text-center w-30 h-20">
-                            <DoughnutPerformance data={[acceptedCnt, reviewedCnt - acceptedCnt]} type='accepted' />
+                            <DoughnutPerformance data={[acceptedCnt, totalData - acceptedCnt]} type='accepted' />
                             <h5>{acceptedCnt}</h5>
                             <p>Data Diterima</p>
                         </div>
 
                         <div className="text-center w-30 h-20">
-                            <DoughnutPerformance data={[acceptedCnt, reviewedCnt - rejectedCnt]} type='rejected' />
+                            <DoughnutPerformance data={[acceptedCnt, totalData - rejectedCnt]} type='rejected' />
                             <h5>{rejectedCnt}</h5>
                             <p>Data Ditolak</p>
                         </div>
                     </div>
                     <div className="text-center">
-                        <Progress value={30} className="[&>*]:bg-[#0088FF]" />
+                        <Progress value={handledData / totalData * 100} className="[&>*]:bg-[#0088FF]" />
                         <p>Penelaahan akan berakhir dalam 20 hari lagi</p>
+                    </div>
+
+                    <div className="mt-4">
+                        <Link href={`/penelaahan/cetak-berita-acara?transactionId=${id}`}>
+                            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                                <FileText />Cetak Berita Acara
+                            </Button>
+                        </Link>
                     </div>
                 </CardContent>
             </Card>
@@ -203,6 +217,16 @@ const ReviewDataTab: React.FC = () => {
     const [allToponymsData, setAllToponymsData] = useState<any[]>([])
     const [loadingAllToponyms, setLoadingAllToponyms] = useState(false)
 
+    // Pagination state for individual transaction toponyms
+    const [toponymPage, setToponymPage] = useState(1)
+    const [toponymTotalPages, setToponymTotalPages] = useState(1)
+    const [toponymLimit, setToponymLimit] = useState(10)
+
+    // Pagination state for all toponyms
+    const [allToponymsPage, setAllToponymsPage] = useState(1)
+    const [allToponymsTotalPages, setAllToponymsTotalPages] = useState(1)
+    const [allToponymsLimit, setAllToponymsLimit] = useState(10)
+
     // Fetch data from API
     useEffect(() => {
         const fetchReviewData = async () => {
@@ -223,12 +247,14 @@ const ReviewDataTab: React.FC = () => {
                         startDate: null, // Not provided by API
                         endDate: item.due_at,
                         reviewerCnt: item.verificator_count,
-                        reviewedCnt: item.total_data,
                         elementTypeCnt: item.element_count,
                         districtCnt: item.district_count,
                         acceptedCnt: item.accepted_data,
                         rejectedCnt: item.rejected_data,
-                        status: item.status
+                        reviewedCnt: item.total_data,
+                        status: item.status,
+                        totalData: item.total_data,
+                        handledData: item.handled_data
                     }))
                     setReviewData(transformedData)
                 }
@@ -250,7 +276,7 @@ const ReviewDataTab: React.FC = () => {
             setLoadingAllToponyms(true)
             try {
                 const token = localStorage.getItem('token')
-                const response = await fetch(`${API_URL}/verifications/transaction/toponyms`, {
+                const response = await fetch(`${API_URL}/verifications/transaction/toponyms?page=${allToponymsPage}&per_page=${allToponymsLimit}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -282,6 +308,11 @@ const ReviewDataTab: React.FC = () => {
                         }
                     })
                     setAllToponymsData(transformedData)
+
+                    // Set pagination info
+                    if (result.pagination) {
+                        setAllToponymsTotalPages(result.pagination.last_page)
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch all toponyms:', error)
@@ -291,7 +322,7 @@ const ReviewDataTab: React.FC = () => {
         }
 
         fetchAllToponyms()
-    }, [viewMode])
+    }, [viewMode, allToponymsPage, allToponymsLimit])
 
     // Fetch toponym data when transaction is selected
     useEffect(() => {
@@ -301,7 +332,7 @@ const ReviewDataTab: React.FC = () => {
             setLoadingToponyms(true)
             try {
                 const token = localStorage.getItem('token')
-                const response = await fetch(`${API_URL}/verifications/transaction/${selectedTransactionId}/toponyms`, {
+                const response = await fetch(`${API_URL}/verifications/transaction/${selectedTransactionId}/toponyms?page=${toponymPage}&per_page=${toponymLimit}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -332,6 +363,11 @@ const ReviewDataTab: React.FC = () => {
                         }
                     })
                     setToponymData(transformedData)
+
+                    // Set pagination info
+                    if (result.pagination) {
+                        setToponymTotalPages(result.pagination.last_page)
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch toponym data:', error)
@@ -341,7 +377,7 @@ const ReviewDataTab: React.FC = () => {
         }
 
         fetchToponymData()
-    }, [selectedTransactionId])
+    }, [selectedTransactionId, toponymPage, toponymLimit])
 
     const columns: ColumnConfig = {
         id: { label: 'ID Penelaahan' },
@@ -351,7 +387,6 @@ const ReviewDataTab: React.FC = () => {
         acceptedCnt: { label: 'Jumlah Diterima' },
         rejectedCnt: { label: 'Jumlah Ditolak' },
         status: { label: 'Progres Penelaahan' },
-        actions: { label: 'Aksi' },
     }
 
     // Columns for koordinat view
@@ -388,6 +423,93 @@ const ReviewDataTab: React.FC = () => {
     const handleBackToReview = () => {
         setShowKoordinatTable(false)
         setSelectedTransactionId(null)
+        setToponymPage(1) // Reset pagination when going back
+    }
+
+    // Pagination helper function
+    const renderPagination = (currentPage: number, totalPages: number, onPageChange: (page: number) => void) => {
+        const pageNumbers: (number | string)[] = []
+        const showEllipsisStart = currentPage > 3
+        const showEllipsisEnd = currentPage < totalPages - 2
+
+        // Always show first page
+        pageNumbers.push(1)
+
+        // Show ellipsis or pages before current
+        if (showEllipsisStart) {
+            pageNumbers.push('...')
+            if (currentPage - 1 > 1) pageNumbers.push(currentPage - 1)
+        } else {
+            for (let i = 2; i < currentPage; i++) {
+                pageNumbers.push(i)
+            }
+        }
+
+        // Show current page (if not first or last)
+        if (currentPage !== 1 && currentPage !== totalPages) {
+            pageNumbers.push(currentPage)
+        }
+
+        // Show ellipsis or pages after current
+        if (showEllipsisEnd) {
+            if (currentPage + 1 < totalPages) pageNumbers.push(currentPage + 1)
+            pageNumbers.push('...')
+        } else {
+            for (let i = currentPage + 1; i < totalPages; i++) {
+                pageNumbers.push(i)
+            }
+        }
+
+        // Always show last page (if more than 1 page)
+        if (totalPages > 1) {
+            pageNumbers.push(totalPages)
+        }
+
+        return (
+            <div className="flex items-center justify-center gap-1 p-1">
+                <Button
+                    size="icon-sm"
+                    disabled={currentPage === 1}
+                    variant='ghost'
+                    onClick={() => onPageChange(currentPage - 1)}
+                >
+                    <ChevronLeft />
+                </Button>
+                {pageNumbers.map((p, idx) => {
+                    if (p === '...') {
+                        return (
+                            <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground">
+                                ...
+                            </span>
+                        )
+                    }
+                    return (
+                        <Button
+                            key={p}
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onPageChange(p as number)}
+                            className={cn(
+                                "text-sm transition-all",
+                                currentPage === p
+                                    ? "font-bold text-black"
+                                    : "font-normal text-muted-foreground"
+                            )}
+                        >
+                            {p}
+                        </Button>
+                    )
+                })}
+                <Button
+                    size="icon-sm"
+                    disabled={currentPage === totalPages}
+                    variant='ghost'
+                    onClick={() => onPageChange(currentPage + 1)}
+                >
+                    <ChevronRight />
+                </Button>
+            </div>
+        )
     }
 
     return (
@@ -469,37 +591,78 @@ const ReviewDataTab: React.FC = () => {
                                 <p className="text-gray-500">Memuat data toponim...</p>
                             </div>
                         ) : (
-                            <SinarParameterizedTable
-                                data={toponymData}
-                                columns={koordinatColumns}
-                                showCols={showKoordinatCols}
-                                actHandler={(item) => {
-                                    router.push(`/penelaahan/detail-toponim?transactionId=${selectedTransactionId}&toponymId=${item.idToponim}`)
-                                }}
-                            />
+                            <>
+                                <div className="flex justify-end items-center mb-4 gap-2">
+                                    <Select value={toponymLimit.toString()} onValueChange={(v) => {
+                                        setToponymLimit(parseInt(v))
+                                        setToponymPage(1)
+                                    }}>
+                                        <SelectTrigger className="w-32">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem value="5">5 Baris</SelectItem>
+                                                <SelectItem value="10">10 Baris</SelectItem>
+                                                <SelectItem value="20">20 Baris</SelectItem>
+                                                <SelectItem value="50">50 Baris</SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {renderPagination(toponymPage, toponymTotalPages, setToponymPage)}
+                                </div>
+                                <SinarParameterizedTable
+                                    data={toponymData}
+                                    columns={koordinatColumns}
+                                    showCols={showKoordinatCols}
+                                    actHandler={(item) => {
+                                        router.push(`/penelaahan/detail-toponim?transactionId=${selectedTransactionId}&toponymId=${item.idToponim}`)
+                                    }}
+                                />
+                            </>
                         )}
                     </CardContent>
                 </Card>
             ) : viewMode === 'all-koordinat' ? (
-                <Card className="mt-4">
-                    <CardHeader>
+                <Card className="mt-4 gap-1">
+                    {/* <CardHeader>
                         <CardTitle>Semua Data Toponim</CardTitle>
-                    </CardHeader>
+                    </CardHeader> */}
                     <CardContent className="p-6">
                         {loadingAllToponyms ? (
                             <div className="flex items-center justify-center py-20">
                                 <p className="text-gray-500">Memuat semua data toponim...</p>
                             </div>
                         ) : (
-                            <SinarParameterizedTable
-                                data={allToponymsData}
-                                columns={koordinatColumns}
-                                showCols={showKoordinatCols}
-                                actHandler={(item) => {
-                                    // Navigate to detail without transactionId since this is all toponyms view
-                                    router.push(`/penelaahan/detail-toponim?transactionId=${item.reviewTransaction?.transaction_id || ''}&toponymId=${item.idToponim}`)
-                                }}
-                            />
+                            <>
+                                <div className="flex justify-end items-center mb-4 gap-2">
+                                    <Select value={allToponymsLimit.toString()} onValueChange={(v) => {
+                                        setAllToponymsLimit(parseInt(v))
+                                        setAllToponymsPage(1)
+                                    }}>
+                                        <SelectTrigger className="w-32">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem value="5">5 Baris</SelectItem>
+                                                <SelectItem value="10">10 Baris</SelectItem>
+                                                <SelectItem value="20">20 Baris</SelectItem>
+                                                <SelectItem value="50">50 Baris</SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {renderPagination(allToponymsPage, allToponymsTotalPages, setAllToponymsPage)}
+                                </div>
+                                <SinarParameterizedTable
+                                    data={allToponymsData}
+                                    columns={koordinatColumns}
+                                    showCols={showKoordinatCols}
+                                    actHandler={(item) => {
+                                        router.push(`/penelaahan/detail-toponim?transactionId=${item.reviewTransaction?.transaction_id || ''}&toponymId=${item.idToponim}`)
+                                    }}
+                                />
+                            </>
                         )}
                     </CardContent>
                 </Card>
@@ -511,11 +674,12 @@ const ReviewDataTab: React.FC = () => {
                             id={item.id}
                             title={item.title}
                             reviewerCnt={item.reviewerCnt}
-                            reviewedCnt={item.reviewedCnt}
                             elementTypeCnt={item.elementTypeCnt}
                             districtCnt={item.districtCnt}
                             acceptedCnt={item.acceptedCnt}
                             rejectedCnt={item.rejectedCnt}
+                            totalData={item.totalData}
+                            handledData={item.handledData}
                         />
                     ))}
                 </div>
@@ -529,6 +693,9 @@ const ReviewDataTab: React.FC = () => {
                             actHandler={(item) => {
                                 setSelectedTransactionId(item.id)
                                 setShowKoordinatTable(true)
+                            }}
+                            documentHandler={(item) => {
+                                router.push(`/penelaahan/cetak-berita-acara?transactionId=${item.id}`)
                             }}
                         />
                     </CardContent>

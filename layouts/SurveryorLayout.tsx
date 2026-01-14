@@ -33,7 +33,7 @@ const SurveyorLayout: React.FC<React.PropsWithChildren<ISurveyorLayout>> = ({ ch
     ]
 
     return (
-        <ProtectedRoute allowedRoles={[Role.SURVEYOR, Role.ADMIN]}>
+        <ProtectedRoute allowedRoles={[Role.SURVEYOR, Role.CONTRIBUTOR, Role.ADMIN]}>
             <div className="flex w-full flex-col h-screen bg-neutral-50">
                 <UserNav isMobile={isMobile} menuItems={menuItems} setOpenLoginDialog={setOpenLoginDialog} navbarRef={navbarRef} />
                 <main className="flex-1 bg-white flex flex-col h-full">

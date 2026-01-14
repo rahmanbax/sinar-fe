@@ -99,14 +99,11 @@ const MyDataTab: React.FC = () => {
         <Card>
             <CardTitle className="sr-only">Data Saya</CardTitle>
             <CardContent className="px-8">
-                <div className="flex justify-end items-center mb-5">
-                    <Link href="/survey/tambah-toponim">
-                        <Button className="bg-green-500 hover:bg-green-700">Tambah Data Toponim</Button>
-                    </Link>
-                </div>
                 <div className="flex flex-col lg:flex-row lg:justify-between mb-5 gap-y-3">
                     <div className="flex gap-2">
-                        <Button className="bg-green-500 hover:bg-green-700">Ajukan Data</Button>
+                        <Link href="/survey/tambah-toponim">
+                            <Button className="bg-green-500 hover:bg-green-700">Ajukan Data</Button>
+                        </Link>
                         <InputGroup className='hidden sm:flex bg-neutral-50'>
                             <InputGroupInput placeholder="Cari..." onChange={(e) => setSearchString(e.target.value)} />
                             <InputGroupAddon>

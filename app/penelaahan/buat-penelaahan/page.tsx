@@ -123,22 +123,8 @@ const Page = () => {
         fetchElements()
     }, [])
 
-    const handleSubmit = async () => {
-        // Validation
-        if (!title.trim()) {
-            alert('Judul penelaahan harus diisi')
-            return
-        }
-
-        if (!tanggalAkhir) {
-            alert('Tanggal akhir harus diisi')
-            return
-        }
-
-        if (jenisUnsur.length === 0) {
-            alert('Minimal pilih satu jenis unsur')
-            return
-        }
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
 
         setIsSubmitting(true)
 
@@ -154,8 +140,7 @@ const Page = () => {
             }
 
             const token = localStorage.getItem('token')
-            const response = await fetch(`${API_URL}/verifications/transaction
-`, {
+            const response = await fetch(`${API_URL}/verifications/transaction`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -222,7 +207,7 @@ const Page = () => {
 
     return (
         <ReviewerLayout>
-            <div className="pt-20 p-6">
+            <div className="pt-20 p-6 mt-6 h-screen">
                 <div className="flex items-center gap-3 mb-6">
                     <Link href="/penelaahan">
                         <Button size='icon-sm' variant="ghost">
@@ -232,57 +217,64 @@ const Page = () => {
                     <h1 className="text-xl font-bold">Buat Penelaahan</h1>
                 </div>
 
-                <Card className="max-w-2xl">
+                <Card className="max-w-1/3">
                     {/* <CardHeader>
                         <CardTitle>Form Penelaahan Baru</CardTitle>
                     </CardHeader> */}
                     <CardContent className="space-y-6">
-                        {/* Ringkasan Statistik Chart */}
-                        <div className="space-y-3">
-                            <Label>Ringkasan Statistik - Jenis Unsur</Label>
-                            <div className="h-[200px] w-full bg-gray-50 rounded-lg p-3">
-                                {loadingStatistics ? (
-                                    <div className="flex items-center justify-center h-full">
-                                        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                                    </div>
-                                ) : statisticsData.length > 0 ? (
-                                    <Bar data={chartData} options={chartOptions} />
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-gray-400">
-                                        Tidak ada data
-                                    </div>
-                                )}
+                        <form onSubmit={handleSubmit}>
+                            {/* Ringkasan Statistik Chart */}
+                            <div className="space-y-3 mb-6">
+                                <Label>Ringkasan Statistik - Jenis Unsur</Label>
+                                <div className="h-[200px] w-full bg-gray-50 rounded-lg p-3">
+                                    {loadingStatistics ? (
+                                        <div className="flex items-center justify-center h-full">
+                                            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                                        </div>
+                                    ) : statisticsData.length > 0 ? (
+                                        <Bar data={chartData} options={chartOptions} />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-gray-400">
+                                            Tidak ada data
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Buat Penelaahan Section */}
-                        <h2 className="font-semibold">Buat Penelaahan</h2>
+                            {/* Buat Penelaahan Section */}
+                            <h2 className="font-semibold mb-6">Buat Penelaahan</h2>
 
-                        {/* Title */}
-                        <div className="space-y-2">
-                            <Label htmlFor="title">Judul Penelaahan</Label>
-                            <Input
-                                id="title"
-                                type="text"
-                                placeholder="Masukkan judul penelaahan"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                            />
-                        </div>
+                            {/* Title */}
+                            <div className="space-y-2 mb-6">
+                                <Label htmlFor="title">
+                                    Judul Penelaahan <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="title"
+                                    type="text"
+                                    placeholder="Masukkan judul penelaahan"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    required
+                                />
+                            </div>
 
-                        {/* Tanggal Akhir */}
-                        <div className="space-y-2">
-                            <Label htmlFor="tanggal-akhir">Tanggal Akhir</Label>
-                            <Input
-                                id="tanggal-akhir"
-                                type="date"
-                                value={tanggalAkhir}
-                                onChange={(e) => setTanggalAkhir(e.target.value)}
-                            />
-                        </div>
+                            {/* Tanggal Akhir */}
+                            <div className="space-y-2 mb-6">
+                                <Label htmlFor="tanggal-akhir">
+                                    Tanggal Akhir <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                    id="tanggal-akhir"
+                                    type="date"
+                                    value={tanggalAkhir}
+                                    onChange={(e) => setTanggalAkhir(e.target.value)}
+                                    required
+                                />
+                            </div>
 
-                        {/* Tanggal Awal - Not needed for API */}
-                        {/* <div className="grid grid-cols-2 gap-4">
+                            {/* Tanggal Awal - Not needed for API */}
+                            {/* <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="tanggal-awal">Tanggal Awal</Label>
                                 <Input
@@ -303,77 +295,80 @@ const Page = () => {
                             </div>
                         </div> */}
 
-                        {/* Jenis Unsur */}
-                        <div className="space-y-2">
-                            <Label>Jenis Unsur</Label>
-                            <Popover open={openElementPopover} onOpenChange={setOpenElementPopover}>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        aria-expanded={openElementPopover}
-                                        className="w-full justify-between font-normal"
-                                        disabled={loadingElements}
-                                    >
-                                        {loadingElements ? (
-                                            <div className="flex items-center gap-2">
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                <span>Memuat...</span>
-                                            </div>
-                                        ) : jenisUnsur.length > 0 ? (
-                                            <span>{jenisUnsur.length} unsur dipilih</span>
-                                        ) : (
-                                            <span className="text-muted-foreground">Pilih Jenis Unsur</span>
-                                        )}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-full p-0" align="start">
-                                    <Command>
-                                        <CommandInput placeholder="Cari jenis unsur..." />
-                                        <CommandList>
-                                            <CommandEmpty>Jenis unsur tidak ditemukan.</CommandEmpty>
-                                            <CommandGroup>
-                                                {elements
-                                                    .sort((a, b) => {
-                                                        const aSelected = jenisUnsur.includes(a.code)
-                                                        const bSelected = jenisUnsur.includes(b.code)
-                                                        // Selected items first
-                                                        if (aSelected && !bSelected) return -1
-                                                        if (!aSelected && bSelected) return 1
-                                                        return 0
-                                                    })
-                                                    .map((element) => {
-                                                        const isSelected = jenisUnsur.includes(element.code)
-                                                        return (
-                                                            <CommandItem
-                                                                key={element.code}
-                                                                value={element.name}
-                                                                onSelect={() => {
-                                                                    if (isSelected) {
-                                                                        setJenisUnsur(jenisUnsur.filter(code => code !== element.code))
-                                                                    } else {
-                                                                        setJenisUnsur([...jenisUnsur, element.code])
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <Checkbox
-                                                                    checked={isSelected}
-                                                                    className="mr-2"
-                                                                />
-                                                                {element.name}
-                                                            </CommandItem>
-                                                        )
-                                                    })}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                            {/* Jenis Unsur */}
+                            <div className="space-y-2 mb-6">
+                                <Label>
+                                    Jenis Unsur <span className="text-red-500">*</span>
+                                </Label>
+                                <input type="hidden" required={jenisUnsur.length === 0} />
+                                <Popover open={openElementPopover} onOpenChange={setOpenElementPopover}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={openElementPopover}
+                                            className="w-full justify-between font-normal"
+                                            disabled={loadingElements}
+                                        >
+                                            {loadingElements ? (
+                                                <div className="flex items-center gap-2">
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    <span>Memuat...</span>
+                                                </div>
+                                            ) : jenisUnsur.length > 0 ? (
+                                                <span>{jenisUnsur.length} unsur dipilih</span>
+                                            ) : (
+                                                <span className="text-muted-foreground">Pilih Jenis Unsur</span>
+                                            )}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0" align="start">
+                                        <Command>
+                                            <CommandInput placeholder="Cari jenis unsur..." />
+                                            <CommandList>
+                                                <CommandEmpty>Jenis unsur tidak ditemukan.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {elements
+                                                        .sort((a, b) => {
+                                                            const aSelected = jenisUnsur.includes(a.code)
+                                                            const bSelected = jenisUnsur.includes(b.code)
+                                                            // Selected items first
+                                                            if (aSelected && !bSelected) return -1
+                                                            if (!aSelected && bSelected) return 1
+                                                            return 0
+                                                        })
+                                                        .map((element) => {
+                                                            const isSelected = jenisUnsur.includes(element.code)
+                                                            return (
+                                                                <CommandItem
+                                                                    key={element.code}
+                                                                    value={element.name}
+                                                                    onSelect={() => {
+                                                                        if (isSelected) {
+                                                                            setJenisUnsur(jenisUnsur.filter(code => code !== element.code))
+                                                                        } else {
+                                                                            setJenisUnsur([...jenisUnsur, element.code])
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <Checkbox
+                                                                        checked={isSelected}
+                                                                        className="mr-2"
+                                                                    />
+                                                                    {element.name}
+                                                                </CommandItem>
+                                                            )
+                                                        })}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
 
-                        {/* Wilayah Administrasi */}
-                        {/* <div className="space-y-2">
+                            {/* Wilayah Administrasi */}
+                            {/* <div className="space-y-2">
                             <Label>Wilayah Administrasi</Label>
                             <Popover open={openProvinceCombobox} onOpenChange={setOpenProvinceCombobox}>
                                 <PopoverTrigger asChild>
@@ -428,8 +423,8 @@ const Page = () => {
                             </Popover>
                         </div> */}
 
-                        {/* Verifikator */}
-                        {/* <div className="space-y-2">
+                            {/* Verifikator */}
+                            {/* <div className="space-y-2">
                             <Label>Verifikator</Label>
                             <Select value={verifikator} onValueChange={setVerifikator}>
                                 <SelectTrigger>
@@ -445,28 +440,29 @@ const Page = () => {
                             </Select>
                         </div> */}
 
-                        {/* Submit Buttons */}
-                        <div className="flex gap-4 pt-4">
-                            <Link href="/penelaahan" className="flex-1">
-                                <Button variant="outline" className="w-full" disabled={isSubmitting}>
-                                    Batal
+                            {/* Submit Buttons */}
+                            <div className="flex gap-4 pt-4">
+                                <Link href="/penelaahan" className="flex-1">
+                                    <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
+                                        Batal
+                                    </Button>
+                                </Link>
+                                <Button
+                                    type="submit"
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                    disabled={isSubmitting || jenisUnsur.length === 0}
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Memproses...
+                                        </>
+                                    ) : (
+                                        'Buat Penelaahan'
+                                    )}
                                 </Button>
-                            </Link>
-                            <Button
-                                className="flex-1 bg-blue-600 hover:bg-blue-700"
-                                onClick={handleSubmit}
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Memproses...
-                                    </>
-                                ) : (
-                                    'Buat Penelaahan'
-                                )}
-                            </Button>
-                        </div>
+                            </div>
+                        </form>
                     </CardContent>
                 </Card>
             </div>

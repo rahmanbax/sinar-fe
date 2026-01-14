@@ -20,6 +20,7 @@ export enum Role {
     ADMIN = 'admin',
     VERIFICATOR = 'verificator',
     SURVEYOR = 'surveyor',
+    CONTRIBUTOR = 'contributor',
     BIG = 'big'
 }
 
@@ -32,6 +33,7 @@ export const getRoleDefaultRoute = (role: Role): string => {
         case Role.VERIFICATOR:
             return '/penelaahan'
         case Role.SURVEYOR:
+        case Role.CONTRIBUTOR:
             return '/survey'
         default:
             return '/'
@@ -48,6 +50,7 @@ export const getRoleAllowedRoutes = (role: Role): string[] => {
         case Role.VERIFICATOR:
             return ['/penelaahan']
         case Role.SURVEYOR:
+        case Role.CONTRIBUTOR:
             return ['/survey', '/pengumuman']
         default:
             return ['/']

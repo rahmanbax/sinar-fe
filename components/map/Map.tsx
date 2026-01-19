@@ -158,13 +158,6 @@ const MapDefault: React.FC<IMapDefault> = (
   const [mapStyle, setMapStyle] = useState(MapStyles[0])
   const [onHover, setOnHover] = useState<string | undefined>()
 
-  const [camera, setCamera] = useState({
-    lng: 0,
-    lat: 0,
-    zoom: 10,
-    bearing: 0,
-    pitch: 0,
-  });
 
   const [listData, setListData] = useState<ToponymAnnouncementTabular[]>([])
   const [searchString, setSearchString] = useState<string>("")
@@ -304,18 +297,22 @@ const MapDefault: React.FC<IMapDefault> = (
     if (!v) return
     const markerData: ToponimMarkerItem = {
       id: v.id,
-      category: v.category.name,
+      category: v.element?.name || '-',
       coordinates: {
         lng: v.location_point?.coordinates[0] ?? 0,
         lat: v.location_point?.coordinates[1] ?? 0
       },
-      element: v.element_type,
+      element: v.element?.name || '-',
       name: v.map_name
     }
     setMarkerData(markerData)
     const params = objToParams({ marker_id: markerData.id, lng: markerData.coordinates.lng, lat: markerData.coordinates.lat, zoom: 15 })
     router.push(`${pathname}?${params}`)
     handleMapFlyTo(markerData.coordinates.lng, markerData.coordinates.lat)
+
+    // Clear search bar and results list
+    setSearchString("")
+    setListData([])
   }
 
   const handleMoveEnd = useCallback(() => {
@@ -354,20 +351,8 @@ const MapDefault: React.FC<IMapDefault> = (
     const map = mapRef.current?.getMap();
     if (!map) return;
 
-    const syncCamera = () => {
-      const c = map.getCenter();
-      setCamera({
-        lng: c.lng,
-        lat: c.lat,
-        zoom: map.getZoom(),
-        bearing: map.getBearing(),
-        pitch: map.getPitch(),
-      });
-    };
-
     const handleChange = () => {
       handleMoveEnd()
-      syncCamera()
     }
 
     map.on("moveend", handleChange)
@@ -380,6 +365,7 @@ const MapDefault: React.FC<IMapDefault> = (
 
   useEffect(() => {
     if (!searchString || searchString.length < 3) {
+      setListData([])
       return
     }
 
@@ -387,12 +373,16 @@ const MapDefault: React.FC<IMapDefault> = (
     const timeout = setTimeout(() => {
       apiHandler(
         'GET',
-        `/toponyms?search=${encodeURIComponent(searchString)}&per_page=10&order_by=map_name&sort_order=asc`,
+        `/toponyms?search=${encodeURIComponent(searchString)}`,
         undefined, // body
         undefined,
         { signal: controller.signal }
       )
-        .then(setListData)
+        .then((r: any) => {
+          // If the API returns a paginated response or direct array, handle it
+          const results = Array.isArray(r) ? r : r?.data || []
+          setListData(results)
+        })
         .catch((e) => {
           if (e.name !== 'AbortError') console.error(e)
         })
@@ -427,12 +417,12 @@ const MapDefault: React.FC<IMapDefault> = (
       >
 
         {DEV_MODE && <>
-          <div className="absolute bottom-80 right-2 z-10 text-sm">
-            <p>Zoom: {camera.zoom.toFixed(2)}</p>
-            <p>Lng: {camera.lng.toFixed(5)}</p>
-            <p>Lat: {camera.lat.toFixed(5)}</p>
-            <p>Bearing: {camera.bearing.toFixed(2)}</p>
-            <p>Pitch: {camera.pitch.toFixed(2)}</p>
+          <div className="absolute bottom-80 right-2 z-10 text-sm bg-white/80 p-2 rounded shadow-md border pointer-events-none">
+            <p>Zoom: {viewState.zoom.toFixed(2)}</p>
+            <p>Lng: {viewState.longitude.toFixed(5)}</p>
+            <p>Lat: {viewState.latitude.toFixed(5)}</p>
+            <p>Bearing: {viewState.bearing?.toFixed(2) ?? "0.00"}</p>
+            <p>Pitch: {viewState.pitch?.toFixed(2) ?? "0.00"}</p>
           </div>
         </>}
 
@@ -452,10 +442,13 @@ const MapDefault: React.FC<IMapDefault> = (
             onSelectedValueChange={handleOnSearchSelect}
             searchValue={searchString}
             isLoading={loading}
+            clearOnSelect={true}
             renderItem={(v) => (<div>
               <h4 className='font-semibold'>{v.local_name}</h4>
               <h5 className='text-muted-foreground'>{v.map_name}</h5>
-              <h5 className='text-muted-foreground text-wrap'>{v.village.name}, {v.district.name}, {v.regency.name}, {v.province.name}</h5>
+              <h5 className='text-muted-foreground text-wrap'>
+                {[v.village?.name, v.district?.name, v.regency?.name, v.province?.name].filter(Boolean).join(', ')}
+              </h5>
             </div>)}
           />
           <Button size='icon' variant='outline' onClick={() => setOpenFilter(true)}>

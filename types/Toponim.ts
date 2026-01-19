@@ -156,34 +156,33 @@ export type PreStandarizedToponim = StandardToponim & {
 
 export type ToponymAnnouncementTabular = {
     id: string
-    element_type: string
     local_name: string
     map_name: string
-    category: {
-        id: string
+    element?: {
+        id: number
         code: string
         name: string
     }
-    province: {
+    province?: {
         id: string
         code: string
         name: string
-    }
-    regency: {
+    } | null
+    regency?: {
         id: string
         code: string
         name: string
-    }
-    district: {
+    } | null
+    district?: {
         id: string
         code: string
         name: string
-    }
-    village: {
+    } | null
+    village?: {
         id: string
         code: string
         name: string
-    }
+    } | null
     location_point?: {
         type: 'Point'
         coordinates: [number, number]

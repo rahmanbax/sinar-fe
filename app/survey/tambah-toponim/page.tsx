@@ -445,6 +445,8 @@ const Page = () => {
     const [historyStack, setHistoryStack] = useState<[number, number][][]>([])
 
     // Form Atribut - Basic Info
+    const [genericElement, setGenericElement] = useState('')
+    const [specificElement, setSpecificElement] = useState('')
     const [localName, setLocalName] = useState('')
     const [mapName, setMapName] = useState('')
     const [otherName, setOtherName] = useState('')
@@ -820,6 +822,8 @@ const Page = () => {
 
             const payload: Record<string, unknown> = {
                 local_name: localName,
+                generic_element: genericElement,
+                specific_element: specificElement,
                 geometry: geometry
             }
 
@@ -1025,6 +1029,28 @@ const Page = () => {
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-4 ml-6 space-y-4">
                                 <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="generic-element">Elemen Generik <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="generic-element"
+                                            placeholder="Contoh: Gunung"
+                                            value={genericElement}
+                                            onChange={(e) => setGenericElement(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="specific-element">Elemen Spesifik <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="specific-element"
+                                            placeholder="Contoh: Merapi"
+                                            value={specificElement}
+                                            onChange={(e) => setSpecificElement(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
                                     <div className="space-y-2">
                                         <Label htmlFor="local-name">Nama Lokal <span className="text-red-500">*</span></Label>
                                         <Input

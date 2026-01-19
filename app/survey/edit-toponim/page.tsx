@@ -13,7 +13,7 @@ import Link from "next/link"
 import { Map, Source, Layer, Marker, type MapRef, type ViewState, type MapLayerMouseEvent } from '@vis.gl/react-maplibre'
 import { big_office_coord, MapStyles } from "@/components/map/Map"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import type { FeatureCollection, Feature, Point } from 'geojson'
+import type { FeatureCollection, Feature, Point, LineString, Polygon } from 'geojson'
 import { IoLocationSharp } from 'react-icons/io5'
 import { API_URL } from "@/lib/config"
 import { useAuth } from "@/contexts/AuthContext"
@@ -61,29 +61,47 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
     };
 
     // Auto zoom to saved geometry on load
+    const hasZoomedRef = useRef(false)
+
     useEffect(() => {
-        if (savedGeometry?.features.length && mapRef.current) {
+        // Reset zoom flag when savedGeometry changes (including on initial load)
+        hasZoomedRef.current = false
+    }, [savedGeometry])
+
+    useEffect(() => {
+        if (savedGeometry?.features.length && mapRef.current && !hasZoomedRef.current) {
             const feature = savedGeometry.features[0];
             let rawCenter: [number, number] | null = null;
 
             if (feature.geometry.type === 'Point') {
                 rawCenter = feature.geometry.coordinates as [number, number];
             } else if (feature.geometry.type === 'LineString') {
-                rawCenter = feature.geometry.coordinates[0] as [number, number];
+                const coords = feature.geometry.coordinates as [number, number][]
+                rawCenter = coords[0];
             } else if (feature.geometry.type === 'Polygon') {
-                rawCenter = feature.geometry.coordinates[0][0] as [number, number];
+                const coords = feature.geometry.coordinates as [number, number][][]
+                rawCenter = coords[0][0];
             }
 
             if (rawCenter) {
                 const [lng, lat] = getSafeCoords(rawCenter);
-                mapRef.current.flyTo({
-                    center: [lng, lat],
-                    zoom: 14,
-                    duration: 1500
-                });
+
+                // Only zoom if coordinates are valid
+                if (!isNaN(lng) && !isNaN(lat) && isFinite(lng) && isFinite(lat)) {
+                    hasZoomedRef.current = true
+
+                    // Use setTimeout to ensure map is fully loaded
+                    setTimeout(() => {
+                        mapRef.current?.flyTo({
+                            center: [lng, lat],
+                            zoom: 15,
+                            duration: 1500
+                        });
+                    }, 100)
+                }
             }
         }
-    }, [savedGeometry]);
+    }, [savedGeometry, mapRef]);
 
     const handleZoomIn = () => { if (mapRef.current) mapRef.current.flyTo({ zoom: Math.min(viewState.zoom + 1, 18), duration: 300 }) }
     const handleZoomOut = () => { if (mapRef.current) mapRef.current.flyTo({ zoom: Math.max(viewState.zoom - 1, 1), duration: 300 }) }
@@ -99,32 +117,89 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
         return nearestPoint
     }, [snappingEnabled, drawnPoints])
 
+    // Click delay to prevent double-click from adding extra point
+    const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
     const handleMapClick = useCallback((e: MapLayerMouseEvent) => {
         if (!isEditing) return
-        if (drawnPoints.length === 0) onClearSaved()
-        const { lng, lat } = e.lngLat
-        const snappedPoint = snapToNearestPoint(lng, lat)
-        if (geometriType === 'titik') onPointsChange([snappedPoint])
-        else onPointsChange([...drawnPoints, snappedPoint])
+
+        // For line/polygon mode, delay the click to check if it's a double-click
+        if (geometriType !== 'titik') {
+            if (clickTimeoutRef.current) {
+                clearTimeout(clickTimeoutRef.current)
+            }
+
+            clickTimeoutRef.current = setTimeout(() => {
+                if (drawnPoints.length === 0) onClearSaved()
+                const { lng, lat } = e.lngLat
+                const snappedPoint = snapToNearestPoint(lng, lat)
+                onPointsChange([...drawnPoints, snappedPoint])
+            }, 200)
+        } else {
+            // Point mode - immediate response
+            if (drawnPoints.length === 0) onClearSaved()
+            const { lng, lat } = e.lngLat
+            const snappedPoint = snapToNearestPoint(lng, lat)
+            onPointsChange([snappedPoint])
+        }
     }, [isEditing, geometriType, drawnPoints, onPointsChange, snapToNearestPoint, onClearSaved])
 
     const handleMapDblClick = useCallback((e: MapLayerMouseEvent) => {
         if (!isEditing || geometriType === 'titik') return
         e.preventDefault()
-        if (drawnPoints.length >= 2) onSave()
+
+        // Cancel pending click
+        if (clickTimeoutRef.current) {
+            clearTimeout(clickTimeoutRef.current)
+            clickTimeoutRef.current = null
+        }
+
+        // Finish drawing with minimum point validation
+        const minPoints = geometriType === 'garis' ? 2 : 3
+        if (drawnPoints.length >= minPoints) onSave()
     }, [isEditing, geometriType, drawnPoints, onSave])
 
-    const handleMouseMove = useCallback((e: MapLayerMouseEvent) => { if (isEditing) setCursorPosition([e.lngLat.lng, e.lngLat.lat]) }, [isEditing])
+    const handleMouseMove = useCallback((e: MapLayerMouseEvent) => {
+        if (!isEditing) return
+        setCursorPosition([e.lngLat.lng, e.lngLat.lat])
+    }, [isEditing])
 
-    const currentDrawingGeoJson: FeatureCollection = { type: 'FeatureCollection', features: [] }
+    // Build GeoJSON for current drawing
+    const currentDrawingGeoJson: FeatureCollection = {
+        type: 'FeatureCollection',
+        features: []
+    }
+
+    // Add drawn points as features
     if (drawnPoints.length > 0) {
-        drawnPoints.forEach((point, idx) => { currentDrawingGeoJson.features.push({ type: 'Feature', properties: { id: idx }, geometry: { type: 'Point', coordinates: point } }) })
+        // Points layer
+        drawnPoints.forEach((point, idx) => {
+            currentDrawingGeoJson.features.push({
+                type: 'Feature',
+                properties: { id: idx },
+                geometry: { type: 'Point', coordinates: point }
+            })
+        })
+
+        // Line/Polygon layer
         if (geometriType === 'garis' && drawnPoints.length >= 2) {
-            const lineCoords = cursorPosition ? [...drawnPoints, cursorPosition] : drawnPoints
-            currentDrawingGeoJson.features.push({ type: 'Feature', properties: { type: 'line' }, geometry: { type: 'LineString', coordinates: lineCoords } })
+            const lineCoords = cursorPosition
+                ? [...drawnPoints, cursorPosition]
+                : drawnPoints
+            currentDrawingGeoJson.features.push({
+                type: 'Feature',
+                properties: { type: 'line' },
+                geometry: { type: 'LineString', coordinates: lineCoords }
+            })
         } else if (geometriType === 'area' && drawnPoints.length >= 2) {
-            const polygonCoords = cursorPosition ? [...drawnPoints, cursorPosition, drawnPoints[0]] : [...drawnPoints, drawnPoints[0]]
-            currentDrawingGeoJson.features.push({ type: 'Feature', properties: { type: 'polygon' }, geometry: { type: 'Polygon', coordinates: [polygonCoords] } })
+            const polygonCoords = cursorPosition
+                ? [...drawnPoints, cursorPosition, drawnPoints[0]]
+                : [...drawnPoints, drawnPoints[0]]
+            currentDrawingGeoJson.features.push({
+                type: 'Feature',
+                properties: { type: 'polygon' },
+                geometry: { type: 'Polygon', coordinates: [polygonCoords] }
+            })
         }
     }
 
@@ -135,6 +210,7 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
                     <Source id="saved-geometry" type="geojson" data={savedGeometry}>
                         <Layer id="saved-polygon-fill" type="fill" filter={['==', ['geometry-type'], 'Polygon']} paint={{ 'fill-color': '#10b981', 'fill-opacity': 0.3 }} />
                         <Layer id="saved-line" type="line" filter={['any', ['==', ['geometry-type'], 'LineString'], ['==', ['geometry-type'], 'Polygon']]} paint={{ 'line-color': '#10b981', 'line-width': 2 }} />
+
                     </Source>
                     {savedGeometry.features.filter(f => f.geometry.type === 'Point').map((feature, idx) => {
                         const rawCoords = (feature.geometry as Point).coordinates as [number, number]
@@ -239,8 +315,48 @@ const EditToponimContent = () => {
                     setDistrictCode(d.district_id || '')
                     setVillageCode(d.village_id || '')
                     if (d.photos) setExistingPhotos(d.photos.map((p: any) => ({ url: p.url, filename: p.filename || p.original_name })))
+
+                    // Handle geometry - check all possible geometry fields
+                    let geometryFeature: Feature | null = null
+
                     if (d.location_point?.coordinates) {
-                        setSavedGeometry({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: d.location_point.coordinates } }] })
+                        geometryFeature = {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'Point',
+                                coordinates: d.location_point.coordinates
+                            }
+                        }
+                    } else if (d.location_line?.coordinates) {
+                        geometryFeature = {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: d.location_line.coordinates
+                            }
+                        }
+                    } else if (d.location_area?.coordinates) {
+                        // location_area is MultiPolygon, convert to Polygon for display
+                        const multiPolygonCoords = d.location_area.coordinates
+                        if (multiPolygonCoords && multiPolygonCoords.length > 0) {
+                            geometryFeature = {
+                                type: 'Feature',
+                                properties: {},
+                                geometry: {
+                                    type: 'Polygon',
+                                    coordinates: multiPolygonCoords[0] // Take first polygon from MultiPolygon
+                                }
+                            }
+                        }
+                    }
+
+                    if (geometryFeature) {
+                        setSavedGeometry({
+                            type: 'FeatureCollection',
+                            features: [geometryFeature]
+                        })
                     }
                 }
             } catch (err) { console.error('Failed to fetch toponym:', err) }
@@ -278,13 +394,35 @@ const EditToponimContent = () => {
         fetch(`${API_URL}/regions?level=DISTRICT&parent=${selectedDistrict.path}&limit=100`).then(r => r.json()).then(result => { if (!result.error && result.data) setVillages(result.data) }).finally(() => setLoadingVillages(false))
     }, [districtCode, districts])
 
-    const getGeometry = (): { type: string, coordinates: number[] | number[][] } | null => {
+    // Reset drawn points when geometry type changes
+    useEffect(() => {
+        if (drawnPoints.length > 0) {
+            setDrawnPoints([])
+            setHistoryStack([])
+        }
+    }, [geometriType])
+
+    const getGeometry = (): { type: string, coordinates: any } | null => {
         if (savedGeometry?.features.length) {
-            const geom = savedGeometry.features[0].geometry as { type: string, coordinates: number[] | number[][] }
-            if (geom.type === 'Point') return { type: 'Point', coordinates: [geom.coordinates[0] as number, geom.coordinates[1] as number] }
+            const geom = savedGeometry.features[0].geometry as any
+            if (geom.type === 'Point') {
+                return { type: 'Point', coordinates: geom.coordinates }
+            } else if (geom.type === 'LineString') {
+                return { type: 'LineString', coordinates: geom.coordinates }
+            } else if (geom.type === 'Polygon') {
+                return { type: 'MultiPolygon', coordinates: [geom.coordinates] }
+            }
             return geom
         }
-        if (drawnPoints.length > 0) return { type: 'Point', coordinates: [drawnPoints[0][0], drawnPoints[0][1]] }
+        if (drawnPoints.length > 0) {
+            if (geometriType === 'titik') {
+                return { type: 'Point', coordinates: [drawnPoints[0][0], drawnPoints[0][1]] }
+            } else if (geometriType === 'garis' && drawnPoints.length >= 2) {
+                return { type: 'LineString', coordinates: drawnPoints }
+            } else if (geometriType === 'area' && drawnPoints.length >= 3) {
+                return { type: 'MultiPolygon', coordinates: [[[...drawnPoints, drawnPoints[0]]]] }
+            }
+        }
         return null
     }
 
@@ -327,13 +465,19 @@ const EditToponimContent = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         const geometry = getGeometry()
-        if (!geometry) { alert('Silakan gambar lokasi titik terlebih dahulu'); return }
+        if (!geometry) { alert('Silakan gambar lokasi terlebih dahulu'); return }
+
         setIsSubmitting(true)
         try {
             let uploadedPhotos: { url: string, filename: string }[] = []
             if (selectedFiles.length > 0) uploadedPhotos = await uploadPhotos()
             const allPhotos = [...existingPhotos, ...uploadedPhotos]
-            const payload: Record<string, unknown> = { local_name: localName, geometry }
+
+            const payload: Record<string, unknown> = {
+                local_name: localName,
+                geometry: geometry
+            }
+
             if (mapName) payload.map_name = mapName
             if (otherName) payload.other_name = otherName
             if (languageOrigin) payload.language_origin = languageOrigin
@@ -362,7 +506,7 @@ const EditToponimContent = () => {
     return (
         <SurveyorLayout>
             <div className="flex h-full pt-20">
-                <div className="w-2/5 p-6 overflow-y-auto border-r">
+                <div className="max-w-2/5 p-6 overflow-y-auto border-r">
                     <div className="flex items-center gap-3 mb-6">
                         <Link href="/survey?tab=my-data"><Button size='icon-sm' variant="ghost"><ChevronLeft /></Button></Link>
                         <h1 className="text-xl font-bold">Edit Data Toponim</h1>
@@ -372,9 +516,9 @@ const EditToponimContent = () => {
                             <CollapsibleTrigger className="flex items-center gap-2 w-full text-left font-semibold text-lg"><ChevronDown className={`transition-transform ${openSpasial ? '' : '-rotate-90'}`} size={20} />Penggambaran Lokasi</CollapsibleTrigger>
                             <CollapsibleContent className="mt-4 ml-6 space-y-4">
                                 {!isEditingDraft ? (
-                                    <Button variant="outline" className="w-full border-blue-500 text-blue-600 hover:bg-blue-50" onClick={() => setIsEditingDraft(true)}>{savedGeometry ? 'Edit Lokasi di Peta' : 'Tambah Lokasi di Peta'}</Button>
+                                    <Button variant="outline" className="w-full border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-600" onClick={() => setIsEditingDraft(true)}>{savedGeometry ? 'Edit Lokasi di Peta' : 'Tambah Lokasi di Peta'}</Button>
                                 ) : (<>
-                                    <div className="space-y-2"><Label>Tipe Geometri</Label><RadioGroup value={geometriType} onValueChange={(v) => setGeometriType(v as 'titik' | 'garis' | 'area')} className="flex gap-6"><div className="flex items-center space-x-2"><RadioGroupItem value="titik" id="titik" /><Label htmlFor="titik" className="font-normal">Titik</Label></div></RadioGroup></div>
+                                    <div className="space-y-2"><Label>Tipe Geometri</Label><RadioGroup value={geometriType} onValueChange={(v) => setGeometriType(v as 'titik' | 'garis' | 'area')} className="flex gap-6"><div className="flex items-center space-x-2"><RadioGroupItem value="titik" id="titik" /><Label htmlFor="titik" className="font-normal">Titik</Label></div><div className="flex items-center space-x-2"><RadioGroupItem value="garis" id="garis" /><Label htmlFor="garis" className="font-normal">Garis</Label></div><div className="flex items-center space-x-2"><RadioGroupItem value="area" id="area" /><Label htmlFor="area" className="font-normal">Area</Label></div></RadioGroup></div>
                                     <div className="flex items-center space-x-2"><Checkbox id="snapping" checked={fiturSnapping} onCheckedChange={(c) => setFiturSnapping(c as boolean)} /><Label htmlFor="snapping" className="font-normal">Fitur Snapping</Label></div>
                                     <div className="flex flex-col gap-2">
                                         <Button variant="outline" className="border-red-400 text-red-500 hover:bg-red-50" onClick={handleClearGeometry}><Trash2 size={16} className="mr-2" />Bersihkan Penggambaran</Button>
@@ -382,9 +526,9 @@ const EditToponimContent = () => {
                                         <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleSaveGeometry}><Save size={16} className="mr-2" />Simpan Lokasi</Button>
                                         <Button variant="outline" className="border-gray-400 text-gray-600 hover:bg-gray-50" onClick={() => setIsEditingDraft(false)}>Batalkan</Button>
                                     </div>
-                                    {(drawnPoints.length > 0 || savedGeometry) && <div className="mt-4 p-3 bg-blue-50 rounded-lg"><Label className="text-sm font-medium mb-2 block">Koordinat Titik</Label>{drawnPoints.length > 0 && <div className="space-y-1 text-sm"><p className="text-gray-500 text-xs mb-1">Titik yang sedang digambar:</p>{drawnPoints.map((point, idx) => <p key={idx} className="font-mono text-blue-600 font-bold">Lng: {point[0].toFixed(6)}, Lat:{point[1].toFixed(6)}</p>)}</div>}</div>}
+                                    {drawnPoints.length > 0 && <div className="mt-4 p-3 bg-blue-50 rounded-lg"><Label className="text-sm font-medium mb-2 block">Koordinat Titik</Label><div className="space-y-1 text-sm"><p className="text-gray-500 text-xs mb-1">Titik yang sedang digambar:</p>{drawnPoints.map((point, idx) => <p key={idx} className="text-blue-600 font-mono font-bold">Lng: {point[0].toFixed(6)}, Lat:{point[1].toFixed(6)}</p>)}</div></div>}
                                 </>)}
-                                {!isEditingDraft && savedGeometry?.features.length && <div className="p-3 bg-green-50 rounded-lg"><Label className="text-sm font-medium mb-2 block text-green-700">Lokasi Tersimpan</Label>{savedGeometry.features.map((feature, idx) => { if (feature.geometry.type === 'Point') { const coords = (feature.geometry as Point).coordinates; return <p key={idx} className="font-mono text-green-600 font-bold text-sm">Lng: {coords[0].toFixed(6)}, Lat: {coords[1].toFixed(6)}</p> } return null })}</div>}
+                                {!isEditingDraft && savedGeometry?.features.length && <div className="p-3 bg-green-50 rounded-lg max-h-64 overflow-y-auto"><Label className="text-sm font-medium mb-2 block text-green-700">Lokasi Tersimpan</Label>{savedGeometry.features.map((feature, idx) => { const geom = feature.geometry; if (geom.type === 'Point') { const coords = geom.coordinates as number[]; return <div key={idx} className="space-y-1"><p className="text-sm text-green-600 font-medium">Tipe: Titik</p><p className="font-mono text-green-600 font-bold text-sm">Lng: {coords[0].toFixed(6)}, Lat: {coords[1].toFixed(6)}</p></div> } else if (geom.type === 'LineString') { const coords = geom.coordinates as number[][]; return <div key={idx} className="space-y-1"><p className="text-sm text-green-600 font-medium">Tipe: Garis ({coords.length} titik)</p><div className="grid grid-cols-1 gap-0.5">{coords.map((c, i) => <p key={i} className="font-mono text-green-600 font-bold text-sm">{i + 1}. Lng: {c[0].toFixed(6)}, Lat: {c[1].toFixed(6)}</p>)}</div></div> } else if (geom.type === 'Polygon') { const coords = (geom.coordinates as number[][][])[0]; const uniqueCoords = coords.slice(0, -1); return <div key={idx} className="space-y-1"><p className="text-sm text-green-600 font-medium">Tipe: Area ({uniqueCoords.length} titik)</p><div className="grid grid-cols-1 gap-0.5">{uniqueCoords.map((c, i) => <p key={i} className="font-mono text-green-600 font-bold text-sm">{i + 1}. Lng: {c[0].toFixed(6)}, Lat: {c[1].toFixed(6)}</p>)}</div></div> } return null })}</div>}
                             </CollapsibleContent>
                         </Collapsible>
                         <Collapsible open={openAtribut} onOpenChange={setOpenAtribut}>

@@ -6,7 +6,7 @@ import Map, { Marker, GeolocateControl, GeolocateResultEvent, type MapRef, type 
 import { IoLocationSharp, IoLocationOutline } from 'react-icons/io5'
 import { DEV_MODE } from '@/lib/config';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Minus, Plus, LocateFixed, Layers, Download, Search, SlidersVertical, Loader2 } from 'lucide-react';
+import { Minus, Plus, LocateFixed, Layers, Download, Search, SlidersVertical, Loader2, RotateCw } from 'lucide-react';
 import { Button } from '../ui/button';
 import { NRB } from '@/types';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '../ui/input-group';
@@ -156,15 +156,8 @@ const MapDefault: React.FC<IMapDefault> = (
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
   const [loadingStyle, setLoadingStyle] = useState(false)
   const [mapStyle, setMapStyle] = useState(MapStyles[0])
-  const [onHover, setOnHover] = useState<number | undefined>()
+  const [onHover, setOnHover] = useState<string | undefined>()
 
-  const [camera, setCamera] = useState({
-    lng: 0,
-    lat: 0,
-    zoom: 10,
-    bearing: 0,
-    pitch: 0,
-  });
 
   const [listData, setListData] = useState<ToponymAnnouncementTabular[]>([])
   const [searchString, setSearchString] = useState<string>("")
@@ -245,7 +238,7 @@ const MapDefault: React.FC<IMapDefault> = (
       mapRef.current?.flyTo({
         center: [parseFloat(urlLng), parseFloat(urlLat)],
         zoom: urlZoom ? parseFloat(urlZoom) : 15,
-        duration: 1000,
+        duration: 2000,
         essential: true,
       })
     }
@@ -299,23 +292,27 @@ const MapDefault: React.FC<IMapDefault> = (
   }, [handleMapFlyTo, markerItems, pathname, setMarkerData, router])
 
 
-  const handleOnSearchSelect = (id: number) => {
+  const handleOnSearchSelect = (id: string) => {
     const v = listData.find(d => d.id === id)
     if (!v) return
     const markerData: ToponimMarkerItem = {
       id: v.id,
-      category: v.category.name,
+      category: v.element?.name || '-',
       coordinates: {
-        lng: v.location.coordinates[0],
-        lat: v.location.coordinates[1]
+        lng: v.location_point?.coordinates[0] ?? 0,
+        lat: v.location_point?.coordinates[1] ?? 0
       },
-      element: v.element_type,
+      element: v.element?.name || '-',
       name: v.map_name
     }
     setMarkerData(markerData)
     const params = objToParams({ marker_id: markerData.id, lng: markerData.coordinates.lng, lat: markerData.coordinates.lat, zoom: 15 })
     router.push(`${pathname}?${params}`)
     handleMapFlyTo(markerData.coordinates.lng, markerData.coordinates.lat)
+
+    // Clear search bar and results list
+    setSearchString("")
+    setListData([])
   }
 
   const handleMoveEnd = useCallback(() => {
@@ -341,10 +338,10 @@ const MapDefault: React.FC<IMapDefault> = (
           longitude={d.coordinates.lng}
           label={d.name}
           handleOnClick={handleMarkerOnClick}
-          selected={selectedMarker?.id === d.id}
-          handleMouseEnter={() => setOnHover(d.id)}
+          selected={String(selectedMarker?.id) === String(d.id)}
+          handleMouseEnter={() => setOnHover(String(d.id))}
           handleMouseLeave={() => setOnHover(undefined)}
-          hovered={onHover === d.id}
+          hovered={onHover === String(d.id)}
         />
       ))
   }, [markerItems, handleMarkerOnClick, selectedMarker, onHover])
@@ -354,20 +351,8 @@ const MapDefault: React.FC<IMapDefault> = (
     const map = mapRef.current?.getMap();
     if (!map) return;
 
-    const syncCamera = () => {
-      const c = map.getCenter();
-      setCamera({
-        lng: c.lng,
-        lat: c.lat,
-        zoom: map.getZoom(),
-        bearing: map.getBearing(),
-        pitch: map.getPitch(),
-      });
-    };
-
     const handleChange = () => {
       handleMoveEnd()
-      syncCamera()
     }
 
     map.on("moveend", handleChange)
@@ -380,6 +365,7 @@ const MapDefault: React.FC<IMapDefault> = (
 
   useEffect(() => {
     if (!searchString || searchString.length < 3) {
+      setListData([])
       return
     }
 
@@ -387,12 +373,16 @@ const MapDefault: React.FC<IMapDefault> = (
     const timeout = setTimeout(() => {
       apiHandler(
         'GET',
-        `/toponyms?search=${encodeURIComponent(searchString)}&per_page=10&order_by=map_name&sort_order=asc`,
+        `/toponyms?search=${encodeURIComponent(searchString)}`,
         undefined, // body
         undefined,
         { signal: controller.signal }
       )
-        .then(setListData)
+        .then((r: any) => {
+          // If the API returns a paginated response or direct array, handle it
+          const results = Array.isArray(r) ? r : r?.data || []
+          setListData(results)
+        })
         .catch((e) => {
           if (e.name !== 'AbortError') console.error(e)
         })
@@ -414,25 +404,17 @@ const MapDefault: React.FC<IMapDefault> = (
       )}
       <Map
         ref={mapRef}
+        {...viewState}
         style={{ width: '100vw', height: 'max' }}
         mapStyle={mapStyle.src ?? MAP_STYLE_SRC}
         onLoad={handleLoad}
+        onMove={e => setViewState(e.viewState)}
         onMoveEnd={handleMoveEnd}
         maxBounds={[
           [91, -12],   // Sudut barat daya Indonesia (lon, lat) + 5
           [142, 12]     // Sudut timur laut Indonesia (lon, lat) + 5
         ]}
       >
-
-        {DEV_MODE && <>
-          <div className="absolute bottom-80 right-2 z-10 text-sm">
-            <p>Zoom: {camera.zoom.toFixed(2)}</p>
-            <p>Lng: {camera.lng.toFixed(5)}</p>
-            <p>Lat: {camera.lat.toFixed(5)}</p>
-            <p>Bearing: {camera.bearing.toFixed(2)}</p>
-            <p>Pitch: {camera.pitch.toFixed(2)}</p>
-          </div>
-        </>}
 
         <div className="w-[90vw] absolute top-25 sm:top-22 left-1/2 -translate-x-1/2 z-3 flex gap-2 sm:left-5 sm:translate-x-0 sm:w-[50vw] md:w-[40vw] lg:w-96">
           {/* <InputGroup className='bg-neutral-50'>
@@ -450,17 +432,20 @@ const MapDefault: React.FC<IMapDefault> = (
             onSelectedValueChange={handleOnSearchSelect}
             searchValue={searchString}
             isLoading={loading}
+            clearOnSelect={true}
             renderItem={(v) => (<div>
               <h4 className='font-semibold'>{v.local_name}</h4>
               <h5 className='text-muted-foreground'>{v.map_name}</h5>
-              <h5 className='text-muted-foreground text-wrap'>{v.village.name}, {v.district.name}, {v.regency.name}, {v.province.name}</h5>
+              <h5 className='text-muted-foreground text-wrap'>
+                {[v.village?.name, v.district?.name, v.regency?.name, v.province?.name].filter(Boolean).join(', ')}
+              </h5>
             </div>)}
           />
           <Button size='icon' variant='outline' onClick={() => setOpenFilter(true)}>
             <SlidersVertical />
           </Button>
         </div>
-        <div className="absolute bottom-12 right-3 flex flex-col gap-2 z-7">
+        <div className="absolute bottom-18 right-3 flex flex-col gap-2 z-7">
           <div
             onClick={() => mapRef.current?.easeTo({ bearing: 0, pitch: 0 })}
             className="flex items-center justify-center 
@@ -559,14 +544,27 @@ const MapDefault: React.FC<IMapDefault> = (
             </Popover>
 
             <Button
-              onClick={() => alert("Refresh clicked")}
+              onClick={() => {
+                const view = getViewFromMap(mapRef)
+                if (view) refreshMap(view)
+              }}
               variant='outline'
               title="Refresh"
             >
-              <Download size={18} />
+              <RotateCw size={18} />
             </Button>
           </div>
         </div>
+
+        {DEV_MODE && <>
+          <div className="absolute flex gap-2 bottom-8 right-2 z-10 text-sm p-2 rounded pointer-events-none">
+            <p>Zoom: {viewState.zoom.toFixed(2)}</p>
+            <p>Lng: {viewState.longitude.toFixed(5)}</p>
+            <p>Lat: {viewState.latitude.toFixed(5)}</p>
+            <p>Bearing: {viewState.bearing?.toFixed(2) ?? "0.00"}</p>
+            <p>Pitch: {viewState.pitch?.toFixed(2) ?? "0.00"}</p>
+          </div>
+        </>}
         {markers}
       </Map>
     </div>

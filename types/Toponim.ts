@@ -46,7 +46,7 @@ export type CreateToponimReq = {
 }
 
 export type ToponimMarkerItem = {
-    id: number
+    id: string
     name: string
     category: string
     element: string
@@ -54,7 +54,7 @@ export type ToponimMarkerItem = {
 }
 
 export type BoundingBoxToponymItem = {
-    id: number
+    id: string
     local_name: string
     category_name: string
     subcategory_name: string
@@ -68,7 +68,7 @@ export type BoundingBoxToponymItem = {
 }
 
 export type StandardToponim = {
-    id: number
+    id: string
     element_id: number
     utm_zone: string
     nlp?: string | null
@@ -155,35 +155,34 @@ export type PreStandarizedToponim = StandardToponim & {
 }
 
 export type ToponymAnnouncementTabular = {
-    id: number
-    element_type: string
+    id: string
     local_name: string
     map_name: string
-    category: {
-        id: string
+    element?: {
+        id: number
         code: string
         name: string
     }
-    province: {
+    province?: {
         id: string
         code: string
         name: string
-    }
-    regency: {
+    } | null
+    regency?: {
         id: string
         code: string
         name: string
-    }
-    district: {
+    } | null
+    district?: {
         id: string
         code: string
         name: string
-    }
-    village: {
+    } | null
+    village?: {
         id: string
         code: string
         name: string
-    }
+    } | null
     location_point?: {
         type: 'Point'
         coordinates: [number, number]

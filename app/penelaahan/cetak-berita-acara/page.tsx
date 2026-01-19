@@ -307,7 +307,7 @@ const CetakBeritaAcaraContent = () => {
             }
 
             alert('Berita acara berhasil dikirim!')
-            router.push('/penelaahan')
+            router.push('/penelaahan?tab=review-data')
         } catch (err) {
             console.error('Failed to submit:', err)
             alert('Gagal mengirim berita acara: ' + (err instanceof Error ? err.message : 'Unknown error'))
@@ -394,7 +394,7 @@ const CetakBeritaAcaraContent = () => {
                                 variant="outline"
                                 className="flex-1"
                                 disabled={submitting}
-                                onClick={() => router.push('/penelaahan')}
+                                onClick={() => router.push('/penelaahan?tab=review-data')}
                             >
                                 Batal
                             </Button>

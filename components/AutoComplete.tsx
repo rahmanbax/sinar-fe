@@ -31,6 +31,7 @@ type Props<
   isLoading?: boolean
   emptyMessage?: string
   placeholder?: string
+  clearOnSelect?: boolean
 }
 
 
@@ -49,7 +50,8 @@ const AutoComplete = <
   renderItem,
   isLoading,
   emptyMessage,
-  placeholder
+  placeholder,
+  clearOnSelect = false
 }: Props<T, K, L>) => {
 
   const [open, setOpen] = useState(false)
@@ -91,7 +93,11 @@ const AutoComplete = <
       reset()
     } else {
       onSelectedValueChange(newValue)
-      onSearchValueChange(String(selectedItem[labelField]))
+      if (clearOnSelect) {
+        onSearchValueChange("")
+      } else {
+        onSearchValueChange(String(selectedItem[labelField]))
+      }
     }
 
     setOpen(false)
@@ -109,7 +115,7 @@ const AutoComplete = <
               onKeyDown={(e) => setOpen(e.key !== "Escape")}
               onMouseDown={() => setOpen((open) => !!searchValue || !open)}
               onFocus={() => setOpen(true)}
-              // onBlur={onInputBlur}
+            // onBlur={onInputBlur}
             >
               <Input placeholder={placeholder} value={searchValue} />
             </CommandPrimitive.Input>

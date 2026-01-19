@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, CircleUserRound, FileText, LayoutGrid, List, MapPin, Plus, Search, SlidersVertical } from "lucide-react"
+import { Check, ChevronLeft, ChevronRight, CircleUserRound, FileText, LayoutGrid, List, MapPin, Plus, Search, SlidersVertical } from "lucide-react"
 import { Badge } from "@/components/ui/badge";
 
 import Link from "next/link"
@@ -114,7 +114,7 @@ const DoughnutPerformance: React.FC<{ data: number[], type: 'accepted' | 'reject
 }
 
 interface IReviewCard {
-  id: number
+  id: string
   title: string
   reviewerCnt?: number
   elementTypeCnt?: number
@@ -127,6 +127,8 @@ interface IReviewCard {
   reviewEndTs?: Date
   totalData?: number
   handledData?: number
+  status?: string
+  onRefresh?: () => void
 }
 
 const ReviewCard:
@@ -143,9 +145,36 @@ const ReviewCard:
     rejectedRate = 0,
     reviewEndTs,
     totalData = 0,
-    handledData = 0
+    handledData = 0,
+    status,
+    onRefresh
   }) => {
-    const isCompleted = totalData > 0 && totalData === handledData
+    const router = useRouter()
+    const isVerificationDone = totalData > 0 && totalData === handledData
+    const isCompleted = status === 'completed'
+
+    const handleFinishTransaction = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await fetch(`${API_URL}/verifications/transaction/${id}/finish`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        const result = await response.json()
+        if (!result.error) {
+          if (onRefresh) onRefresh()
+          // router.push(`/penelaahan/cetak-berita-acara?transactionId=${id}`)
+        } else {
+          alert(result.message || 'Gagal menyelesaikan penelaahan')
+        }
+      } catch (err) {
+        console.error('Error finishing transaction:', err)
+        alert('Terjadi kesalahan koneksi')
+      }
+    }
 
     return (
       <Card className="p-4 rounded-none border border-black shadow-none sm:w-full">
@@ -195,13 +224,36 @@ const ReviewCard:
             {/* <p>Penelaahan akan berakhir dalam 20 hari lagi</p> */}
           </div>
 
-          <div className="mt-4">
-            <Link href={`/penelaahan/cetak-berita-acara?transactionId=${id}`}>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                <FileText />Cetak Berita Acara
-              </Button>
-            </Link>
-          </div>
+          {
+            isVerificationDone && (
+              <div className="mt-4">
+                <Button
+                  className={`w-full  text-white ${isCompleted ? 'disabled bg-gray-300 hover:bg-gray-300' : 'cursor-pointer bg-green-500 hover:bg-green-600'}`}
+                  onClick={handleFinishTransaction}
+                >
+                  {isCompleted ? (
+                    "Selesai"
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Check size={18} /> Tandai Selesai
+                    </div>
+                  )}
+                </Button>
+              </div>
+            )
+          }
+
+          {
+            isCompleted && (
+              <div className="mt-4">
+                <Link href={`/penelaahan/cetak-berita-acara?transactionId=${id}`}>
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">
+                    <FileText />Cetak Berita Acara
+                  </Button>
+                </Link>
+              </div>
+            )
+          }
         </CardContent>
       </Card>
     )
@@ -268,47 +320,47 @@ const ReviewDataTab: React.FC = () => {
   const [allToponymsLimit, setAllToponymsLimit] = useState(10)
 
   // Fetch data from API
-  useEffect(() => {
-    const fetchReviewData = async () => {
-      try {
-        const token = localStorage.getItem('token')
-        const response = await fetch(`${API_URL}/verifications/transaction`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        const result = await response.json()
-
-        if (!result.error && result.data) {
-          // Transform API data to match component structure
-          const transformedData = result.data.map((item: VerificationTransaction) => ({
-            id: item.id,
-            title: item.title,
-            startDate: null, // Not provided by API
-            endDate: item.due_at,
-            reviewerCnt: item.verificator_count,
-            elementTypeCnt: item.element_count,
-            districtCnt: item.district_count,
-            acceptedCnt: item.accepted_data,
-            rejectedCnt: item.rejected_data,
-            acceptedRate: Math.round(item.accepted_rate ?? 0),
-            rejectedRate: Math.round(item.rejected_rate ?? 0),
-            reviewedCnt: item.total_data,
-            status: item.status,
-            totalData: item.total_data,
-            handledData: item.handled_data
-          }))
-          setReviewData(transformedData)
+  const fetchReviewData = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/verifications/transaction`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      } catch (error) {
-        console.error('Failed to fetch review data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+      })
+      const result = await response.json()
 
-    fetchReviewData()
+      if (!result.error && result.data) {
+        // Transform API data to match component structure
+        const transformedData = result.data.map((item: VerificationTransaction) => ({
+          id: item.id,
+          title: item.title,
+          startDate: null, // Not provided by API
+          endDate: item.due_at,
+          reviewerCnt: item.verificator_count,
+          elementTypeCnt: item.element_count,
+          districtCnt: item.district_count,
+          acceptedCnt: item.accepted_data,
+          rejectedCnt: item.rejected_data,
+          acceptedRate: Math.round(item.accepted_rate ?? 0),
+          rejectedRate: Math.round(item.rejected_rate ?? 0),
+          reviewedCnt: item.total_data,
+          status: item.status,
+          totalData: item.total_data,
+          handledData: item.handled_data
+        }))
+        setReviewData(transformedData)
+      }
+    } catch (error) {
+      console.error('Failed to fetch review data:', error)
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  useEffect(() => {
+    fetchReviewData()
+  }, [fetchReviewData])
 
   // Fetch all toponyms data
   useEffect(() => {
@@ -369,15 +421,14 @@ const ReviewDataTab: React.FC = () => {
   }, [viewMode, allToponymsPage, allToponymsLimit])
 
   const getStatusBadge = (status: string) => {
-    const statusStyles: Record<string, { bg: string; text: string }> = {
-      "Proses Penelaahan": { bg: "bg-yellow-100", text: "text-yellow-800" },
-      Disetujui: { bg: "bg-green-100", text: "text-green-800" },
-      Ditolak: { bg: "bg-red-100", text: "text-red-800" },
+    const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
+      issued: { bg: "bg-blue-100", text: "text-blue-800", label: "issued" },
+      completed: { bg: "bg-green-100", text: "text-green-800", label: "completed" },
     };
 
-    const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800" };
+    const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800", label: status };
 
-    return <span className={`px-3 py-1 rounded-full text-sm font-medium ${style.bg} ${style.text}`}>{status}</span>;
+    return <span className={`px-3 py-1 rounded-full text-sm font-medium ${style.bg} ${style.text}`}>{style.label}</span>;
   };
 
   // Fetch toponym data when transaction is selected
@@ -739,6 +790,8 @@ const ReviewDataTab: React.FC = () => {
               rejectedRate={item.rejectedRate}
               totalData={item.totalData}
               handledData={item.handledData}
+              status={item.status}
+              onRefresh={fetchReviewData}
             />
           ))}
         </div>
@@ -755,6 +808,7 @@ const ReviewDataTab: React.FC = () => {
               documentHandler={(item) => {
                 router.push(`/penelaahan/cetak-berita-acara?transactionId=${item.id}`)
               }}
+              documentCondition={(item) => item.status === 'completed'}
             />
           </CardContent>
         </Card>

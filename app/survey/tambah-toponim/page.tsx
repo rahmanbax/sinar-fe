@@ -139,24 +139,39 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
         return nearestPoint
     }, [snappingEnabled, drawnPoints])
 
+    // Click delay to prevent double-click from adding extra point
+    const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
     // Handle map click for drawing
     const handleMapClick = useCallback((e: MapLayerMouseEvent) => {
         if (!isEditing) return
 
-        // Clear saved geometry when starting new drawing
-        if (drawnPoints.length === 0) {
-            onClearSaved()
-        }
+        // For line/polygon mode, delay the click to check if it's a double-click
+        if (geometriType !== 'titik') {
+            if (clickTimeoutRef.current) {
+                clearTimeout(clickTimeoutRef.current)
+            }
 
-        const { lng, lat } = e.lngLat
-        const snappedPoint = snapToNearestPoint(lng, lat)
+            clickTimeoutRef.current = setTimeout(() => {
+                // Clear saved geometry when starting new drawing
+                if (drawnPoints.length === 0) {
+                    onClearSaved()
+                }
 
-        if (geometriType === 'titik') {
-            // Point mode - replace with single point
-            onPointsChange([snappedPoint])
+                const { lng, lat } = e.lngLat
+                const snappedPoint = snapToNearestPoint(lng, lat)
+
+                // Line/Polygon mode - add point
+                onPointsChange([...drawnPoints, snappedPoint])
+            }, 200) // 200ms delay to detect double-click
         } else {
-            // Line/Polygon mode - add point
-            onPointsChange([...drawnPoints, snappedPoint])
+            // Point mode - immediate response, replace with single point
+            if (drawnPoints.length === 0) {
+                onClearSaved()
+            }
+            const { lng, lat } = e.lngLat
+            const snappedPoint = snapToNearestPoint(lng, lat)
+            onPointsChange([snappedPoint])
         }
     }, [isEditing, geometriType, drawnPoints, onPointsChange, snapToNearestPoint, onClearSaved])
 
@@ -165,8 +180,15 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
         if (!isEditing || geometriType === 'titik') return
         e.preventDefault()
 
-        // Finish drawing - trigger save
-        if (drawnPoints.length >= 2) {
+        // Cancel pending click
+        if (clickTimeoutRef.current) {
+            clearTimeout(clickTimeoutRef.current)
+            clickTimeoutRef.current = null
+        }
+
+        // Finish drawing - trigger save with minimum point validation
+        const minPoints = geometriType === 'garis' ? 2 : 3 // Line needs 2, Polygon needs 3
+        if (drawnPoints.length >= minPoints) {
             onSave()
         }
     }, [isEditing, geometriType, drawnPoints, onSave])
@@ -423,6 +445,8 @@ const Page = () => {
     const [historyStack, setHistoryStack] = useState<[number, number][][]>([])
 
     // Form Atribut - Basic Info
+    const [genericElement, setGenericElement] = useState('')
+    const [specificElement, setSpecificElement] = useState('')
     const [localName, setLocalName] = useState('')
     const [mapName, setMapName] = useState('')
     const [otherName, setOtherName] = useState('')
@@ -658,27 +682,55 @@ const Page = () => {
         fetchVillages()
     }, [districtCode, districts])
 
+    // Reset drawn points when geometry type changes
+    useEffect(() => {
+        if (drawnPoints.length > 0) {
+            setDrawnPoints([])
+            setHistoryStack([])
+        }
+    }, [geometriType])
+
     // Get geometry from saved geometry or drawn points
-    const getGeometry = (): { type: string, coordinates: number[] | number[][] } | null => {
+    const getGeometry = (): { type: string, coordinates: any } | null => {
         if (savedGeometry && savedGeometry.features.length > 0) {
             const feature = savedGeometry.features[0]
-            const geom = feature.geometry as { type: string, coordinates: number[] | number[][] }
+            const geom = feature.geometry as any
 
-            // API expects standard GeoJSON [lng, lat]
             if (geom.type === 'Point') {
-                const coords = geom.coordinates as number[]
                 return {
                     type: 'Point',
-                    coordinates: [coords[0], coords[1]] // [lng, lat]
+                    coordinates: geom.coordinates
+                }
+            } else if (geom.type === 'LineString') {
+                return {
+                    type: 'LineString',
+                    coordinates: geom.coordinates
+                }
+            } else if (geom.type === 'Polygon') {
+                // Return as MultiPolygon as per user request
+                return {
+                    type: 'MultiPolygon',
+                    coordinates: [geom.coordinates] // Wrap in another array for MultiPolygon
                 }
             }
             return geom
         }
         if (drawnPoints.length > 0) {
-            // drawnPoints are in [lng, lat] format from map
-            return {
-                type: 'Point',
-                coordinates: [drawnPoints[0][0], drawnPoints[0][1]] // [lng, lat]
+            if (geometriType === 'titik') {
+                return {
+                    type: 'Point',
+                    coordinates: [drawnPoints[0][0], drawnPoints[0][1]]
+                }
+            } else if (geometriType === 'garis' && drawnPoints.length >= 2) {
+                return {
+                    type: 'LineString',
+                    coordinates: drawnPoints
+                }
+            } else if (geometriType === 'area' && drawnPoints.length >= 3) {
+                return {
+                    type: 'MultiPolygon',
+                    coordinates: [[[...drawnPoints, drawnPoints[0]]]]
+                }
             }
         }
         return null
@@ -770,6 +822,8 @@ const Page = () => {
 
             const payload: Record<string, unknown> = {
                 local_name: localName,
+                generic_element: genericElement,
+                specific_element: specificElement,
                 geometry: geometry
             }
 
@@ -852,6 +906,14 @@ const Page = () => {
                                                     <RadioGroupItem value="titik" id="titik" />
                                                     <Label htmlFor="titik" className="font-normal">Titik</Label>
                                                 </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <RadioGroupItem value="garis" id="garis" />
+                                                    <Label htmlFor="garis" className="font-normal">Garis</Label>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <RadioGroupItem value="area" id="area" />
+                                                    <Label htmlFor="area" className="font-normal">Area</Label>
+                                                </div>
                                             </RadioGroup>
                                         </div>
 
@@ -894,7 +956,7 @@ const Page = () => {
                                                     <div className="space-y-1 text-sm">
                                                         <p className="text-gray-500 text-xs mb-1">Titik yang sedang digambar:</p>
                                                         {drawnPoints.map((point, idx) => (
-                                                            <p key={idx} className="font-mono text-blue-600 font-bold">
+                                                            <p key={idx} className="text-blue-600 font-mono font-bold">
                                                                 Lng: {point[0].toFixed(6)}, Lat:{point[1].toFixed(6)}
                                                             </p>
                                                         ))}
@@ -907,15 +969,49 @@ const Page = () => {
 
                                 {/* Show saved coordinates when not editing */}
                                 {!isEditingDraft && savedGeometry && savedGeometry.features.length > 0 && (
-                                    <div className="p-3 bg-green-50 rounded-lg">
+                                    <div className="p-3 bg-green-50 rounded-lg max-h-64 overflow-y-auto">
                                         <Label className="text-sm font-medium mb-2 block text-green-700">Lokasi Tersimpan</Label>
                                         {savedGeometry.features.map((feature, idx) => {
-                                            if (feature.geometry.type === 'Point') {
-                                                const coords = (feature.geometry as Point).coordinates
+                                            const geom = feature.geometry;
+                                            if (geom.type === 'Point') {
+                                                const coords = geom.coordinates as number[]
                                                 return (
-                                                    <p key={idx} className="font-mono text-green-600 font-bold text-sm">
-                                                        Lng: {coords[0].toFixed(6)}, Lat: {coords[1].toFixed(6)}
-                                                    </p>
+                                                    <div key={idx} className="space-y-1">
+                                                        <p className="text-sm text-green-600 font-medium">Tipe: Titik</p>
+                                                        <p key={idx} className="font-mono text-green-600 font-bold text-sm">
+                                                            Lng: {coords[0].toFixed(6)}, Lat: {coords[1].toFixed(6)}
+                                                        </p>
+                                                    </div>
+                                                )
+                                            } else if (geom.type === 'LineString') {
+                                                const coords = geom.coordinates as number[][]
+                                                return (
+                                                    <div key={idx} className="space-y-1">
+                                                        <p className="text-sm text-green-600 font-medium">Tipe: Garis ({coords.length} titik)</p>
+                                                        <div className="grid grid-cols-1 gap-0.5">
+                                                            {coords.map((c, i) => (
+                                                                <p key={i} className="font-mono text-green-600 font-bold text-sm">
+                                                                    {i + 1}. Lng: {c[0].toFixed(6)}, Lat: {c[1].toFixed(6)}
+                                                                </p>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            } else if (geom.type === 'Polygon') {
+                                                const coords = (geom.coordinates as number[][][])[0]
+                                                // Exclude the last point since it's a duplicate of the first (closing point)
+                                                const uniqueCoords = coords.slice(0, -1)
+                                                return (
+                                                    <div key={idx} className="space-y-1">
+                                                        <p className="text-sm text-green-600 font-medium">Tipe: Area ({uniqueCoords.length} titik)</p>
+                                                        <div className="grid grid-cols-1 gap-0.5">
+                                                            {uniqueCoords.map((c, i) => (
+                                                                <p key={i} className="font-mono text-green-600 font-bold text-sm">
+                                                                    {i + 1}. Lng: {c[0].toFixed(6)}, Lat: {c[1].toFixed(6)}
+                                                                </p>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 )
                                             }
                                             return null
@@ -933,6 +1029,28 @@ const Page = () => {
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-4 ml-6 space-y-4">
                                 <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="generic-element">Elemen Generik <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="generic-element"
+                                            placeholder="Contoh: Gunung"
+                                            value={genericElement}
+                                            onChange={(e) => setGenericElement(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="specific-element">Elemen Spesifik <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="specific-element"
+                                            placeholder="Contoh: Merapi"
+                                            value={specificElement}
+                                            onChange={(e) => setSpecificElement(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+
                                     <div className="space-y-2">
                                         <Label htmlFor="local-name">Nama Lokal <span className="text-red-500">*</span></Label>
                                         <Input

@@ -370,8 +370,10 @@ const EditToponimContent = () => {
                     setNameHistory(d.name_history || '')
                     setPronounciation(d.pronounciation || '')
                     setSpelling(d.spelling || '')
+                    setGenericElement(d.generic_element || '')
+                    setSpecificElement(d.specific_element || '')
                     setElementCode(d.element?.code || '')
-                    setSurveyAt(d.survey_at ? d.survey_at.split('T')[0] : '')
+                    setSurveyAt(d.survey_at ? d.survey_at.substring(0, 10) : '')
                     setProvinceCode(d.province_id || '')
                     setRegencyCode(d.regency_id || '')
                     setDistrictCode(d.district_id || '')
@@ -616,6 +618,8 @@ const EditToponimContent = () => {
 
             const payload: Record<string, unknown> = {
                 local_name: localName,
+                generic_element: genericElement,
+                specific_element: specificElement,
                 geometry: geometry
             }
 

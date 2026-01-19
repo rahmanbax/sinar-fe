@@ -26,6 +26,7 @@ interface ISinarParameterizedTable<T extends Record<string, any>> {
     renderRow?: (item: T) => React.ReactNode
     actHandler?: (item: T) => void
     documentHandler?: (item: T) => void
+    documentCondition?: (item: T) => boolean
 }
 
 const SinarParameterizedTable = <T extends Record<string, any>>({
@@ -35,7 +36,8 @@ const SinarParameterizedTable = <T extends Record<string, any>>({
     showCols,
     renderRow,
     actHandler,
-    documentHandler
+    documentHandler,
+    documentCondition
 }: ISinarParameterizedTable<T>) => {
 
     const showedColumns = showCols ? Object.fromEntries(Object.entries(columns).filter(([key]) => showCols.some(o => o.value === key))) : columns
@@ -83,7 +85,7 @@ const SinarParameterizedTable = <T extends Record<string, any>>({
                                                 />
                                             </button>
                                         )}
-                                        {documentHandler && (
+                                        {documentHandler && (!documentCondition || documentCondition(data[i])) && (
                                             <button onClick={() => documentHandler(data[i])} className="group flex items-center justify-center rounded-full p-1 bg-transparent hover:bg-gray-200 transition">
                                                 <FileText
                                                     size={20}

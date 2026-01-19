@@ -156,7 +156,7 @@ const MapDefault: React.FC<IMapDefault> = (
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
   const [loadingStyle, setLoadingStyle] = useState(false)
   const [mapStyle, setMapStyle] = useState(MapStyles[0])
-  const [onHover, setOnHover] = useState<number | undefined>()
+  const [onHover, setOnHover] = useState<string | undefined>()
 
   const [camera, setCamera] = useState({
     lng: 0,
@@ -245,7 +245,7 @@ const MapDefault: React.FC<IMapDefault> = (
       mapRef.current?.flyTo({
         center: [parseFloat(urlLng), parseFloat(urlLat)],
         zoom: urlZoom ? parseFloat(urlZoom) : 15,
-        duration: 1000,
+        duration: 2000,
         essential: true,
       })
     }
@@ -299,15 +299,15 @@ const MapDefault: React.FC<IMapDefault> = (
   }, [handleMapFlyTo, markerItems, pathname, setMarkerData, router])
 
 
-  const handleOnSearchSelect = (id: number) => {
+  const handleOnSearchSelect = (id: string) => {
     const v = listData.find(d => d.id === id)
     if (!v) return
     const markerData: ToponimMarkerItem = {
       id: v.id,
       category: v.category.name,
       coordinates: {
-        lng: v.location.coordinates[0],
-        lat: v.location.coordinates[1]
+        lng: v.location_point?.coordinates[0] ?? 0,
+        lat: v.location_point?.coordinates[1] ?? 0
       },
       element: v.element_type,
       name: v.map_name
@@ -341,10 +341,10 @@ const MapDefault: React.FC<IMapDefault> = (
           longitude={d.coordinates.lng}
           label={d.name}
           handleOnClick={handleMarkerOnClick}
-          selected={selectedMarker?.id === d.id}
-          handleMouseEnter={() => setOnHover(d.id)}
+          selected={String(selectedMarker?.id) === String(d.id)}
+          handleMouseEnter={() => setOnHover(String(d.id))}
           handleMouseLeave={() => setOnHover(undefined)}
-          hovered={onHover === d.id}
+          hovered={onHover === String(d.id)}
         />
       ))
   }, [markerItems, handleMarkerOnClick, selectedMarker, onHover])
@@ -414,9 +414,11 @@ const MapDefault: React.FC<IMapDefault> = (
       )}
       <Map
         ref={mapRef}
+        {...viewState}
         style={{ width: '100vw', height: 'max' }}
         mapStyle={mapStyle.src ?? MAP_STYLE_SRC}
         onLoad={handleLoad}
+        onMove={e => setViewState(e.viewState)}
         onMoveEnd={handleMoveEnd}
         maxBounds={[
           [91, -12],   // Sudut barat daya Indonesia (lon, lat) + 5

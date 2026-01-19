@@ -49,14 +49,14 @@ const POIDetailSidebar: React.FC<React.PropsWithChildren<IPOIDetailSidebar>> = (
     }
 
     const isInitialLoad = useRef(true)
-    const fetchedId = useRef<number | null>(null)
+    const fetchedId = useRef<string | null>(null)
     const [loading, setLoading] = useState(false)
     const apiHandler = useApiHandler<StandardToponim>({ setLoading, shouldHandleError: true })
     const [item, setData] = useState<StandardToponim | null>(null)
 
     const refresh = useCallback(() => {
-        if (markerData && fetchedId.current !== markerData.id) {
-            fetchedId.current = markerData.id
+        if (markerData && String(fetchedId.current) !== String(markerData.id)) {
+            fetchedId.current = String(markerData.id)
             apiHandler('GET', `/toponyms/${markerData.id}`)
                 .then(r => {
                     setData(r)

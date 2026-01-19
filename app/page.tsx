@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useCallback, useEffect, Suspense } from "react";
+import { useState, useRef, useCallback, useEffect, Suspense, useMemo } from "react";
 import PublicLayout from "../layouts/PublicLayout";
 import MapDefault from "@/components/map/Map";
 
@@ -35,38 +35,58 @@ const HomeContent = () => {
   const [loading, setLoading] = useState(false)
   const apiHandler = useApiHandler<BoundingBoxApiResponse>({ setLoading, shouldHandleError: false })
   const [apiData, setData] = useState<ToponimMarkerItem[]>([])
-  const [markerData, setMarkerData] = useState<ToponimMarkerItem | null>(() => {
-    if (markerId && lng && lat) {
-      return {
-        id: parseInt(markerId),
-        name: '',
-        category: '',
-        element: '',
-        coordinates: { lng: parseFloat(lng), lat: parseFloat(lat) }
-      }
-    }
-    return null
-  })
+  const [markerData, setMarkerData] = useState<ToponimMarkerItem | null>(null)
   const [openFilter, setOpenFilter] = useState(false)
   const [viewState, setViewState] = useState<ViewState>({
-    longitude: lng ? parseFloat(lng) : 119.450,
-    latitude: lat ? parseFloat(lat) : -6.900,
-    zoom: zoom ? parseFloat(zoom) : 4.55,
+    longitude: 119.450,
+    latitude: -6.900,
+    zoom: 4.55,
     bearing: 0,
     pitch: 0,
     padding: { bottom: 0 }
   })
 
-  const refresh = useCallback(async (viewState: ((ViewState & { bounds: LngLatBounds }) | undefined)) => {
-    const bounds = viewState?.bounds
-    const zoom = viewState?.zoom
+  // Sync state from URL on load and changes
+  useEffect(() => {
+    if (markerId && lng && lat) {
+      setMarkerData(prev => {
+        // Only update if ID or coords changed to avoid unnecessary re-renders
+        if (prev?.id === markerId) return prev
+        return {
+          id: markerId,
+          name: '',
+          category: '',
+          element: '',
+          coordinates: { lng: parseFloat(lng), lat: parseFloat(lat) }
+        }
+      })
+
+      // If the map isn't loaded yet, don't setViewState here. 
+      // Let Map.tsx:handleLoad handle the flyTo animation for that "wow" effect.
+      // If we set it here, the map will jump to the coordinates instantly.
+      if (!isInitialLoad.current) {
+        setViewState({
+          longitude: parseFloat(lng),
+          latitude: parseFloat(lat),
+          zoom: zoom ? parseFloat(zoom) : 15,
+          bearing: 0,
+          pitch: 0,
+          padding: { bottom: 0 }
+        })
+      }
+    }
+  }, [markerId, lng, lat, zoom])
+
+  const refresh = useCallback(async (viewStateParams: ((ViewState & { bounds: LngLatBounds }) | undefined)) => {
+    const bounds = viewStateParams?.bounds
+    const currentZoom = viewStateParams?.zoom
 
     apiHandler(
       'GET',
-      `/toponyms/spatial/bounding-box?min_lat=${bounds?._sw.lat}&max_lat=${bounds?._ne.lat}&min_lng=${bounds?._sw.lng}&max_lng=${bounds?._ne.lng}&limit=${zoom && zoom > 8 ? Math.ceil(zoom) : 8}`
+      `/toponyms/spatial/bounding-box?min_lat=${bounds?._sw.lat}&max_lat=${bounds?._ne.lat}&min_lng=${bounds?._sw.lng}&max_lng=${bounds?._ne.lng}&limit=${currentZoom && currentZoom > 10 ? 50 : 20}`
     ).then((r: BoundingBoxApiResponse) => {
       const mappedResults: ToponimMarkerItem[] = r.results.map((item: BoundingBoxToponymItem) => ({
-        id: item.id,
+        id: String(item.id), // Ensure ID is string
         name: item.local_name,
         category: item.category_name,
         element: item.element_name,
@@ -78,8 +98,8 @@ const HomeContent = () => {
       setData(mappedResults)
       return mappedResults
     }).then((r: ToponimMarkerItem[]) => {
-      if (isInitialLoad.current && markerId && !isNaN(parseInt(markerId))) {
-        const found = r.find(i => i.id === parseInt(markerId))
+      if (isInitialLoad.current && markerId) {
+        const found = r.find(i => String(i.id) === String(markerId))
         if (found) setMarkerData(found)
       }
     })
@@ -87,9 +107,28 @@ const HomeContent = () => {
     isInitialLoad.current = false
   }, [apiHandler, markerId])
 
+  // Merge selected marker into data if not already present
+  const allMarkers = useMemo(() => {
+    if (!markerData) return apiData
+    const exists = apiData.some(m => String(m.id) === String(markerData.id))
+    if (!exists && markerData.coordinates.lng !== 0) {
+      return [...apiData, markerData]
+    }
+    return apiData
+  }, [apiData, markerData])
+
   return (
     <PublicLayout>
-      <MapDefault refreshMap={refresh} viewState={viewState} setViewState={setViewState} geoLocation={coords} markerItems={apiData} setMarkerData={setMarkerData} selectedMarker={markerData} setOpenFilter={setOpenFilter} />
+      <MapDefault
+        refreshMap={refresh}
+        viewState={viewState}
+        setViewState={setViewState}
+        geoLocation={coords}
+        markerItems={allMarkers}
+        setMarkerData={setMarkerData}
+        selectedMarker={markerData}
+        setOpenFilter={setOpenFilter}
+      />
       <POIDetailSidebar markerData={markerData} setMarkerData={setMarkerData} />
       <FilterDialog open={openFilter} setOpen={setOpenFilter} />
     </PublicLayout>

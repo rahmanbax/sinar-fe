@@ -1,94 +1,85 @@
-"use client"
-import { useState, useRef, useCallback, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { ChevronDown, ChevronLeft, Layers, Minus, Plus, RotateCcw, Save, CircleDot, Trash2, Loader2, Check, ChevronsUpDown, Camera, X } from "lucide-react"
-import SurveyorLayout from "@/layouts/SurveryorLayout"
-import Link from "next/link"
-import { Map, Source, Layer, Marker, type MapRef, type ViewState, type MapLayerMouseEvent } from '@vis.gl/react-maplibre'
-import { big_office_coord, MapStyles } from "@/components/map/Map"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import type { FeatureCollection, Feature, Point, LineString, Polygon } from 'geojson'
-import { IoLocationSharp } from 'react-icons/io5'
-import { API_URL } from "@/lib/config"
-import { useAuth } from "@/contexts/AuthContext"
-import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
+"use client";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ChevronDown, ChevronLeft, ChevronRight, Layers, Minus, Plus, RotateCcw, Save, CircleDot, Trash2, Loader2, Check, ChevronsUpDown, Camera, X, Maximize2 } from "lucide-react";
+import SurveyorLayout from "@/layouts/SurveryorLayout";
+import Link from "next/link";
+import { Map, Source, Layer, Marker, type MapRef, type ViewState, type MapLayerMouseEvent } from "@vis.gl/react-maplibre";
+import { big_office_coord, MapStyles } from "@/components/map/Map";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import type { FeatureCollection, Feature, Point, LineString, Polygon } from "geojson";
+import { IoLocationSharp } from "react-icons/io5";
+import { API_URL } from "@/lib/config";
+import { useAuth } from "@/contexts/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 // Category type from API
 interface Category {
-    id: number
-    code: string
-    name: string
+    id: number;
+    code: string;
+    name: string;
 }
 
 // SubCategory type from API
 interface SubCategory {
-    id: number
-    code: string
-    name: string
-    category_id: number
+    id: number;
+    code: string;
+    name: string;
+    category_id: number;
 }
 
 // Province type from API
 interface Province {
-    id: number
-    name: string
-    code: string
-    level: string
-    path: string
+    id: number;
+    name: string;
+    code: string;
+    level: string;
+    path: string;
 }
 
 // Region type for regency/district
 interface Region {
-    id: number
-    name: string
-    code: string
-    level: string
-    parent_id: number
-    path: string
+    id: number;
+    name: string;
+    code: string;
+    level: string;
+    parent_id: number;
+    path: string;
 }
 
 // Element type from API
 interface Element {
-    id: number
-    code: string
-    name: string
-    subcategory_id: number
+    id: number;
+    code: string;
+    name: string;
+    subcategory_id: number;
 }
 
 interface PreviewMapProps {
-    isEditing: boolean
-    geometriType: 'titik' | 'garis' | 'area'
-    snappingEnabled: boolean
-    drawnPoints: [number, number][]
-    onPointsChange: (points: [number, number][]) => void
-    savedGeometry: FeatureCollection | null
-    onClearSaved: () => void
-    onSave: () => void
-    onUndo: () => void
+    isEditing: boolean;
+    geometriType: "titik" | "garis" | "area";
+    snappingEnabled: boolean;
+    drawnPoints: [number, number][];
+    onPointsChange: (points: [number, number][]) => void;
+    savedGeometry: FeatureCollection | null;
+    onClearSaved: () => void;
+    onSave: () => void;
+    onUndo: () => void;
 }
 
-const PreviewMap: React.FC<PreviewMapProps> = ({
-    isEditing,
-    geometriType,
-    snappingEnabled,
-    drawnPoints,
-    onPointsChange,
-    savedGeometry,
-    onClearSaved,
-    onSave,
-    onUndo
-}) => {
-    const mapRef = useRef<MapRef>(null)
-    const [showLayerMenu, setShowLayerMenu] = useState(false)
-    const [cursorPosition, setCursorPosition] = useState<[number, number] | null>(null)
+const PreviewMap: React.FC<PreviewMapProps> = ({ isEditing, geometriType, snappingEnabled, drawnPoints, onPointsChange, savedGeometry, onClearSaved, onSave, onUndo }) => {
+    const mapRef = useRef<MapRef>(null);
+    const [showLayerMenu, setShowLayerMenu] = useState(false);
+    const [cursorPosition, setCursorPosition] = useState<[number, number] | null>(null);
 
     const initialViewState: ViewState = {
         longitude: big_office_coord.longitude,
@@ -96,145 +87,151 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
         zoom: 4.55,
         bearing: 0,
         pitch: 0,
-        padding: { bottom: 0 }
-    }
+        padding: { bottom: 0 },
+    };
 
-    const [viewState, setViewState] = useState(initialViewState)
-    const [mapStyle, setMapStyle] = useState(MapStyles[0])
+    const [viewState, setViewState] = useState(initialViewState);
+    const [mapStyle, setMapStyle] = useState(MapStyles[0]);
 
     const handleZoomIn = () => {
         if (mapRef.current) {
-            const currentZoom = viewState.zoom
-            mapRef.current.flyTo({ zoom: Math.min(currentZoom + 1, 18), duration: 300 })
+            const currentZoom = viewState.zoom;
+            mapRef.current.flyTo({ zoom: Math.min(currentZoom + 1, 18), duration: 300 });
         }
-    }
+    };
 
     const handleZoomOut = () => {
         if (mapRef.current) {
-            const currentZoom = viewState.zoom
-            mapRef.current.flyTo({ zoom: Math.max(currentZoom - 1, 1), duration: 300 })
+            const currentZoom = viewState.zoom;
+            mapRef.current.flyTo({ zoom: Math.max(currentZoom - 1, 1), duration: 300 });
         }
-    }
+    };
 
     // Snapping logic - find nearest point within threshold
-    const snapToNearestPoint = useCallback((lng: number, lat: number): [number, number] => {
-        if (!snappingEnabled || drawnPoints.length === 0) {
-            return [lng, lat]
-        }
-
-        const threshold = 0.001 // ~100m at equator
-        let nearestPoint: [number, number] = [lng, lat]
-        let minDistance = Infinity
-
-        for (const point of drawnPoints) {
-            const distance = Math.sqrt(
-                Math.pow(point[0] - lng, 2) + Math.pow(point[1] - lat, 2)
-            )
-            if (distance < threshold && distance < minDistance) {
-                minDistance = distance
-                nearestPoint = point
+    const snapToNearestPoint = useCallback(
+        (lng: number, lat: number): [number, number] => {
+            if (!snappingEnabled || drawnPoints.length === 0) {
+                return [lng, lat];
             }
-        }
 
-        return nearestPoint
-    }, [snappingEnabled, drawnPoints])
+            const threshold = 0.001; // ~100m at equator
+            let nearestPoint: [number, number] = [lng, lat];
+            let minDistance = Infinity;
+
+            for (const point of drawnPoints) {
+                const distance = Math.sqrt(Math.pow(point[0] - lng, 2) + Math.pow(point[1] - lat, 2));
+                if (distance < threshold && distance < minDistance) {
+                    minDistance = distance;
+                    nearestPoint = point;
+                }
+            }
+
+            return nearestPoint;
+        },
+        [snappingEnabled, drawnPoints],
+    );
 
     // Click delay to prevent double-click from adding extra point
-    const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Handle map click for drawing
-    const handleMapClick = useCallback((e: MapLayerMouseEvent) => {
-        if (!isEditing) return
+    const handleMapClick = useCallback(
+        (e: MapLayerMouseEvent) => {
+            if (!isEditing) return;
 
-        // For line/polygon mode, delay the click to check if it's a double-click
-        if (geometriType !== 'titik') {
-            if (clickTimeoutRef.current) {
-                clearTimeout(clickTimeoutRef.current)
-            }
-
-            clickTimeoutRef.current = setTimeout(() => {
-                // Clear saved geometry when starting new drawing
-                if (drawnPoints.length === 0) {
-                    onClearSaved()
+            // For line/polygon mode, delay the click to check if it's a double-click
+            if (geometriType !== "titik") {
+                if (clickTimeoutRef.current) {
+                    clearTimeout(clickTimeoutRef.current);
                 }
 
-                const { lng, lat } = e.lngLat
-                const snappedPoint = snapToNearestPoint(lng, lat)
+                clickTimeoutRef.current = setTimeout(() => {
+                    // Clear saved geometry when starting new drawing
+                    if (drawnPoints.length === 0) {
+                        onClearSaved();
+                    }
 
-                // Line/Polygon mode - add point
-                onPointsChange([...drawnPoints, snappedPoint])
-            }, 200) // 200ms delay to detect double-click
-        } else {
-            // Point mode - immediate response, replace with single point
-            if (drawnPoints.length === 0) {
-                onClearSaved()
+                    const { lng, lat } = e.lngLat;
+                    const snappedPoint = snapToNearestPoint(lng, lat);
+
+                    // Line/Polygon mode - add point
+                    onPointsChange([...drawnPoints, snappedPoint]);
+                }, 200); // 200ms delay to detect double-click
+            } else {
+                // Point mode - immediate response, replace with single point
+                if (drawnPoints.length === 0) {
+                    onClearSaved();
+                }
+                const { lng, lat } = e.lngLat;
+                const snappedPoint = snapToNearestPoint(lng, lat);
+                onPointsChange([snappedPoint]);
             }
-            const { lng, lat } = e.lngLat
-            const snappedPoint = snapToNearestPoint(lng, lat)
-            onPointsChange([snappedPoint])
-        }
-    }, [isEditing, geometriType, drawnPoints, onPointsChange, snapToNearestPoint, onClearSaved])
+        },
+        [isEditing, geometriType, drawnPoints, onPointsChange, snapToNearestPoint, onClearSaved],
+    );
 
     // Handle double-click to finish line/polygon
-    const handleMapDblClick = useCallback((e: MapLayerMouseEvent) => {
-        if (!isEditing || geometriType === 'titik') return
-        e.preventDefault()
+    const handleMapDblClick = useCallback(
+        (e: MapLayerMouseEvent) => {
+            if (!isEditing || geometriType === "titik") return;
+            e.preventDefault();
 
-        // Cancel pending click
-        if (clickTimeoutRef.current) {
-            clearTimeout(clickTimeoutRef.current)
-            clickTimeoutRef.current = null
-        }
+            // Cancel pending click
+            if (clickTimeoutRef.current) {
+                clearTimeout(clickTimeoutRef.current);
+                clickTimeoutRef.current = null;
+            }
 
-        // Finish drawing - trigger save with minimum point validation
-        const minPoints = geometriType === 'garis' ? 2 : 3 // Line needs 2, Polygon needs 3
-        if (drawnPoints.length >= minPoints) {
-            onSave()
-        }
-    }, [isEditing, geometriType, drawnPoints, onSave])
+            // Finish drawing - trigger save with minimum point validation
+            const minPoints = geometriType === "garis" ? 2 : 3; // Line needs 2, Polygon needs 3
+            if (drawnPoints.length >= minPoints) {
+                onSave();
+            }
+        },
+        [isEditing, geometriType, drawnPoints, onSave],
+    );
 
     // Handle mouse move for cursor tracking
-    const handleMouseMove = useCallback((e: MapLayerMouseEvent) => {
-        if (!isEditing) return
-        setCursorPosition([e.lngLat.lng, e.lngLat.lat])
-    }, [isEditing])
+    const handleMouseMove = useCallback(
+        (e: MapLayerMouseEvent) => {
+            if (!isEditing) return;
+            setCursorPosition([e.lngLat.lng, e.lngLat.lat]);
+        },
+        [isEditing],
+    );
 
     // Build GeoJSON for current drawing
     const currentDrawingGeoJson: FeatureCollection = {
-        type: 'FeatureCollection',
-        features: []
-    }
+        type: "FeatureCollection",
+        features: [],
+    };
 
     // Add drawn points as features
     if (drawnPoints.length > 0) {
         // Points layer
         drawnPoints.forEach((point, idx) => {
             currentDrawingGeoJson.features.push({
-                type: 'Feature',
+                type: "Feature",
                 properties: { id: idx },
-                geometry: { type: 'Point', coordinates: point }
-            })
-        })
+                geometry: { type: "Point", coordinates: point },
+            });
+        });
 
         // Line/Polygon layer
-        if (geometriType === 'garis' && drawnPoints.length >= 2) {
-            const lineCoords = cursorPosition
-                ? [...drawnPoints, cursorPosition]
-                : drawnPoints
+        if (geometriType === "garis" && drawnPoints.length >= 2) {
+            const lineCoords = cursorPosition ? [...drawnPoints, cursorPosition] : drawnPoints;
             currentDrawingGeoJson.features.push({
-                type: 'Feature',
-                properties: { type: 'line' },
-                geometry: { type: 'LineString', coordinates: lineCoords }
-            })
-        } else if (geometriType === 'area' && drawnPoints.length >= 2) {
-            const polygonCoords = cursorPosition
-                ? [...drawnPoints, cursorPosition, drawnPoints[0]]
-                : [...drawnPoints, drawnPoints[0]]
+                type: "Feature",
+                properties: { type: "line" },
+                geometry: { type: "LineString", coordinates: lineCoords },
+            });
+        } else if (geometriType === "area" && drawnPoints.length >= 2) {
+            const polygonCoords = cursorPosition ? [...drawnPoints, cursorPosition, drawnPoints[0]] : [...drawnPoints, drawnPoints[0]];
             currentDrawingGeoJson.features.push({
-                type: 'Feature',
-                properties: { type: 'polygon' },
-                geometry: { type: 'Polygon', coordinates: [polygonCoords] }
-            })
+                type: "Feature",
+                properties: { type: "polygon" },
+                geometry: { type: "Polygon", coordinates: [polygonCoords] },
+            });
         }
     }
 
@@ -243,16 +240,16 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
             <Map
                 {...viewState}
                 ref={mapRef}
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: "100%", height: "100%" }}
                 mapStyle={mapStyle.src}
-                onMove={e => setViewState(e.viewState)}
+                onMove={(e) => setViewState(e.viewState)}
                 onClick={handleMapClick}
                 onDblClick={handleMapDblClick}
                 onMouseMove={handleMouseMove}
-                cursor={isEditing ? 'crosshair' : 'grab'}
+                cursor={isEditing ? "crosshair" : "grab"}
                 maxBounds={[
                     [92, -12],
-                    [142, 7]
+                    [142, 7],
                 ]}
             >
                 {/* Saved Geometry Layer */}
@@ -262,39 +259,33 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
                             <Layer
                                 id="saved-polygon-fill"
                                 type="fill"
-                                filter={['==', ['geometry-type'], 'Polygon']}
+                                filter={["==", ["geometry-type"], "Polygon"]}
                                 paint={{
-                                    'fill-color': '#10b981',
-                                    'fill-opacity': 0.3
+                                    "fill-color": "#10b981",
+                                    "fill-opacity": 0.3,
                                 }}
                             />
                             <Layer
                                 id="saved-line"
                                 type="line"
-                                filter={['any', ['==', ['geometry-type'], 'LineString'], ['==', ['geometry-type'], 'Polygon']]}
+                                filter={["any", ["==", ["geometry-type"], "LineString"], ["==", ["geometry-type"], "Polygon"]]}
                                 paint={{
-                                    'line-color': '#10b981',
-                                    'line-width': 2
+                                    "line-color": "#10b981",
+                                    "line-width": 2,
                                 }}
                             />
                         </Source>
                         {/* Render saved points as Markers with location icon */}
                         {savedGeometry.features
-                            .filter(f => f.geometry.type === 'Point')
+                            .filter((f) => f.geometry.type === "Point")
                             .map((feature, idx) => {
-                                const coords = (feature.geometry as Point).coordinates as [number, number]
+                                const coords = (feature.geometry as Point).coordinates as [number, number];
                                 return (
-                                    <Marker
-                                        key={`saved-point-${idx}`}
-                                        longitude={coords[0]}
-                                        latitude={coords[1]}
-                                        anchor="bottom"
-                                    >
-                                        <IoLocationSharp className='text-3xl text-blue-600 drop-shadow-lg' />
+                                    <Marker key={`saved-point-${idx}`} longitude={coords[0]} latitude={coords[1]} anchor="bottom">
+                                        <IoLocationSharp className="text-3xl text-blue-600 drop-shadow-lg" />
                                     </Marker>
-                                )
-                            })
-                        }
+                                );
+                            })}
                     </>
                 )}
 
@@ -305,48 +296,44 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
                             <Layer
                                 id="drawing-polygon-fill"
                                 type="fill"
-                                filter={['==', ['geometry-type'], 'Polygon']}
+                                filter={["==", ["geometry-type"], "Polygon"]}
                                 paint={{
-                                    'fill-color': '#3b82f6',
-                                    'fill-opacity': 0.2
+                                    "fill-color": "#3b82f6",
+                                    "fill-opacity": 0.2,
                                 }}
                             />
                             <Layer
                                 id="drawing-line"
                                 type="line"
-                                filter={['any', ['==', ['geometry-type'], 'LineString'], ['==', ['geometry-type'], 'Polygon']]}
+                                filter={["any", ["==", ["geometry-type"], "LineString"], ["==", ["geometry-type"], "Polygon"]]}
                                 paint={{
-                                    'line-color': '#3b82f6',
-                                    'line-width': 2,
-                                    'line-dasharray': [2, 2]
+                                    "line-color": "#3b82f6",
+                                    "line-width": 2,
+                                    "line-dasharray": [2, 2],
                                 }}
                             />
                             {/* Circle points only for line/polygon modes */}
-                            {geometriType !== 'titik' && (
+                            {geometriType !== "titik" && (
                                 <Layer
                                     id="drawing-points"
                                     type="circle"
-                                    filter={['==', ['geometry-type'], 'Point']}
+                                    filter={["==", ["geometry-type"], "Point"]}
                                     paint={{
-                                        'circle-radius': 6,
-                                        'circle-color': '#3b82f6',
-                                        'circle-stroke-width': 2,
-                                        'circle-stroke-color': '#ffffff'
+                                        "circle-radius": 6,
+                                        "circle-color": "#3b82f6",
+                                        "circle-stroke-width": 2,
+                                        "circle-stroke-color": "#ffffff",
                                     }}
                                 />
                             )}
                         </Source>
                         {/* Marker icon for point mode */}
-                        {geometriType === 'titik' && drawnPoints.map((point, idx) => (
-                            <Marker
-                                key={`drawing-point-${idx}`}
-                                longitude={point[0]}
-                                latitude={point[1]}
-                                anchor="bottom"
-                            >
-                                <IoLocationSharp className='text-3xl text-blue-600 drop-shadow-lg opacity-90' />
-                            </Marker>
-                        ))}
+                        {geometriType === "titik" &&
+                            drawnPoints.map((point, idx) => (
+                                <Marker key={`drawing-point-${idx}`} longitude={point[0]} latitude={point[1]} anchor="bottom">
+                                    <IoLocationSharp className="text-3xl text-blue-600 drop-shadow-lg opacity-90" />
+                                </Marker>
+                            ))}
                     </>
                 )}
             </Map>
@@ -356,8 +343,8 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
                 <div className="absolute top-4 left-4 bg-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2">
                     <CircleDot size={16} className="text-blue-600" />
                     <span className="text-sm font-medium">
-                        Mode: {geometriType === 'titik' ? 'Titik' : geometriType === 'garis' ? 'Garis' : 'Area'}
-                        {snappingEnabled && ' (Snapping ON)'}
+                        Mode: {geometriType === "titik" ? "Titik" : geometriType === "garis" ? "Garis" : "Area"}
+                        {snappingEnabled && " (Snapping ON)"}
                     </span>
                 </div>
             )}
@@ -365,11 +352,7 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
             {/* Instructions */}
             {isEditing && (
                 <div className="absolute bottom-20 left-4 bg-white px-3 py-2 rounded-lg shadow-lg text-sm max-w-[200px]">
-                    {geometriType === 'titik' ? (
-                        <p>Klik pada peta untuk menempatkan titik</p>
-                    ) : (
-                        <p>Klik untuk menambah titik, double-click untuk selesai</p>
-                    )}
+                    {geometriType === "titik" ? <p>Klik pada peta untuk menempatkan titik</p> : <p>Klik untuk menambah titik, double-click untuk selesai</p>}
                 </div>
             )}
 
@@ -377,12 +360,7 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
             <div className="absolute bottom-12 right-4 flex flex-col gap-2">
                 {/* Layer Toggle */}
                 <div className="relative">
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        className="bg-white shadow-lg"
-                        onClick={() => setShowLayerMenu(!showLayerMenu)}
-                    >
+                    <Button size="icon" variant="ghost" className="bg-white shadow-lg" onClick={() => setShowLayerMenu(!showLayerMenu)}>
                         <Layers size={18} />
                     </Button>
 
@@ -391,11 +369,10 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
                             {MapStyles.map((style) => (
                                 <button
                                     key={style.label}
-                                    className={`w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 ${mapStyle.label === style.label ? 'bg-blue-100 text-blue-700' : ''
-                                        }`}
+                                    className={`w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 ${mapStyle.label === style.label ? "bg-blue-100 text-blue-700" : ""}`}
                                     onClick={() => {
-                                        setMapStyle(style)
-                                        setShowLayerMenu(false)
+                                        setMapStyle(style);
+                                        setShowLayerMenu(false);
                                     }}
                                 >
                                     {style.label}
@@ -406,466 +383,493 @@ const PreviewMap: React.FC<PreviewMapProps> = ({
                 </div>
 
                 {/* Zoom Controls */}
-                <Button
-                    size="icon"
-                    variant="ghost"
-                    className="bg-white shadow-lg"
-                    onClick={handleZoomIn}
-                >
+                <Button size="icon" variant="ghost" className="bg-white shadow-lg" onClick={handleZoomIn}>
                     <Plus size={18} />
                 </Button>
-                <Button
-                    size="icon"
-                    variant="ghost"
-                    className="bg-white shadow-lg"
-                    onClick={handleZoomOut}
-                >
+                <Button size="icon" variant="ghost" className="bg-white shadow-lg" onClick={handleZoomOut}>
                     <Minus size={18} />
                 </Button>
             </div>
         </div>
-    )
-}
-
+    );
+};
 
 const Page = () => {
-    const router = useRouter()
-    const { token } = useAuth()
-    const [openSpasial, setOpenSpasial] = useState(true)
-    const [openAtribut, setOpenAtribut] = useState(true)
+    const router = useRouter();
+    const { token } = useAuth();
+    const [openSpasial, setOpenSpasial] = useState(true);
+    const [openAtribut, setOpenAtribut] = useState(true);
 
     // Spasial/Geometri
-    const [isEditingDraft, setIsEditingDraft] = useState(false)
-    const [geometriType, setGeometriType] = useState<'titik' | 'garis' | 'area'>('titik')
-    const [fiturSnapping, setFiturSnapping] = useState(false)
+    const [isEditingDraft, setIsEditingDraft] = useState(false);
+    const [geometriType, setGeometriType] = useState<"titik" | "garis" | "area">("titik");
+    const [fiturSnapping, setFiturSnapping] = useState(false);
 
     // Drawing state
-    const [drawnPoints, setDrawnPoints] = useState<[number, number][]>([])
-    const [savedGeometry, setSavedGeometry] = useState<FeatureCollection | null>(null)
-    const [historyStack, setHistoryStack] = useState<[number, number][][]>([])
+    const [drawnPoints, setDrawnPoints] = useState<[number, number][]>([]);
+    const [savedGeometry, setSavedGeometry] = useState<FeatureCollection | null>(null);
+    const [historyStack, setHistoryStack] = useState<[number, number][][]>([]);
 
     // Form Atribut - Basic Info
-    const [genericElement, setGenericElement] = useState('')
-    const [specificElement, setSpecificElement] = useState('')
-    const [localName, setLocalName] = useState('')
-    const [mapName, setMapName] = useState('')
-    const [otherName, setOtherName] = useState('')
-    const [languageOrigin, setLanguageOrigin] = useState('')
-    const [nameMeaning, setNameMeaning] = useState('')
-    const [nameHistory, setNameHistory] = useState('')
-    const [pronounciation, setPronounciation] = useState('')
-    const [spelling, setSpelling] = useState('')
-    const [elementCode, setElementCode] = useState('')
-    const [surveyAt, setSurveyAt] = useState('')
+    const [genericElement, setGenericElement] = useState("");
+    const [specificElement, setSpecificElement] = useState("");
+    const [localName, setLocalName] = useState("");
+    const [mapName, setMapName] = useState("");
+    const [otherName, setOtherName] = useState("");
+    const [languageOrigin, setLanguageOrigin] = useState("");
+    const [nameMeaning, setNameMeaning] = useState("");
+    const [nameHistory, setNameHistory] = useState("");
+    const [pronounciation, setPronounciation] = useState("");
+    const [spelling, setSpelling] = useState("");
+    const [elementCode, setElementCode] = useState("");
+    const [surveyAt, setSurveyAt] = useState("");
 
     // Region codes
-    const [provinceCode, setProvinceCode] = useState('')
-    const [regencyCode, setRegencyCode] = useState('')
-    const [districtCode, setDistrictCode] = useState('')
-    const [villageCode, setVillageCode] = useState('')
+    const [provinceCode, setProvinceCode] = useState("");
+    const [regencyCode, setRegencyCode] = useState("");
+    const [districtCode, setDistrictCode] = useState("");
+    const [villageCode, setVillageCode] = useState("");
 
     // API Data
-    const [provinces, setProvinces] = useState<Province[]>([])
-    const [loadingProvinces, setLoadingProvinces] = useState(true)
-    const [regencies, setRegencies] = useState<Region[]>([])
-    const [loadingRegencies, setLoadingRegencies] = useState(false)
-    const [districts, setDistricts] = useState<Region[]>([])
-    const [loadingDistricts, setLoadingDistricts] = useState(false)
-    const [villages, setVillages] = useState<Region[]>([])
-    const [loadingVillages, setLoadingVillages] = useState(false)
+    const [provinces, setProvinces] = useState<Province[]>([]);
+    const [loadingProvinces, setLoadingProvinces] = useState(true);
+    const [regencies, setRegencies] = useState<Region[]>([]);
+    const [loadingRegencies, setLoadingRegencies] = useState(false);
+    const [districts, setDistricts] = useState<Region[]>([]);
+    const [loadingDistricts, setLoadingDistricts] = useState(false);
+    const [villages, setVillages] = useState<Region[]>([]);
+    const [loadingVillages, setLoadingVillages] = useState(false);
 
     // Submission state
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Selected files for upload (stored locally until submit)
-    const [selectedFiles, setSelectedFiles] = useState<{ file: File, previewUrl: string }[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<{ file: File; previewUrl: string }[]>([]);
 
     // Photo select handler (store locally, don't upload yet)
     const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files
-        if (!files || files.length === 0) return
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
 
-        const sizeInMB = 3
-        const MAX_SIZE = sizeInMB * 1024 * 1024
-        const validFiles: { file: File, previewUrl: string }[] = []
-        const rejectedFiles: string[] = []
+        const sizeInMB = 3;
+        const MAX_SIZE = sizeInMB * 1024 * 1024;
+        const validFiles: { file: File; previewUrl: string }[] = [];
+        const rejectedFiles: string[] = [];
 
         for (const file of Array.from(files)) {
             if (file.size > MAX_SIZE) {
-                rejectedFiles.push(file.name)
+                rejectedFiles.push(file.name);
             } else {
                 validFiles.push({
                     file,
-                    previewUrl: URL.createObjectURL(file)
-                })
+                    previewUrl: URL.createObjectURL(file),
+                });
             }
         }
 
         if (rejectedFiles.length > 0) {
-            alert(`File berikut melebihi ukuran maksimal ${sizeInMB}MB:\n${rejectedFiles.join('\n')}`)
+            alert(`File berikut melebihi ukuran maksimal ${sizeInMB}MB:\n${rejectedFiles.join("\n")}`);
         }
 
         if (validFiles.length > 0) {
-            setSelectedFiles(prev => [...prev, ...validFiles])
+            setSelectedFiles((prev) => [...prev, ...validFiles]);
         }
 
         // Reset input
-        e.target.value = ''
-    }
+        e.target.value = "";
+    };
 
     // Remove selected photo
     const handleRemovePhoto = (index: number) => {
-        setSelectedFiles(prev => {
+        setSelectedFiles((prev) => {
             // Revoke object URL to free memory
-            URL.revokeObjectURL(prev[index].previewUrl)
-            return prev.filter((_, i) => i !== index)
-        })
-    }
+            URL.revokeObjectURL(prev[index].previewUrl);
+            return prev.filter((_, i) => i !== index);
+        });
+    };
 
     // Upload all photos (called during submit)
-    const uploadPhotos = async (): Promise<{ url: string, filename: string }[]> => {
-        const uploadedPhotos: { url: string, filename: string }[] = []
+    const uploadPhotos = async (): Promise<{ url: string; filename: string }[]> => {
+        const uploadedPhotos: { url: string; filename: string }[] = [];
 
         for (const { file } of selectedFiles) {
-            const formData = new FormData()
-            formData.append('file', file)
+            const formData = new FormData();
+            formData.append("file", file);
 
             const res = await fetch(`${API_URL}/media/upload/image`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
                 },
-                body: formData
-            })
+                body: formData,
+            });
 
-            const result = await res.json()
+            const result = await res.json();
             if (!result.error && result.data) {
                 uploadedPhotos.push({
                     url: result.data.url,
-                    filename: file.name
-                })
+                    filename: file.name,
+                });
             } else {
-                throw new Error(`Gagal upload ${file.name}: ${result.message}`)
+                throw new Error(`Gagal upload ${file.name}: ${result.message}`);
             }
         }
 
-        return uploadedPhotos
-    }
+        return uploadedPhotos;
+    };
 
     // Elements data
-    const [elements, setElements] = useState<Element[]>([])
-    const [loadingElements, setLoadingElements] = useState(true)
-    const [openElementCombobox, setOpenElementCombobox] = useState(false)
-    const [openProvincePopover, setOpenProvincePopover] = useState(false)
-    const [openRegencyPopover, setOpenRegencyPopover] = useState(false)
-    const [openDistrictPopover, setOpenDistrictPopover] = useState(false)
-    const [openVillagePopover, setOpenVillagePopover] = useState(false)
-
+    const [elements, setElements] = useState<Element[]>([]);
+    const [loadingElements, setLoadingElements] = useState(true);
+    const [openElementCombobox, setOpenElementCombobox] = useState(false);
+    const [openProvincePopover, setOpenProvincePopover] = useState(false);
+    const [openRegencyPopover, setOpenRegencyPopover] = useState(false);
+    const [openDistrictPopover, setOpenDistrictPopover] = useState(false);
+    const [openVillagePopover, setOpenVillagePopover] = useState(false);
+    const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
 
     // Fetch provinces and elements on mount
     useEffect(() => {
         const fetchProvinces = async () => {
             try {
-                const res = await fetch(`${API_URL}/regions?level=PROVINCE&limit=100`)
-                const result = await res.json()
+                const res = await fetch(`${API_URL}/regions?level=PROVINCE&limit=100`);
+                const result = await res.json();
                 if (!result.error && result.data) {
-                    setProvinces(result.data)
+                    setProvinces(result.data);
                 }
             } catch (err) {
-                console.error('Failed to fetch provinces:', err)
+                console.error("Failed to fetch provinces:", err);
             } finally {
-                setLoadingProvinces(false)
+                setLoadingProvinces(false);
             }
-        }
-        fetchProvinces()
+        };
+        fetchProvinces();
 
         const fetchElements = async () => {
             try {
-                const res = await fetch(`${API_URL}/classification/elements?sort_by=name&sort_order=asc`)
-                const result = await res.json()
+                const res = await fetch(`${API_URL}/classification/elements?sort_by=name&sort_order=asc`);
+                const result = await res.json();
                 if (!result.error && result.data) {
-                    setElements(result.data)
+                    setElements(result.data);
                 }
             } catch (err) {
-                console.error('Failed to fetch elements:', err)
+                console.error("Failed to fetch elements:", err);
             } finally {
-                setLoadingElements(false)
+                setLoadingElements(false);
             }
-        }
-        fetchElements()
-    }, [])
+        };
+        fetchElements();
+    }, []);
 
     // Fetch regencies when province changes
     useEffect(() => {
         if (!provinceCode) {
-            setRegencies([])
-            setRegencyCode('')
-            setDistricts([])
-            setDistrictCode('')
-            setVillages([])
-            setVillageCode('')
-            return
+            setRegencies([]);
+            setRegencyCode("");
+            setDistricts([]);
+            setDistrictCode("");
+            setVillages([]);
+            setVillageCode("");
+            return;
         }
-        const selectedProvince = provinces.find(p => p.code === provinceCode)
-        if (!selectedProvince) return
+        const selectedProvince = provinces.find((p) => p.code === provinceCode);
+        if (!selectedProvince) return;
 
         const fetchRegencies = async () => {
-            setLoadingRegencies(true)
+            setLoadingRegencies(true);
             try {
-                const res = await fetch(`${API_URL}/regions?level=CITY&parent=${selectedProvince.path}&limit=100`)
-                const result = await res.json()
+                const res = await fetch(`${API_URL}/regions?level=CITY&parent=${selectedProvince.path}&limit=100`);
+                const result = await res.json();
                 if (!result.error && result.data) {
-                    setRegencies(result.data)
+                    setRegencies(result.data);
                 }
             } catch (err) {
-                console.error('Failed to fetch regencies:', err)
+                console.error("Failed to fetch regencies:", err);
             } finally {
-                setLoadingRegencies(false)
+                setLoadingRegencies(false);
             }
-        }
-        fetchRegencies()
-    }, [provinceCode, provinces])
+        };
+        fetchRegencies();
+    }, [provinceCode, provinces]);
 
     // Fetch districts when regency changes
     useEffect(() => {
         if (!regencyCode) {
-            setDistricts([])
-            setDistrictCode('')
-            setVillages([])
-            setVillageCode('')
-            return
+            setDistricts([]);
+            setDistrictCode("");
+            setVillages([]);
+            setVillageCode("");
+            return;
         }
-        const selectedRegency = regencies.find(r => r.code === regencyCode)
-        if (!selectedRegency) return
+        const selectedRegency = regencies.find((r) => r.code === regencyCode);
+        if (!selectedRegency) return;
 
         const fetchDistricts = async () => {
-            setLoadingDistricts(true)
+            setLoadingDistricts(true);
             try {
-                const res = await fetch(`${API_URL}/regions?level=DISTRICT&parent=${selectedRegency.path}&limit=100`)
-                const result = await res.json()
+                const res = await fetch(`${API_URL}/regions?level=DISTRICT&parent=${selectedRegency.path}&limit=100`);
+                const result = await res.json();
                 if (!result.error && result.data) {
-                    setDistricts(result.data)
+                    setDistricts(result.data);
                 }
             } catch (err) {
-                console.error('Failed to fetch districts:', err)
+                console.error("Failed to fetch districts:", err);
             } finally {
-                setLoadingDistricts(false)
+                setLoadingDistricts(false);
             }
-        }
-        fetchDistricts()
-    }, [regencyCode, regencies])
+        };
+        fetchDistricts();
+    }, [regencyCode, regencies]);
 
     // Fetch villages when district changes
     useEffect(() => {
         if (!districtCode) {
-            setVillages([])
-            setVillageCode('')
-            return
+            setVillages([]);
+            setVillageCode("");
+            return;
         }
-        const selectedDistrict = districts.find(d => d.code === districtCode)
-        if (!selectedDistrict) return
+        const selectedDistrict = districts.find((d) => d.code === districtCode);
+        if (!selectedDistrict) return;
 
         const fetchVillages = async () => {
-            setLoadingVillages(true)
+            setLoadingVillages(true);
             try {
-                const res = await fetch(`${API_URL}/regions?level=DISTRICT&parent=${selectedDistrict.path}&limit=100`)
-                const result = await res.json()
+                const res = await fetch(`${API_URL}/regions?level=VILLAGE&parent=${selectedDistrict.path}&limit=100`);
+                const result = await res.json();
                 if (!result.error && result.data) {
-                    setVillages(result.data)
+                    setVillages(result.data);
                 }
             } catch (err) {
-                console.error('Failed to fetch villages:', err)
+                console.error("Failed to fetch villages:", err);
             } finally {
-                setLoadingVillages(false)
+                setLoadingVillages(false);
             }
-        }
-        fetchVillages()
-    }, [districtCode, districts])
+        };
+        fetchVillages();
+    }, [districtCode, districts]);
+
+    const allPhotos = selectedFiles.map((f) => ({ url: f.previewUrl, name: f.file.name }));
+
+    const handlePrevImage = useCallback(
+        (e?: React.MouseEvent | KeyboardEvent) => {
+            e?.stopPropagation();
+            const currentIndex = allPhotos.findIndex((p) => p.url === previewImage?.url);
+            if (currentIndex > 0) {
+                setPreviewImage(allPhotos[currentIndex - 1]);
+            }
+        },
+        [previewImage, allPhotos],
+    );
+
+    const handleNextImage = useCallback(
+        (e?: React.MouseEvent | KeyboardEvent) => {
+            e?.stopPropagation();
+            const currentIndex = allPhotos.findIndex((p) => p.url === previewImage?.url);
+            if (currentIndex < allPhotos.length - 1) {
+                setPreviewImage(allPhotos[currentIndex + 1]);
+            }
+        },
+        [previewImage, allPhotos],
+    );
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!previewImage) return;
+            if (e.key === "ArrowLeft") handlePrevImage(e);
+            if (e.key === "ArrowRight") handleNextImage(e);
+            if (e.key === "Escape") setPreviewImage(null);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [previewImage, handlePrevImage, handleNextImage]);
 
     // Reset drawn points when geometry type changes
     useEffect(() => {
         if (drawnPoints.length > 0) {
-            setDrawnPoints([])
-            setHistoryStack([])
+            setDrawnPoints([]);
+            setHistoryStack([]);
         }
-    }, [geometriType])
+    }, [geometriType]);
 
     // Get geometry from saved geometry or drawn points
-    const getGeometry = (): { type: string, coordinates: any } | null => {
+    const getGeometry = (): { type: string; coordinates: any } | null => {
         if (savedGeometry && savedGeometry.features.length > 0) {
-            const feature = savedGeometry.features[0]
-            const geom = feature.geometry as any
+            const feature = savedGeometry.features[0];
+            const geom = feature.geometry as any;
 
-            if (geom.type === 'Point') {
+            if (geom.type === "Point") {
                 return {
-                    type: 'Point',
-                    coordinates: geom.coordinates
-                }
-            } else if (geom.type === 'LineString') {
+                    type: "Point",
+                    coordinates: geom.coordinates,
+                };
+            } else if (geom.type === "LineString") {
                 return {
-                    type: 'LineString',
-                    coordinates: geom.coordinates
-                }
-            } else if (geom.type === 'Polygon') {
+                    type: "LineString",
+                    coordinates: geom.coordinates,
+                };
+            } else if (geom.type === "Polygon") {
                 // Return as MultiPolygon as per user request
                 return {
-                    type: 'MultiPolygon',
-                    coordinates: [geom.coordinates] // Wrap in another array for MultiPolygon
-                }
+                    type: "MultiPolygon",
+                    coordinates: [geom.coordinates], // Wrap in another array for MultiPolygon
+                };
             }
-            return geom
+            return geom;
         }
         if (drawnPoints.length > 0) {
-            if (geometriType === 'titik') {
+            if (geometriType === "titik") {
                 return {
-                    type: 'Point',
-                    coordinates: [drawnPoints[0][0], drawnPoints[0][1]]
-                }
-            } else if (geometriType === 'garis' && drawnPoints.length >= 2) {
+                    type: "Point",
+                    coordinates: [drawnPoints[0][0], drawnPoints[0][1]],
+                };
+            } else if (geometriType === "garis" && drawnPoints.length >= 2) {
                 return {
-                    type: 'LineString',
-                    coordinates: drawnPoints
-                }
-            } else if (geometriType === 'area' && drawnPoints.length >= 3) {
+                    type: "LineString",
+                    coordinates: drawnPoints,
+                };
+            } else if (geometriType === "area" && drawnPoints.length >= 3) {
                 return {
-                    type: 'MultiPolygon',
-                    coordinates: [[[...drawnPoints, drawnPoints[0]]]]
-                }
+                    type: "MultiPolygon",
+                    coordinates: [[[...drawnPoints, drawnPoints[0]]]],
+                };
             }
         }
-        return null
-    }
+        return null;
+    };
 
     // Handle points change with history
-    const handlePointsChange = useCallback((points: [number, number][]) => {
-        setHistoryStack(prev => [...prev, drawnPoints])
-        setDrawnPoints(points)
-    }, [drawnPoints])
+    const handlePointsChange = useCallback(
+        (points: [number, number][]) => {
+            setHistoryStack((prev) => [...prev, drawnPoints]);
+            setDrawnPoints(points);
+        },
+        [drawnPoints],
+    );
 
     // Save geometry
     const handleSaveGeometry = useCallback(() => {
-        if (drawnPoints.length === 0) return
+        if (drawnPoints.length === 0) return;
 
-        const features: Feature[] = []
+        const features: Feature[] = [];
 
-        if (geometriType === 'titik' && drawnPoints.length >= 1) {
+        if (geometriType === "titik" && drawnPoints.length >= 1) {
             features.push({
-                type: 'Feature',
+                type: "Feature",
                 properties: {},
-                geometry: { type: 'Point', coordinates: drawnPoints[0] }
-            })
-        } else if (geometriType === 'garis' && drawnPoints.length >= 2) {
+                geometry: { type: "Point", coordinates: drawnPoints[0] },
+            });
+        } else if (geometriType === "garis" && drawnPoints.length >= 2) {
             features.push({
-                type: 'Feature',
+                type: "Feature",
                 properties: {},
-                geometry: { type: 'LineString', coordinates: drawnPoints }
-            })
-        } else if (geometriType === 'area' && drawnPoints.length >= 3) {
+                geometry: { type: "LineString", coordinates: drawnPoints },
+            });
+        } else if (geometriType === "area" && drawnPoints.length >= 3) {
             features.push({
-                type: 'Feature',
+                type: "Feature",
                 properties: {},
-                geometry: { type: 'Polygon', coordinates: [[...drawnPoints, drawnPoints[0]]] }
-            })
+                geometry: { type: "Polygon", coordinates: [[...drawnPoints, drawnPoints[0]]] },
+            });
         }
 
         if (features.length > 0) {
             setSavedGeometry({
-                type: 'FeatureCollection',
-                features
-            })
-            setDrawnPoints([])
-            setHistoryStack([])
-            setIsEditingDraft(false)
+                type: "FeatureCollection",
+                features,
+            });
+            setDrawnPoints([]);
+            setHistoryStack([]);
+            setIsEditingDraft(false);
         }
-    }, [drawnPoints, geometriType])
+    }, [drawnPoints, geometriType]);
 
     // Undo last point
     const handleUndoGeometry = useCallback(() => {
         if (historyStack.length > 0) {
-            const previousPoints = historyStack[historyStack.length - 1]
-            setDrawnPoints(previousPoints)
-            setHistoryStack(prev => prev.slice(0, -1))
+            const previousPoints = historyStack[historyStack.length - 1];
+            setDrawnPoints(previousPoints);
+            setHistoryStack((prev) => prev.slice(0, -1));
         } else {
-            setDrawnPoints([])
+            setDrawnPoints([]);
         }
-    }, [historyStack])
+    }, [historyStack]);
 
     // Clear all drawing
     const handleClearGeometry = useCallback(() => {
-        setDrawnPoints([])
-        setSavedGeometry(null)
-        setHistoryStack([])
-    }, [])
+        setDrawnPoints([]);
+        setSavedGeometry(null);
+        setHistoryStack([]);
+    }, []);
 
     // Clear only saved geometry (for when starting new drawing)
     const handleClearSavedGeometry = useCallback(() => {
-        setSavedGeometry(null)
-    }, [])
+        setSavedGeometry(null);
+    }, []);
 
     // Submit toponym
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        const geometry = getGeometry()
+        const geometry = getGeometry();
         if (!geometry) {
-            alert('Silakan gambar lokasi titik terlebih dahulu')
-            return
+            alert("Silakan gambar lokasi titik terlebih dahulu");
+            return;
         }
 
-        setIsSubmitting(true)
+        setIsSubmitting(true);
         try {
             // Upload photos first if any
-            let uploadedPhotos: { url: string, filename: string }[] = []
+            let uploadedPhotos: { url: string; filename: string }[] = [];
             if (selectedFiles.length > 0) {
-                uploadedPhotos = await uploadPhotos()
+                uploadedPhotos = await uploadPhotos();
             }
 
             const payload: Record<string, unknown> = {
                 local_name: localName,
                 generic_element: genericElement,
                 specific_element: specificElement,
-                geometry: geometry
-            }
+                geometry: geometry,
+            };
 
             // Optional fields
-            if (mapName) payload.map_name = mapName
-            if (otherName) payload.other_name = otherName
-            if (languageOrigin) payload.language_origin = languageOrigin
-            if (nameMeaning) payload.name_meaning = nameMeaning
-            if (nameHistory) payload.name_history = nameHistory
-            if (pronounciation) payload.pronounciation = pronounciation
-            if (spelling) payload.spelling = spelling
-            if (elementCode) payload.element_id = elementCode
-            if (provinceCode) payload.province_code = provinceCode
-            if (regencyCode) payload.regency_code = regencyCode
-            if (districtCode) payload.district_code = districtCode
-            if (villageCode) payload.village_code = villageCode
-            if (surveyAt) payload.survey_at = surveyAt
-            if (uploadedPhotos.length > 0) payload.photos = uploadedPhotos
+            if (mapName) payload.map_name = mapName;
+            if (otherName) payload.other_name = otherName;
+            if (languageOrigin) payload.language_origin = languageOrigin;
+            if (nameMeaning) payload.name_meaning = nameMeaning;
+            if (nameHistory) payload.name_history = nameHistory;
+            if (pronounciation) payload.pronounciation = pronounciation;
+            if (spelling) payload.spelling = spelling;
+            if (elementCode) payload.element_id = elementCode;
+            if (provinceCode) payload.province_code = provinceCode;
+            if (regencyCode) payload.regency_code = regencyCode;
+            if (districtCode) payload.district_code = districtCode;
+            if (villageCode) payload.village_code = villageCode;
+            if (surveyAt) payload.survey_at = surveyAt;
+            if (uploadedPhotos.length > 0) payload.photos = uploadedPhotos;
 
             const res = await fetch(`${API_URL}/survey/toponyms`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(payload)
-            })
+                body: JSON.stringify(payload),
+            });
 
-            const result = await res.json()
+            const result = await res.json();
             if (!result.error) {
-                alert('Toponim berhasil ditambahkan!')
-                router.push('/survey')
+                alert("Toponim berhasil ditambahkan!");
+                router.push("/survey");
             } else {
-                alert(`Gagal: ${result.message}`)
+                alert(`Gagal: ${result.message}`);
             }
         } catch (err) {
-            console.error('Failed to submit:', err)
-            alert('Terjadi kesalahan saat menyimpan')
+            console.error("Failed to submit:", err);
+            alert("Terjadi kesalahan saat menyimpan");
         } finally {
-            setIsSubmitting(false)
+            setIsSubmitting(false);
         }
-    }
+    };
 
     return (
         <SurveyorLayout>
@@ -874,7 +878,7 @@ const Page = () => {
                 <div className="w-2/5 p-6 overflow-y-auto border-r">
                     <div className="flex items-center gap-3 mb-6">
                         <Link href="/survey?tab=my-data">
-                            <Button size='icon-sm' variant="ghost">
+                            <Button size="icon-sm" variant="ghost">
                                 <ChevronLeft />
                             </Button>
                         </Link>
@@ -885,45 +889,45 @@ const Page = () => {
                         {/* Penggambaran Spasial/Geometri */}
                         <Collapsible open={openSpasial} onOpenChange={setOpenSpasial}>
                             <CollapsibleTrigger className="flex items-center gap-2 w-full text-left font-semibold text-lg">
-                                <ChevronDown className={`transition-transform ${openSpasial ? '' : '-rotate-90'}`} size={20} />
+                                <ChevronDown className={`transition-transform ${openSpasial ? "" : "-rotate-90"}`} size={20} />
                                 Penggambaran Lokasi
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-4 ml-6 space-y-4">
                                 {!isEditingDraft ? (
-                                    <Button
-                                        variant="outline"
-                                        className="w-full border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-600"
-                                        onClick={() => setIsEditingDraft(true)}
-                                    >
-                                        {savedGeometry ? 'Edit Lokasi di Peta' : 'Tambah Lokasi di Peta'}
+                                    <Button variant="outline" className="w-full border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-600" onClick={() => setIsEditingDraft(true)}>
+                                        {savedGeometry ? "Edit Lokasi di Peta" : "Tambah Lokasi di Peta"}
                                     </Button>
                                 ) : (
                                     <>
                                         <div className="space-y-2">
                                             <Label>Tipe Geometri</Label>
-                                            <RadioGroup value={geometriType} onValueChange={(v) => setGeometriType(v as 'titik' | 'garis' | 'area')} className="flex gap-6">
+                                            <RadioGroup value={geometriType} onValueChange={(v) => setGeometriType(v as "titik" | "garis" | "area")} className="flex gap-6">
                                                 <div className="flex items-center space-x-2">
                                                     <RadioGroupItem value="titik" id="titik" />
-                                                    <Label htmlFor="titik" className="font-normal">Titik</Label>
+                                                    <Label htmlFor="titik" className="font-normal">
+                                                        Titik
+                                                    </Label>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
                                                     <RadioGroupItem value="garis" id="garis" />
-                                                    <Label htmlFor="garis" className="font-normal">Garis</Label>
+                                                    <Label htmlFor="garis" className="font-normal">
+                                                        Garis
+                                                    </Label>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
                                                     <RadioGroupItem value="area" id="area" />
-                                                    <Label htmlFor="area" className="font-normal">Area</Label>
+                                                    <Label htmlFor="area" className="font-normal">
+                                                        Area
+                                                    </Label>
                                                 </div>
                                             </RadioGroup>
                                         </div>
 
                                         <div className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id="snapping"
-                                                checked={fiturSnapping}
-                                                onCheckedChange={(checked) => setFiturSnapping(checked as boolean)}
-                                            />
-                                            <Label htmlFor="snapping" className="font-normal">Fitur Snapping</Label>
+                                            <Checkbox id="snapping" checked={fiturSnapping} onCheckedChange={(checked) => setFiturSnapping(checked as boolean)} />
+                                            <Label htmlFor="snapping" className="font-normal">
+                                                Fitur Snapping
+                                            </Label>
                                         </div>
 
                                         <div className="flex flex-col gap-2">
@@ -939,11 +943,7 @@ const Page = () => {
                                                 <Save size={16} className="mr-2" />
                                                 Simpan Lokasi
                                             </Button>
-                                            <Button
-                                                variant="outline"
-                                                className="border-gray-400 text-gray-600 hover:bg-gray-50"
-                                                onClick={() => setIsEditingDraft(false)}
-                                            >
+                                            <Button variant="outline" className="border-gray-400 text-gray-600 hover:bg-gray-50" onClick={() => setIsEditingDraft(false)}>
                                                 Batalkan
                                             </Button>
                                         </div>
@@ -973,8 +973,8 @@ const Page = () => {
                                         <Label className="text-sm font-medium mb-2 block text-green-700">Lokasi Tersimpan</Label>
                                         {savedGeometry.features.map((feature, idx) => {
                                             const geom = feature.geometry;
-                                            if (geom.type === 'Point') {
-                                                const coords = geom.coordinates as number[]
+                                            if (geom.type === "Point") {
+                                                const coords = geom.coordinates as number[];
                                                 return (
                                                     <div key={idx} className="space-y-1">
                                                         <p className="text-sm text-green-600 font-medium">Tipe: Titik</p>
@@ -982,9 +982,9 @@ const Page = () => {
                                                             Lng: {coords[0].toFixed(6)}, Lat: {coords[1].toFixed(6)}
                                                         </p>
                                                     </div>
-                                                )
-                                            } else if (geom.type === 'LineString') {
-                                                const coords = geom.coordinates as number[][]
+                                                );
+                                            } else if (geom.type === "LineString") {
+                                                const coords = geom.coordinates as number[][];
                                                 return (
                                                     <div key={idx} className="space-y-1">
                                                         <p className="text-sm text-green-600 font-medium">Tipe: Garis ({coords.length} titik)</p>
@@ -996,11 +996,11 @@ const Page = () => {
                                                             ))}
                                                         </div>
                                                     </div>
-                                                )
-                                            } else if (geom.type === 'Polygon') {
-                                                const coords = (geom.coordinates as number[][][])[0]
+                                                );
+                                            } else if (geom.type === "Polygon") {
+                                                const coords = (geom.coordinates as number[][][])[0];
                                                 // Exclude the last point since it's a duplicate of the first (closing point)
-                                                const uniqueCoords = coords.slice(0, -1)
+                                                const uniqueCoords = coords.slice(0, -1);
                                                 return (
                                                     <div key={idx} className="space-y-1">
                                                         <p className="text-sm text-green-600 font-medium">Tipe: Area ({uniqueCoords.length} titik)</p>
@@ -1012,9 +1012,9 @@ const Page = () => {
                                                             ))}
                                                         </div>
                                                     </div>
-                                                )
+                                                );
                                             }
-                                            return null
+                                            return null;
                                         })}
                                     </div>
                                 )}
@@ -1024,133 +1024,89 @@ const Page = () => {
                         {/* Pengisian Atribut */}
                         <Collapsible open={openAtribut} onOpenChange={setOpenAtribut}>
                             <CollapsibleTrigger className="flex items-center gap-2 w-full text-left font-semibold text-lg">
-                                <ChevronDown className={`transition-transform ${openAtribut ? '' : '-rotate-90'}`} size={20} />
+                                <ChevronDown className={`transition-transform ${openAtribut ? "" : "-rotate-90"}`} size={20} />
                                 Informasi Toponim
                             </CollapsibleTrigger>
                             <CollapsibleContent className="mt-4 ml-6 space-y-4">
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="generic-element">Elemen Generik <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="generic-element"
-                                            placeholder="Contoh: Gunung"
-                                            value={genericElement}
-                                            onChange={(e) => setGenericElement(e.target.value)}
-                                            required
-                                        />
+                                        <Label htmlFor="generic-element">
+                                            Elemen Generik <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input id="generic-element" placeholder="Contoh: Gunung" value={genericElement} onChange={(e) => setGenericElement(e.target.value)} required />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="specific-element">Elemen Spesifik <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="specific-element"
-                                            placeholder="Contoh: Merapi"
-                                            value={specificElement}
-                                            onChange={(e) => setSpecificElement(e.target.value)}
-                                            required
-                                        />
+                                        <Label htmlFor="specific-element">
+                                            Elemen Spesifik <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input id="specific-element" placeholder="Contoh: Merapi" value={specificElement} onChange={(e) => setSpecificElement(e.target.value)} required />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="local-name">Nama Lokal <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="local-name"
-                                            placeholder="Contoh: Gunung Merapi"
-                                            value={localName}
-                                            onChange={(e) => setLocalName(e.target.value)}
-                                            required
-                                        />
+                                        <Label htmlFor="local-name">
+                                            Nama Lokal <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input id="local-name" placeholder="Contoh: Gunung Merapi" value={localName} onChange={(e) => setLocalName(e.target.value)} required />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="map-name">Nama Peta <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="map-name"
-                                            placeholder="Contoh: Gunung Merapi"
-                                            value={mapName}
-                                            onChange={(e) => setMapName(e.target.value)}
-                                            required
-                                        />
+                                        <Label htmlFor="map-name">
+                                            Nama Peta <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input id="map-name" placeholder="Contoh: Gunung Merapi" value={mapName} onChange={(e) => setMapName(e.target.value)} required />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="other-name">Nama Lain <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="other-name"
-                                            placeholder="Contoh: Mt. Merapi"
-                                            value={otherName}
-                                            onChange={(e) => setOtherName(e.target.value)}
-                                            required
-                                        />
+                                        <Label htmlFor="other-name">
+                                            Nama Lain <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input id="other-name" placeholder="Contoh: Mt. Merapi" value={otherName} onChange={(e) => setOtherName(e.target.value)} required />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="language-origin">Asal Bahasa <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="language-origin"
-                                            placeholder="Contoh: Jawa"
-                                            value={languageOrigin}
-                                            onChange={(e) => setLanguageOrigin(e.target.value)}
-                                            required
-                                        />
+                                        <Label htmlFor="language-origin">
+                                            Asal Bahasa <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input id="language-origin" placeholder="Contoh: Jawa" value={languageOrigin} onChange={(e) => setLanguageOrigin(e.target.value)} required />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="name-meaning">Arti Nama <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="name-meaning"
-                                            placeholder="Contoh: Gunung berapi"
-                                            value={nameMeaning}
-                                            onChange={(e) => setNameMeaning(e.target.value)}
-                                            required
-                                        />
+                                        <Label htmlFor="name-meaning">
+                                            Arti Nama <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input id="name-meaning" placeholder="Contoh: Gunung berapi" value={nameMeaning} onChange={(e) => setNameMeaning(e.target.value)} required />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="name-history">Sejarah Nama <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="name-history"
-                                            placeholder="Contoh: Digunakan sejak abad ke-15"
-                                            value={nameHistory}
-                                            onChange={(e) => setNameHistory(e.target.value)}
-                                            required
-                                        />
+                                        <Label htmlFor="name-history">
+                                            Sejarah Nama <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input id="name-history" placeholder="Contoh: Digunakan sejak abad ke-15" value={nameHistory} onChange={(e) => setNameHistory(e.target.value)} required />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="pronounciation">Pelafalan <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="pronounciation"
-                                            placeholder="Contoh: Gu-nung Me-ra-pi"
-                                            value={pronounciation}
-                                            onChange={(e) => setPronounciation(e.target.value)}
-                                            required
-                                        />
+                                        <Label htmlFor="pronounciation">
+                                            Pelafalan <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input id="pronounciation" placeholder="Contoh: Gu-nung Me-ra-pi" value={pronounciation} onChange={(e) => setPronounciation(e.target.value)} required />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="spelling">Ejaan <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            id="spelling"
-                                            placeholder="Contoh: Gunung Merapi"
-                                            value={spelling}
-                                            onChange={(e) => setSpelling(e.target.value)}
-                                            required
-                                        />
+                                        <Label htmlFor="spelling">
+                                            Ejaan <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input id="spelling" placeholder="Contoh: Gunung Merapi" value={spelling} onChange={(e) => setSpelling(e.target.value)} required />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>Elemen <span className="text-red-500">*</span></Label>
+                                        <Label>
+                                            Elemen <span className="text-red-500">*</span>
+                                        </Label>
                                         <input type="hidden" value={elementCode} required />
                                         <Popover open={openElementCombobox} onOpenChange={setOpenElementCombobox}>
                                             <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={openElementCombobox}
-                                                    className="w-full justify-between font-normal"
-                                                    disabled={loadingElements}
-                                                >
+                                                <Button variant="outline" role="combobox" aria-expanded={openElementCombobox} className="w-full justify-between font-normal" disabled={loadingElements}>
                                                     {loadingElements ? (
                                                         <div className="flex items-center gap-2">
                                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -1175,16 +1131,11 @@ const Page = () => {
                                                                     key={element.code}
                                                                     value={element.name}
                                                                     onSelect={() => {
-                                                                        setElementCode(element.code)
-                                                                        setOpenElementCombobox(false)
+                                                                        setElementCode(element.code);
+                                                                        setOpenElementCombobox(false);
                                                                     }}
                                                                 >
-                                                                    <Check
-                                                                        className={cn(
-                                                                            "mr-2 h-4 w-4",
-                                                                            elementCode === element.code ? "opacity-100" : "opacity-0"
-                                                                        )}
-                                                                    />
+                                                                    <Check className={cn("mr-2 h-4 w-4", elementCode === element.code ? "opacity-100" : "opacity-0")} />
                                                                     {element.name}
                                                                 </CommandItem>
                                                             ))}
@@ -1196,17 +1147,13 @@ const Page = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>Provinsi <span className="text-red-500">*</span></Label>
+                                        <Label>
+                                            Provinsi <span className="text-red-500">*</span>
+                                        </Label>
                                         <input type="hidden" value={provinceCode} required />
                                         <Popover open={openProvincePopover} onOpenChange={setOpenProvincePopover}>
                                             <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={openProvincePopover}
-                                                    className="w-full justify-between font-normal"
-                                                    disabled={loadingProvinces}
-                                                >
+                                                <Button variant="outline" role="combobox" aria-expanded={openProvincePopover} className="w-full justify-between font-normal" disabled={loadingProvinces}>
                                                     {loadingProvinces ? (
                                                         <div className="flex items-center gap-2">
                                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -1231,16 +1178,11 @@ const Page = () => {
                                                                     key={province.code}
                                                                     value={province.name}
                                                                     onSelect={() => {
-                                                                        setProvinceCode(province.code)
-                                                                        setOpenProvincePopover(false)
+                                                                        setProvinceCode(province.code);
+                                                                        setOpenProvincePopover(false);
                                                                     }}
                                                                 >
-                                                                    <Check
-                                                                        className={cn(
-                                                                            "mr-2 h-4 w-4",
-                                                                            provinceCode === province.code ? "opacity-100" : "opacity-0"
-                                                                        )}
-                                                                    />
+                                                                    <Check className={cn("mr-2 h-4 w-4", provinceCode === province.code ? "opacity-100" : "opacity-0")} />
                                                                     {province.name}
                                                                 </CommandItem>
                                                             ))}
@@ -1252,17 +1194,13 @@ const Page = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>Kabupaten/Kota <span className="text-red-500">*</span></Label>
+                                        <Label>
+                                            Kabupaten/Kota <span className="text-red-500">*</span>
+                                        </Label>
                                         <input type="hidden" value={regencyCode} required />
                                         <Popover open={openRegencyPopover} onOpenChange={setOpenRegencyPopover}>
                                             <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={openRegencyPopover}
-                                                    className="w-full justify-between font-normal"
-                                                    disabled={loadingRegencies || !provinceCode}
-                                                >
+                                                <Button variant="outline" role="combobox" aria-expanded={openRegencyPopover} className="w-full justify-between font-normal" disabled={loadingRegencies || !provinceCode}>
                                                     {loadingRegencies ? (
                                                         <div className="flex items-center gap-2">
                                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -1270,8 +1208,10 @@ const Page = () => {
                                                         </div>
                                                     ) : regencyCode ? (
                                                         regencies.find((r) => r.code === regencyCode)?.name
+                                                    ) : provinceCode ? (
+                                                        "Pilih Kabupaten/Kota"
                                                     ) : (
-                                                        provinceCode ? "Pilih Kabupaten/Kota" : "Pilih Provinsi terlebih dahulu"
+                                                        "Pilih Provinsi terlebih dahulu"
                                                     )}
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
@@ -1287,16 +1227,11 @@ const Page = () => {
                                                                     key={regency.code}
                                                                     value={regency.name}
                                                                     onSelect={() => {
-                                                                        setRegencyCode(regency.code)
-                                                                        setOpenRegencyPopover(false)
+                                                                        setRegencyCode(regency.code);
+                                                                        setOpenRegencyPopover(false);
                                                                     }}
                                                                 >
-                                                                    <Check
-                                                                        className={cn(
-                                                                            "mr-2 h-4 w-4",
-                                                                            regencyCode === regency.code ? "opacity-100" : "opacity-0"
-                                                                        )}
-                                                                    />
+                                                                    <Check className={cn("mr-2 h-4 w-4", regencyCode === regency.code ? "opacity-100" : "opacity-0")} />
                                                                     {regency.name}
                                                                 </CommandItem>
                                                             ))}
@@ -1308,17 +1243,13 @@ const Page = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>Kecamatan <span className="text-red-500">*</span></Label>
+                                        <Label>
+                                            Kecamatan <span className="text-red-500">*</span>
+                                        </Label>
                                         <input type="hidden" value={districtCode} required />
                                         <Popover open={openDistrictPopover} onOpenChange={setOpenDistrictPopover}>
                                             <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={openDistrictPopover}
-                                                    className="w-full justify-between font-normal"
-                                                    disabled={loadingDistricts || !regencyCode}
-                                                >
+                                                <Button variant="outline" role="combobox" aria-expanded={openDistrictPopover} className="w-full justify-between font-normal" disabled={loadingDistricts || !regencyCode}>
                                                     {loadingDistricts ? (
                                                         <div className="flex items-center gap-2">
                                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -1326,8 +1257,10 @@ const Page = () => {
                                                         </div>
                                                     ) : districtCode ? (
                                                         districts.find((d) => d.code === districtCode)?.name
+                                                    ) : regencyCode ? (
+                                                        "Pilih Kecamatan"
                                                     ) : (
-                                                        regencyCode ? "Pilih Kecamatan" : "Pilih Kabupaten/Kota terlebih dahulu"
+                                                        "Pilih Kabupaten/Kota terlebih dahulu"
                                                     )}
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
@@ -1343,16 +1276,11 @@ const Page = () => {
                                                                     key={district.code}
                                                                     value={district.name}
                                                                     onSelect={() => {
-                                                                        setDistrictCode(district.code)
-                                                                        setOpenDistrictPopover(false)
+                                                                        setDistrictCode(district.code);
+                                                                        setOpenDistrictPopover(false);
                                                                     }}
                                                                 >
-                                                                    <Check
-                                                                        className={cn(
-                                                                            "mr-2 h-4 w-4",
-                                                                            districtCode === district.code ? "opacity-100" : "opacity-0"
-                                                                        )}
-                                                                    />
+                                                                    <Check className={cn("mr-2 h-4 w-4", districtCode === district.code ? "opacity-100" : "opacity-0")} />
                                                                     {district.name}
                                                                 </CommandItem>
                                                             ))}
@@ -1364,17 +1292,13 @@ const Page = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label>Desa/Kelurahan <span className="text-red-500">*</span></Label>
+                                        <Label>
+                                            Desa/Kelurahan <span className="text-red-500">*</span>
+                                        </Label>
                                         <input type="hidden" value={villageCode} required />
                                         <Popover open={openVillagePopover} onOpenChange={setOpenVillagePopover}>
                                             <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={openVillagePopover}
-                                                    className="w-full justify-between font-normal"
-                                                    disabled={loadingVillages || !districtCode}
-                                                >
+                                                <Button variant="outline" role="combobox" aria-expanded={openVillagePopover} className="w-full justify-between font-normal" disabled={loadingVillages || !districtCode}>
                                                     {loadingVillages ? (
                                                         <div className="flex items-center gap-2">
                                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -1382,8 +1306,10 @@ const Page = () => {
                                                         </div>
                                                     ) : villageCode ? (
                                                         villages.find((v) => v.code === villageCode)?.name
+                                                    ) : districtCode ? (
+                                                        "Pilih Kelurahan/Desa"
                                                     ) : (
-                                                        districtCode ? "Pilih Kelurahan/Desa" : "Pilih Kecamatan terlebih dahulu"
+                                                        "Pilih Kecamatan terlebih dahulu"
                                                     )}
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
@@ -1399,16 +1325,11 @@ const Page = () => {
                                                                     key={village.code}
                                                                     value={village.name}
                                                                     onSelect={() => {
-                                                                        setVillageCode(village.code)
-                                                                        setOpenVillagePopover(false)
+                                                                        setVillageCode(village.code);
+                                                                        setOpenVillagePopover(false);
                                                                     }}
                                                                 >
-                                                                    <Check
-                                                                        className={cn(
-                                                                            "mr-2 h-4 w-4",
-                                                                            villageCode === village.code ? "opacity-100" : "opacity-0"
-                                                                        )}
-                                                                    />
+                                                                    <Check className={cn("mr-2 h-4 w-4", villageCode === village.code ? "opacity-100" : "opacity-0")} />
                                                                     {village.name}
                                                                 </CommandItem>
                                                             ))}
@@ -1419,33 +1340,17 @@ const Page = () => {
                                         </Popover>
                                     </div>
 
-
                                     <div className="space-y-2">
                                         <Label htmlFor="survey-at">Tanggal Survei </Label>
-                                        <Input
-                                            id="survey-at"
-                                            type="date"
-                                            value={surveyAt}
-                                            onChange={(e) => setSurveyAt(e.target.value)}
-                                        />
+                                        <Input id="survey-at" type="date" value={surveyAt} onChange={(e) => setSurveyAt(e.target.value)} />
                                     </div>
 
                                     {/* Photo Upload */}
                                     <div className="space-y-2">
                                         <Label>Foto Pendukung (Maksimal 3MB)</Label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                multiple
-                                                onChange={handlePhotoSelect}
-                                                className="hidden"
-                                                id="photo-upload"
-                                            />
-                                            <label
-                                                htmlFor="photo-upload"
-                                                className="flex flex-col items-center justify-center cursor-pointer"
-                                            >
+                                            <input type="file" accept="image/*" multiple onChange={handlePhotoSelect} className="hidden" id="photo-upload" />
+                                            <label htmlFor="photo-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                 <Camera className="h-8 w-8 text-gray-400 mb-2" />
                                                 <span className="text-sm text-gray-500">Klik untuk pilih foto</span>
                                                 <span className="text-xs text-gray-400 mt-1">Pilih beberapa foto sekaligus</span>
@@ -1456,16 +1361,18 @@ const Page = () => {
                                         {selectedFiles.length > 0 && (
                                             <div className="grid grid-cols-3 gap-2 mt-3">
                                                 {selectedFiles.map((photo, index) => (
-                                                    <div key={index} className="relative group">
-                                                        <img
-                                                            src={photo.previewUrl}
-                                                            alt={photo.file.name}
-                                                            className="w-full h-24 object-cover rounded-lg"
-                                                        />
+                                                    <div key={index} className="relative group cursor-pointer" onClick={() => setPreviewImage({ url: photo.previewUrl, name: photo.file.name })}>
+                                                        <img src={photo.previewUrl} alt={photo.file.name} className="w-full h-24 object-cover rounded-lg border border-gray-200" />
+                                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
+                                                            <Maximize2 className="text-white h-6 w-6" />
+                                                        </div>
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleRemovePhoto(index)}
-                                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleRemovePhoto(index);
+                                                            }}
+                                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all z-10"
                                                         >
                                                             <X size={14} />
                                                         </button>
@@ -1476,6 +1383,66 @@ const Page = () => {
                                         )}
                                     </div>
 
+                                    {/* Dialog Preview Gambar */}
+                                    <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+                                        <DialogContent className="max-w-none sm:max-w-none w-screen h-screen p-0 m-0 bg-black border-none shadow-none rounded-none overflow-hidden flex items-center justify-center" showCloseButton={false}>
+                                            <DialogHeader className="sr-only">
+                                                <DialogTitle>{previewImage?.name || "Preview Gambar"}</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="w-screen h-screen flex items-center justify-center bg-black py-1 px-4 relative group/gallery">
+                                                <img src={previewImage?.url} alt={previewImage?.name} className="max-w-full max-h-full object-contain" />
+
+                                                {/* Navigation Buttons */}
+                                                {allPhotos.length > 1 && (
+                                                    <>
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            className={cn(
+                                                                "absolute left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full h-14 w-14 transition-all border border-white/20 backdrop-blur-md z-50",
+                                                                allPhotos.findIndex((p) => p.url === previewImage?.url) === 0 && "opacity-20 cursor-not-allowed",
+                                                            )}
+                                                            onClick={handlePrevImage}
+                                                            disabled={allPhotos.findIndex((p) => p.url === previewImage?.url) === 0}
+                                                        >
+                                                            <ChevronLeft size={32} />
+                                                        </Button>
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            className={cn(
+                                                                "absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full h-14 w-14 transition-all border border-white/20 backdrop-blur-md z-50",
+                                                                allPhotos.findIndex((p) => p.url === previewImage?.url) === allPhotos.length - 1 && "opacity-20 cursor-not-allowed",
+                                                            )}
+                                                            onClick={handleNextImage}
+                                                            disabled={allPhotos.findIndex((p) => p.url === previewImage?.url) === allPhotos.length - 1}
+                                                        >
+                                                            <ChevronRight size={32} />
+                                                        </Button>
+                                                    </>
+                                                )}
+
+                                                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
+                                                    <span className="bg-white/10 text-white px-6 py-2 rounded-full text-sm font-medium backdrop-blur-xl border border-white/20 shadow-2xl">{previewImage?.name}</span>
+                                                    {allPhotos.length > 1 && (
+                                                        <span className="text-white/60 text-xs font-light">
+                                                            {allPhotos.findIndex((p) => p.url === previewImage?.url) + 1} dari {allPhotos.length}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="absolute top-6 right-6 bg-white/10 hover:bg-white/20 text-white rounded-full h-12 w-12 transition-all border border-white/20 backdrop-blur-md z-50"
+                                                    onClick={() => setPreviewImage(null)}
+                                                >
+                                                    <X size={28} />
+                                                </Button>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+
                                     {/* Submit Buttons */}
                                     <div className="flex gap-4 pt-4">
                                         <Link href="/survey" className="flex-1">
@@ -1483,18 +1450,14 @@ const Page = () => {
                                                 Batal
                                             </Button>
                                         </Link>
-                                        <Button
-                                            type="submit"
-                                            className="flex-1 bg-green-600 hover:bg-green-700"
-                                            disabled={isSubmitting}
-                                        >
+                                        <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700" disabled={isSubmitting}>
                                             {isSubmitting ? (
                                                 <>
                                                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                                                     Menyimpan...
                                                 </>
                                             ) : (
-                                                'Simpan Toponim'
+                                                "Simpan Toponim"
                                             )}
                                         </Button>
                                     </div>
@@ -1520,7 +1483,7 @@ const Page = () => {
                 </div>
             </div>
         </SurveyorLayout>
-    )
-}
+    );
+};
 
-export default Page
+export default Page;

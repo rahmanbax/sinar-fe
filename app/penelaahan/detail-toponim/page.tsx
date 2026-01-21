@@ -1,25 +1,26 @@
-"use client"
-import { useState, useRef, useEffect, Suspense } from "react";
-import { PiPencilSimpleLineDuotone } from 'react-icons/pi'
+"use client";
+import { useState, useRef, useEffect, Suspense, useCallback } from "react";
+import { PiPencilSimpleLineDuotone } from "react-icons/pi";
 import { useSearchParams, useRouter } from "next/navigation";
 import { API_URL } from "@/lib/config";
 
 import { Button } from "@/components/ui/button";
-import { Check, ChevronDown, ChevronLeft, ChevronsDown, ChevronsUp, ChevronsUpDown, CircleUserRound, Database, X } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronsDown, ChevronsUp, ChevronsUpDown, CircleUserRound, Database, X, Trash2, RotateCcw, Save, CircleDot } from "lucide-react";
 import ReviewerLayout from "@/layouts/ReviewerLayout";
 import { Avatar } from "@/components/ui/avatar";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 // import * as d3 from 'd3'
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
-import type { ChartData, ChartOptions } from 'chart.js';
-import { Map, type MapRef, type ViewState, } from '@vis.gl/react-maplibre'
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+import { Bar } from "react-chartjs-2";
+import type { ChartData, ChartOptions } from "chart.js";
+import { Map, type MapRef, type ViewState, Source, Layer } from "@vis.gl/react-maplibre";
 import { big_office_coord, MapStyles } from "@/components/map/Map";
-import CalendarHeatmap from 'react-calendar-heatmap';
-import 'react-calendar-heatmap/dist/styles.css';
+import CalendarHeatmap from "react-calendar-heatmap";
+import "react-calendar-heatmap/dist/styles.css";
 import Image from "next/image";
 import StatisticTab from "../StatisticTab";
 import MyTeamTab from "../MyTeamTab";
@@ -29,251 +30,549 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Layers, Minus, Plus } from "lucide-react";
-import { Marker } from '@vis.gl/react-maplibre'
-import { IoLocationSharp } from 'react-icons/io5'
+import { Layers, Minus, Plus, Loader2 } from "lucide-react";
+import { Marker } from "@vis.gl/react-maplibre";
+import { IoLocationSharp } from "react-icons/io5";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import type { FeatureCollection, Feature, Point, LineString, Polygon } from "geojson";
+import type { MapLayerMouseEvent } from "maplibre-gl";
 
 interface PreviewMapProps {
-    coordinates?: [number, number] | null
+    isEditing: boolean;
+    geometriType: "titik" | "garis" | "area";
+    snappingEnabled: boolean;
+    drawnPoints: [number, number][];
+    onPointsChange: (points: [number, number][]) => void;
+    savedGeometry: FeatureCollection | null;
+    onClearSaved: () => void;
+    onSave: () => void;
+    onUndo: () => void;
 }
 
-const PreviewMap: React.FC<PreviewMapProps> = ({ coordinates }) => {
-    const mapRef = useRef<MapRef>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const geoRef = useRef<maplibregl.GeolocateControl>(null);
+interface Province {
+    id: number;
+    name: string;
+    code: string;
+    level: string;
+    path: string;
+}
 
-    const [bearing, setBearing] = useState(0)
-    const [showLayerMenu, setShowLayerMenu] = useState(false)
+interface Region {
+    id: number;
+    name: string;
+    code: string;
+    level: string;
+    parent_id: number;
+    path: string;
+}
 
-    // Validate coordinates
-    const isValidCoordinates = (coords: [number, number] | null | undefined): coords is [number, number] => {
-        if (!coords || coords.length !== 2) return false
-        const [lng, lat] = coords
-        return lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90
+interface Element {
+    id: number;
+    code: string;
+    name: string;
+    subcategory_id: number;
+}
+
+const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "-";
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return dateString;
     }
+};
 
-    const validCoordinates = isValidCoordinates(coordinates) ? coordinates : null
+const ddToDMS = (dd: number, isLat: boolean): string => {
+    const absDd = Math.abs(dd);
+    const deg = Math.floor(absDd);
+    const min = Math.floor((absDd - deg) * 60);
+    const sec = ((absDd - deg - min / 60) * 3600).toFixed(2);
+    const direction = isLat ? (dd >= 0 ? "LU" : "LS") : dd >= 0 ? "BT" : "BB";
+    return `${deg}° ${min}' ${sec}" ${direction}`;
+};
 
-    const initialViewState: ViewState = {
-        longitude: validCoordinates ? validCoordinates[0] : big_office_coord.longitude,
-        latitude: validCoordinates ? validCoordinates[1] : big_office_coord.latitude,
-        zoom: validCoordinates ? 14 : 4.55,
-        bearing: 0,
-        pitch: 0,
-        padding: { bottom: 0 }
+const PreviewMap: React.FC<PreviewMapProps> = ({ isEditing, geometriType, snappingEnabled, drawnPoints, onPointsChange, savedGeometry, onClearSaved, onSave, onUndo }) => {
+    const mapRef = useRef<MapRef>(null);
+    const [showLayerMenu, setShowLayerMenu] = useState(false);
+    const [cursorPosition, setCursorPosition] = useState<[number, number] | null>(null);
+    const initialViewState: ViewState = { longitude: big_office_coord.longitude, latitude: big_office_coord.latitude, zoom: 4.55, bearing: 0, pitch: 0, padding: { bottom: 0 } };
+    const [viewState, setViewState] = useState(initialViewState);
+    const [mapStyle, setMapStyle] = useState(MapStyles[0]);
+
+    // Helper to validate and fix swapped Lng/Lat
+    const getSafeCoords = (coords: [number, number]): [number, number] => {
+        let [lng, lat] = coords;
+        // If latitude is definitely a longitude (outside -90 to 90)
+        // and longitude could be a latitude (inside -90 to 90), swap them
+        if ((lat > 90 || lat < -90) && lng <= 90 && lng >= -90) {
+            [lng, lat] = [lat, lng];
+        }
+        // Final safety clamp for MapLibre
+        const safeLat = Math.max(-89.9, Math.min(89.9, lat));
+        const safeLng = lng; // Longitude is more flexible but can be wrapped
+        return [safeLng, safeLat];
     };
 
-    const [loadingStyle, setLoadingStyle] = useState(false)
-    const [viewState, setViewState] = useState(initialViewState);
-    const [mapStyle, setMapStyle] = useState(MapStyles[0])
-    const [onHover, setOnHover] = useState<string | undefined>()
+    // Auto zoom to saved geometry on load
+    const hasZoomedRef = useRef(false);
 
-    // Update view when coordinates change
     useEffect(() => {
-        if (validCoordinates && mapRef.current) {
-            mapRef.current.flyTo({
-                center: [validCoordinates[0], validCoordinates[1]],
-                zoom: 14,
-                duration: 1000
-            })
+        // Reset zoom flag when savedGeometry changes (including on initial load)
+        hasZoomedRef.current = false;
+    }, [savedGeometry]);
+
+    useEffect(() => {
+        if (savedGeometry?.features.length && mapRef.current && !hasZoomedRef.current) {
+            const feature = savedGeometry.features[0];
+            let rawCenter: [number, number] | null = null;
+
+            if (feature.geometry.type === "Point") {
+                rawCenter = (feature.geometry as Point).coordinates as [number, number];
+            } else if (feature.geometry.type === "LineString") {
+                const coords = (feature.geometry as LineString).coordinates as [number, number][];
+                rawCenter = coords[0];
+            } else if (feature.geometry.type === "Polygon") {
+                const coords = (feature.geometry as Polygon).coordinates as [number, number][][];
+                rawCenter = coords[0][0];
+            }
+
+            if (rawCenter) {
+                const [lng, lat] = getSafeCoords(rawCenter);
+
+                // Only zoom if coordinates are valid
+                if (!isNaN(lng) && !isNaN(lat) && isFinite(lng) && isFinite(lat)) {
+                    hasZoomedRef.current = true;
+
+                    // Use setTimeout to ensure map is fully loaded
+                    setTimeout(() => {
+                        mapRef.current?.flyTo({
+                            center: [lng, lat],
+                            zoom: 15,
+                            duration: 1500,
+                        });
+                    }, 100);
+                }
+            }
         }
-    }, [validCoordinates])
+    }, [savedGeometry, mapRef]);
 
     const handleZoomIn = () => {
-        if (mapRef.current) {
-            const currentZoom = viewState.zoom
-            mapRef.current.flyTo({ zoom: Math.min(currentZoom + 1, 18), duration: 300 })
-        }
-    }
-
+        if (mapRef.current) mapRef.current.flyTo({ zoom: Math.min(viewState.zoom + 1, 18), duration: 300 });
+    };
     const handleZoomOut = () => {
-        if (mapRef.current) {
-            const currentZoom = viewState.zoom
-            mapRef.current.flyTo({ zoom: Math.max(currentZoom - 1, 1), duration: 300 })
-        }
-    }
+        if (mapRef.current) mapRef.current.flyTo({ zoom: Math.max(viewState.zoom - 1, 1), duration: 300 });
+    };
 
-    const handleChangeStyle = (style: typeof MapStyles[0]) => {
-        setMapStyle(style)
-        setShowLayerMenu(false)
+    const snapToNearestPoint = useCallback(
+        (lng: number, lat: number): [number, number] => {
+            if (!snappingEnabled || drawnPoints.length === 0) return [lng, lat];
+            const threshold = 0.001;
+            let nearestPoint: [number, number] = [lng, lat],
+                minDistance = Infinity;
+            for (const point of drawnPoints) {
+                const distance = Math.sqrt(Math.pow(point[0] - lng, 2) + Math.pow(point[1] - lat, 2));
+                if (distance < threshold && distance < minDistance) {
+                    minDistance = distance;
+                    nearestPoint = point;
+                }
+            }
+            return nearestPoint;
+        },
+        [snappingEnabled, drawnPoints],
+    );
+
+    // Click delay to prevent double-click from adding extra point
+    const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleMapClick = useCallback(
+        (e: MapLayerMouseEvent) => {
+            if (!isEditing) return;
+
+            // For line/polygon mode, delay the click to check if it's a double-click
+            if (geometriType !== "titik") {
+                if (clickTimeoutRef.current) {
+                    clearTimeout(clickTimeoutRef.current);
+                }
+
+                clickTimeoutRef.current = setTimeout(() => {
+                    if (drawnPoints.length === 0) onClearSaved();
+                    const { lng, lat } = e.lngLat;
+                    const snappedPoint = snapToNearestPoint(lng, lat);
+                    onPointsChange([...drawnPoints, snappedPoint]);
+                }, 200);
+            } else {
+                // Point mode - immediate response
+                if (drawnPoints.length === 0) onClearSaved();
+                const { lng, lat } = e.lngLat;
+                const snappedPoint = snapToNearestPoint(lng, lat);
+                onPointsChange([snappedPoint]);
+            }
+        },
+        [isEditing, geometriType, drawnPoints, onPointsChange, snapToNearestPoint, onClearSaved],
+    );
+
+    const handleMapDblClick = useCallback(
+        (e: MapLayerMouseEvent) => {
+            if (!isEditing || geometriType === "titik") return;
+            e.preventDefault();
+
+            // Cancel pending click
+            if (clickTimeoutRef.current) {
+                clearTimeout(clickTimeoutRef.current);
+                clickTimeoutRef.current = null;
+            }
+
+            // Finish drawing with minimum point validation
+            const minPoints = geometriType === "garis" ? 2 : 3;
+            if (drawnPoints.length >= minPoints) onSave();
+        },
+        [isEditing, geometriType, drawnPoints, onSave],
+    );
+
+    const handleMouseMove = useCallback(
+        (e: MapLayerMouseEvent) => {
+            if (!isEditing) return;
+            setCursorPosition([e.lngLat.lng, e.lngLat.lat]);
+        },
+        [isEditing],
+    );
+
+    // Build GeoJSON for current drawing
+    const currentDrawingGeoJson: FeatureCollection = {
+        type: "FeatureCollection",
+        features: [],
+    };
+
+    // Add drawn points as features
+    if (drawnPoints.length > 0) {
+        // Points layer
+        drawnPoints.forEach((point, idx) => {
+            currentDrawingGeoJson.features.push({
+                type: "Feature",
+                properties: { id: idx },
+                geometry: { type: "Point", coordinates: point },
+            });
+        });
+
+        // Line/Polygon layer
+        if (geometriType === "garis" && drawnPoints.length >= 2) {
+            const lineCoords = cursorPosition ? [...drawnPoints, cursorPosition] : drawnPoints;
+            currentDrawingGeoJson.features.push({
+                type: "Feature",
+                properties: { type: "line" },
+                geometry: { type: "LineString", coordinates: lineCoords },
+            });
+        } else if (geometriType === "area" && drawnPoints.length >= 2) {
+            const polygonCoords = cursorPosition ? [...drawnPoints, cursorPosition, drawnPoints[0]] : [...drawnPoints, drawnPoints[0]];
+            currentDrawingGeoJson.features.push({
+                type: "Feature",
+                properties: { type: "polygon" },
+                geometry: { type: "Polygon", coordinates: [polygonCoords] },
+            });
+        }
     }
 
     return (
-        <div className="w-full h-full border-2 border-black relative">
+        <div className="w-full h-full relative">
             <Map
                 {...viewState}
                 ref={mapRef}
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: "100%", height: "100%" }}
                 mapStyle={mapStyle.src}
-                onMove={e => {
-                    setViewState(e.viewState)
-                    setBearing(e.viewState.bearing)
-                }}
+                onMove={(e) => setViewState(e.viewState)}
+                onClick={handleMapClick}
+                onDblClick={handleMapDblClick}
+                onMouseMove={handleMouseMove}
+                cursor={isEditing ? "crosshair" : "grab"}
                 maxBounds={[
                     [92, -12],
-                    [142, 7]
+                    [142, 7],
                 ]}
             >
-                {/* Marker for toponym location */}
-                {validCoordinates && (
-                    <Marker
-                        longitude={validCoordinates[0]}
-                        latitude={validCoordinates[1]}
-                        anchor="center"
-                        pitchAlignment="map"
-                    >
-                        <IoLocationSharp className="text-3xl text-blue-600 drop-shadow-lg" />
-                    </Marker>
+                {savedGeometry && (
+                    <>
+                        <Source id="saved-geometry" type="geojson" data={savedGeometry}>
+                            <Layer id="saved-polygon-fill" type="fill" filter={["==", ["geometry-type"], "Polygon"]} paint={{ "fill-color": "#10b981", "fill-opacity": 0.3 }} />
+                            <Layer id="saved-line" type="line" filter={["any", ["==", ["geometry-type"], "LineString"], ["==", ["geometry-type"], "Polygon"]]} paint={{ "line-color": "#10b981", "line-width": 2 }} />
+                        </Source>
+                        {savedGeometry.features
+                            .filter((f) => f.geometry.type === "Point")
+                            .map((feature, idx) => {
+                                const rawCoords = (feature.geometry as Point).coordinates as [number, number];
+                                const [lng, lat] = getSafeCoords(rawCoords);
+                                return (
+                                    <Marker key={`saved-point-${idx}`} longitude={lng} latitude={lat} anchor="bottom">
+                                        <IoLocationSharp className="text-3xl text-blue-600 drop-shadow-lg" />
+                                    </Marker>
+                                );
+                            })}
+                    </>
+                )}
+                {isEditing && currentDrawingGeoJson.features.length > 0 && (
+                    <>
+                        <Source id="current-drawing" type="geojson" data={currentDrawingGeoJson}>
+                            <Layer id="drawing-polygon-fill" type="fill" filter={["==", ["geometry-type"], "Polygon"]} paint={{ "fill-color": "#3b82f6", "fill-opacity": 0.2 }} />
+                            <Layer
+                                id="drawing-line"
+                                type="line"
+                                filter={["any", ["==", ["geometry-type"], "LineString"], ["==", ["geometry-type"], "Polygon"]]}
+                                paint={{ "line-color": "#3b82f6", "line-width": 2, "line-dasharray": [2, 2] }}
+                            />
+                            {geometriType !== "titik" && (
+                                <Layer id="drawing-points" type="circle" filter={["==", ["geometry-type"], "Point"]} paint={{ "circle-radius": 6, "circle-color": "#3b82f6", "circle-stroke-width": 2, "circle-stroke-color": "#ffffff" }} />
+                            )}
+                        </Source>
+                        {geometriType === "titik" &&
+                            drawnPoints.map((point, idx) => (
+                                <Marker key={`drawing-point-${idx}`} longitude={point[0]} latitude={point[1]} anchor="bottom">
+                                    <IoLocationSharp className="text-3xl text-blue-600 drop-shadow-lg opacity-90" />
+                                </Marker>
+                            ))}
+                    </>
                 )}
             </Map>
-
-            {/* Map Controls - Bottom Right */}
+            {isEditing && (
+                <div className="absolute top-4 left-4 bg-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2">
+                    <CircleDot size={16} className="text-blue-600" />
+                    <span className="text-sm font-medium">
+                        Mode: {geometriType === "titik" ? "Titik" : geometriType === "garis" ? "Garis" : "Area"}
+                        {snappingEnabled && " (Snapping ON)"}
+                    </span>
+                </div>
+            )}
+            {isEditing && (
+                <div className="absolute bottom-20 left-4 bg-white px-3 py-2 rounded-lg shadow-lg text-sm max-w-[200px]">
+                    {geometriType === "titik" ? <p>Klik pada peta untuk menempatkan titik</p> : <p>Klik untuk menambah titik, double-click untuk selesai</p>}
+                </div>
+            )}
             <div className="absolute bottom-12 right-4 flex flex-col gap-2">
-                {/* Layer Toggle */}
                 <div className="relative">
+                    <Button size="icon" variant="ghost" className="bg-white shadow-lg" onClick={() => setShowLayerMenu(!showLayerMenu)}>
+                        <Layers size={18} />
+                    </Button>
                     {showLayerMenu && (
-                        <div className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border p-2 min-w-[140px]">
+                        <div className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg p-2 min-w-[150px]">
                             {MapStyles.map((style) => (
                                 <button
                                     key={style.label}
-                                    onClick={() => handleChangeStyle(style)}
-                                    className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 ${mapStyle.label === style.label ? 'bg-blue-100 text-blue-700 font-medium' : ''
-                                        }`}
+                                    className={`w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 ${mapStyle.label === style.label ? "bg-blue-100 text-blue-700" : ""}`}
+                                    onClick={() => {
+                                        setMapStyle(style);
+                                        setShowLayerMenu(false);
+                                    }}
                                 >
                                     {style.label}
                                 </button>
                             ))}
                         </div>
                     )}
-                    <Button
-                        size="icon"
-                        variant="secondary"
-                        className="bg-white shadow-md hover:bg-gray-100"
-                        onClick={() => setShowLayerMenu(!showLayerMenu)}
-                    >
-                        <Layers size={18} />
-                    </Button>
                 </div>
-
-                {/* Zoom Controls */}
-                <div className="flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        className="rounded-none border-b hover:bg-gray-100"
-                        onClick={handleZoomIn}
-                    >
-                        <Plus size={18} />
-                    </Button>
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        className="rounded-none hover:bg-gray-100"
-                        onClick={handleZoomOut}
-                    >
-                        <Minus size={18} />
-                    </Button>
-                </div>
+                <Button size="icon" variant="ghost" className="bg-white shadow-lg" onClick={handleZoomIn}>
+                    <Plus size={18} />
+                </Button>
+                <Button size="icon" variant="ghost" className="bg-white shadow-lg" onClick={handleZoomOut}>
+                    <Minus size={18} />
+                </Button>
             </div>
         </div>
-    )
-}
+    );
+};
 
 // Toponym Detail API Response Type
 interface ToponymDetail {
-    id: string
+    id: string;
     element: {
-        code: string
-        name: string
-    }
-    local_name: string
-    map_name: string
-    other_name: string | null
-    language_origin: string
-    name_meaning: string | null
-    name_history: string | null
-    pronounciation: string | null
-    spelling: string | null
-    geometry_type: string
+        code: string;
+        name: string;
+    };
+    generic_element: string;
+    specific_element: string;
+    local_name: string;
+    map_name: string;
+    other_name: string | null;
+    language_origin: string;
+    name_meaning: string | null;
+    name_history: string | null;
+    pronounciation: string | null;
+    spelling: string | null;
+    geometry_type: string;
     location_point: {
-        type: string
-        coordinates: [number, number]
-    } | null
-    elevation_value: string
-    country: string
-    province_id: string
-    regency_id: string
-    district_id: string
-    village_id: string | null
-    survey_at: string | null
-    source: string
-    notes: string | null
-    sketch: string | null
+        type: string;
+        coordinates: [number, number];
+    } | null;
+    elevation_value: string;
+    country: string;
+    province_id: string;
+    regency_id: string;
+    district_id: string;
+    village_id: string | null;
+    survey_at: string | null;
+    source: string;
+    notes: string | null;
+    sketch: string | null;
     photos: Array<{
-        url: string
-        size: number
-        filename: string
-        uploaded_at: string
-        original_name: string
-    }>
-    utm_zone: string
-    status: string
+        url: string;
+        size: number;
+        filename: string;
+        uploaded_at: string;
+        original_name: string;
+    }>;
+    utm_zone: string;
+    status: string;
 }
 
 const DetailToponimContent = () => {
-    const searchParams = useSearchParams()
-    const router = useRouter()
-    const transactionId = searchParams.get('transactionId')
-    const toponymId = searchParams.get('toponymId')
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const transactionId = searchParams.get("transactionId");
+    const toponymId = searchParams.get("toponymId");
 
-    const [fullTab, setFulltab] = useState(false)
+    const [fullTab, setFulltab] = useState(false);
     const navbarRef = useRef<HTMLDivElement>(null);
     const [navbarHeight, setNavbarHeight] = useState(0);
-    const [openCollapsible, setOpenCollapsible] = useState({ toponim: true, additional: true })
+    const [openCollapsible, setOpenCollapsible] = useState({ toponim: true, additional: true });
 
     // API State
-    const [toponymData, setToponymData] = useState<ToponymDetail | null>(null)
-    const [loading, setLoading] = useState(true)
+    const [toponymData, setToponymData] = useState<ToponymDetail | null>(null);
+    const [loading, setLoading] = useState(true);
 
     // Edit mode state
-    const [isEditMode, setIsEditMode] = useState(false)
-    const [editedData, setEditedData] = useState<Partial<ToponymDetail>>({})
-    const [saving, setSaving] = useState(false)
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editedData, setEditedData] = useState<Partial<ToponymDetail>>({});
+    const [saving, setSaving] = useState(false);
 
     // Elements dropdown state
-    const [elements, setElements] = useState<Array<{ id: number, code: string, name: string }>>([])
-    const [loadingElements, setLoadingElements] = useState(false)
-    const [openElementCombobox, setOpenElementCombobox] = useState(false)
+    const [elements, setElements] = useState<Element[]>([]);
+    const [loadingElements, setLoadingElements] = useState(false);
+    const [openElementCombobox, setOpenElementCombobox] = useState(false);
+
+    // Regional data state
+    const [provinces, setProvinces] = useState<Province[]>([]);
+    const [loadingProvinces, setLoadingProvinces] = useState(false);
+    const [regencies, setRegencies] = useState<Region[]>([]);
+    const [loadingRegencies, setLoadingRegencies] = useState(false);
+    const [districts, setDistricts] = useState<Region[]>([]);
+    const [loadingDistricts, setLoadingDistricts] = useState(false);
+    const [villages, setVillages] = useState<Region[]>([]);
+    const [loadingVillages, setLoadingVillages] = useState(false);
+
+    const [openProvincePopover, setOpenProvincePopover] = useState(false);
+    const [openRegencyPopover, setOpenRegencyPopover] = useState(false);
+    const [openDistrictPopover, setOpenDistrictPopover] = useState(false);
+    const [openVillagePopover, setOpenVillagePopover] = useState(false);
 
     // Photo modal state
-    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null)
-    const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false)
+    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+    const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+
+    const [openSpasial, setOpenSpasial] = useState(true);
+    const [openAtribut, setOpenAtribut] = useState(true);
+
+    // Geometri Editing State
+    const [isEditingDraft, setIsEditingDraft] = useState(false);
+    const [geometriType, setGeometriType] = useState<"titik" | "garis" | "area">("titik");
+    const [fiturSnapping, setFiturSnapping] = useState(false);
+    const [drawnPoints, setDrawnPoints] = useState<[number, number][]>([]);
+    const [savedGeometry, setSavedGeometry] = useState<FeatureCollection | null>(null);
+    const [historyStack, setHistoryStack] = useState<[number, number][][]>([]);
+
+    // Initial load geometry
+    useEffect(() => {
+        if (toponymData) {
+            let geometry: FeatureCollection | null = null;
+            if (toponymData.location_point) {
+                let type = "Point";
+                if (toponymData.geometry_type === "area") type = "Polygon";
+                else if (toponymData.geometry_type === "garis") type = "LineString";
+
+                geometry = {
+                    type: "FeatureCollection",
+                    features: [
+                        {
+                            type: "Feature",
+                            properties: {},
+                            geometry: {
+                                type: type as any,
+                                coordinates: toponymData.location_point.coordinates,
+                            },
+                        },
+                    ],
+                };
+                setGeometriType((toponymData.geometry_type as any) || "titik");
+            }
+            setSavedGeometry(geometry);
+        }
+    }, [toponymData]);
+
+    const handlePointsChange = useCallback(
+        (points: [number, number][]) => {
+            setHistoryStack((prev) => [...prev, drawnPoints]);
+            setDrawnPoints(points);
+        },
+        [drawnPoints],
+    );
+
+    const handleSaveGeometry = useCallback(() => {
+        if (drawnPoints.length === 0) return;
+        const features: Feature[] = [];
+        if (geometriType === "titik" && drawnPoints.length >= 1) features.push({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: drawnPoints[0] } });
+        else if (geometriType === "garis" && drawnPoints.length >= 2) features.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: drawnPoints } });
+        else if (geometriType === "area" && drawnPoints.length >= 3) features.push({ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[...drawnPoints, drawnPoints[0]]] } });
+        if (features.length > 0) {
+            setSavedGeometry({ type: "FeatureCollection", features });
+            setDrawnPoints([]);
+            setHistoryStack([]);
+            setIsEditingDraft(false);
+        }
+    }, [drawnPoints, geometriType]);
+
+    const handleUndoGeometry = useCallback(() => {
+        if (historyStack.length > 0) {
+            setDrawnPoints(historyStack[historyStack.length - 1]);
+            setHistoryStack((prev) => prev.slice(0, -1));
+        } else setDrawnPoints([]);
+    }, [historyStack]);
+
+    const handleClearGeometry = useCallback(() => {
+        setDrawnPoints([]);
+        setSavedGeometry(null);
+        setHistoryStack([]);
+    }, []);
+
+    const handleClearSavedGeometry = useCallback(() => {
+        setSavedGeometry(null);
+    }, []);
 
     const handleOpenCollapsible = (key: keyof typeof openCollapsible) => {
-        setOpenCollapsible({ ...openCollapsible, [key]: !openCollapsible[key] })
-    }
+        setOpenCollapsible({ ...openCollapsible, [key]: !openCollapsible[key] });
+    };
 
     const handlePhotoClick = (index: number) => {
-        setSelectedPhotoIndex(index)
-        setIsPhotoModalOpen(true)
-    }
+        setSelectedPhotoIndex(index);
+        setIsPhotoModalOpen(true);
+    };
 
     const handleNextPhoto = () => {
         if (selectedPhotoIndex !== null && toponymData?.photos) {
-            setSelectedPhotoIndex((selectedPhotoIndex + 1) % toponymData.photos.length)
+            setSelectedPhotoIndex((selectedPhotoIndex + 1) % toponymData.photos.length);
         }
-    }
+    };
 
     const handlePrevPhoto = () => {
         if (selectedPhotoIndex !== null && toponymData?.photos) {
-            setSelectedPhotoIndex((selectedPhotoIndex - 1 + toponymData.photos.length) % toponymData.photos.length)
+            setSelectedPhotoIndex((selectedPhotoIndex - 1 + toponymData.photos.length) % toponymData.photos.length);
         }
-    }
+    };
 
     const handleEditClick = () => {
         if (toponymData) {
@@ -281,62 +580,145 @@ const DetailToponimContent = () => {
                 local_name: toponymData.local_name,
                 map_name: toponymData.map_name,
                 element: toponymData.element,
+                generic_element: toponymData.generic_element,
+                specific_element: toponymData.specific_element,
                 name_meaning: toponymData.name_meaning,
                 other_name: toponymData.other_name,
                 language_origin: toponymData.language_origin,
                 name_history: toponymData.name_history,
                 pronounciation: toponymData.pronounciation,
                 spelling: toponymData.spelling,
-                notes: toponymData.notes,
-                sketch: toponymData.sketch,
-                survey_at: toponymData.survey_at
-            })
-            setIsEditMode(true)
+                survey_at: toponymData.survey_at ? toponymData.survey_at.substring(0, 10) : "",
+                province_id: toponymData.province_id,
+                regency_id: toponymData.regency_id,
+                district_id: toponymData.district_id,
+                village_id: toponymData.village_id,
+            });
+            setIsEditMode(true);
+            setIsEditingDraft(false);
+            setDrawnPoints([]);
             // Fetch elements when entering edit mode
-            fetchElements()
+            fetchElements();
         }
-    }
+    };
 
     const fetchElements = async () => {
-        setLoadingElements(true)
+        setLoadingElements(true);
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem("token");
             const response = await fetch(`${API_URL}/classification/elements`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            const result = await response.json()
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const result = await response.json();
             if (!result.error && result.data) {
-                setElements(result.data)
+                setElements(result.data);
             }
         } catch (error) {
-            console.error('Failed to fetch elements:', error)
+            console.error("Failed to fetch elements:", error);
         } finally {
-            setLoadingElements(false)
+            setLoadingElements(false);
         }
-    }
+    };
 
     const handleCancelEdit = () => {
-        setIsEditMode(false)
-        setEditedData({})
-    }
+        setIsEditMode(false);
+        setEditedData({});
+        setIsEditingDraft(false);
+        setDrawnPoints([]);
+    };
 
-    const handleInputChange = (field: keyof ToponymDetail, value: string) => {
-        setEditedData(prev => ({
+    // Regional Fetching
+    useEffect(() => {
+        if (!isEditMode && !toponymData) return;
+        const token = localStorage.getItem("token");
+        setLoadingProvinces(true);
+        fetch(`${API_URL}/regions?level=PROVINCE&limit=100`, { headers: { Authorization: `Bearer ${token}` } })
+            .then((r) => r.json())
+            .then((result) => {
+                if (!result.error && result.data) setProvinces(result.data);
+            })
+            .finally(() => setLoadingProvinces(false));
+    }, [isEditMode, toponymData]);
+
+    useEffect(() => {
+        const provCode = isEditMode ? editedData.province_id : toponymData?.province_id;
+        if (!provCode) {
+            setRegencies([]);
+            return;
+        }
+        const selectedProvince = provinces.find((p) => p.code === provCode);
+        if (!selectedProvince) return;
+        const token = localStorage.getItem("token");
+        setLoadingRegencies(true);
+        fetch(`${API_URL}/regions?level=CITY&parent=${selectedProvince.path}&limit=100`, { headers: { Authorization: `Bearer ${token}` } })
+            .then((r) => r.json())
+            .then((result) => {
+                if (!result.error && result.data) setRegencies(result.data);
+            })
+            .finally(() => setLoadingRegencies(false));
+    }, [isEditMode, editedData.province_id, toponymData?.province_id, provinces]);
+
+    useEffect(() => {
+        const provCode = isEditMode ? editedData.province_id : toponymData?.province_id;
+        const regCode = isEditMode ? editedData.regency_id : toponymData?.regency_id;
+        if (!provCode || !regCode) {
+            setDistricts([]);
+            return;
+        }
+        const selectedRegency = regencies.find((r) => r.code === regCode);
+        if (!selectedRegency) return;
+        const token = localStorage.getItem("token");
+        setLoadingDistricts(true);
+        fetch(`${API_URL}/regions?level=DISTRICT&parent=${selectedRegency.path}&limit=100`, { headers: { Authorization: `Bearer ${token}` } })
+            .then((r) => r.json())
+            .then((result) => {
+                if (!result.error && result.data) setDistricts(result.data);
+            })
+            .finally(() => setLoadingDistricts(false));
+    }, [isEditMode, editedData.regency_id, toponymData?.regency_id, regencies]);
+
+    useEffect(() => {
+        const distCode = isEditMode ? editedData.district_id : toponymData?.district_id;
+        if (!distCode) {
+            setVillages([]);
+            return;
+        }
+        const selectedDistrict = districts.find((d) => d.code === distCode);
+        if (!selectedDistrict) return;
+        const token = localStorage.getItem("token");
+        setLoadingVillages(true);
+        fetch(`${API_URL}/regions?level=VILLAGE&parent=${selectedDistrict.path}&limit=100`, { headers: { Authorization: `Bearer ${token}` } })
+            .then((r) => r.json())
+            .then((result) => {
+                if (!result.error && result.data) setVillages(result.data);
+            })
+            .finally(() => setLoadingVillages(false));
+    }, [isEditMode, editedData.district_id, toponymData?.district_id, districts]);
+
+    useEffect(() => {
+        if (toponymData) {
+            fetchElements();
+        }
+    }, [toponymData]);
+
+    const handleInputChange = (field: keyof ToponymDetail, value: any) => {
+        setEditedData((prev) => ({
             ...prev,
-            [field]: value
-        }))
-    }
+            [field]: value,
+        }));
+    };
 
     const handleSaveChanges = async () => {
-        if (!transactionId || !toponymId || !toponymData) return
+        if (!transactionId || !toponymId || !toponymData) return;
 
-        setSaving(true)
+        setSaving(true);
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem("token");
 
             // Map editedData and toponymData to the requested format
+            // FIXED: Match the working request body structure
             const requestBody = {
                 local_name: editedData.local_name || toponymData.local_name,
                 map_name: editedData.map_name || toponymData.map_name,
@@ -346,7 +728,7 @@ const DetailToponimContent = () => {
                 name_history: editedData.name_history || toponymData.name_history,
                 pronounciation: editedData.pronounciation || toponymData.pronounciation,
                 spelling: editedData.spelling || toponymData.spelling,
-                element: (editedData.element?.code || toponymData.element.code),
+                element: editedData.element?.code || toponymData.element.code,
                 province_code: toponymData.province_id,
                 regency_code: toponymData.regency_id,
                 district_code: toponymData.district_id,
@@ -355,138 +737,145 @@ const DetailToponimContent = () => {
                 notes: editedData.notes || toponymData.notes,
                 sketch: editedData.sketch || toponymData.sketch,
                 photos: toponymData.photos || [],
-                geometry: toponymData.location_point ? {
-                    type: toponymData.geometry_type || toponymData.location_point.type,
-                    coordinates: toponymData.location_point.coordinates
-                } : null,
+                geometry: savedGeometry?.features[0]
+                    ? {
+                          type: savedGeometry.features[0].geometry.type,
+                          coordinates: (savedGeometry.features[0].geometry as any).coordinates,
+                      }
+                    : toponymData.location_point
+                      ? {
+                            type: toponymData.geometry_type || toponymData.location_point.type,
+                            coordinates: toponymData.location_point.coordinates,
+                        }
+                      : null,
                 element_id: editedData.element?.code || toponymData.element.code,
-            }
+            };
 
             const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms/${toponymId}`, {
-                method: 'PUT',
+                method: "PUT",
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(requestBody)
-            })
+                body: JSON.stringify(requestBody),
+            });
 
-            const result = await response.json()
+            const result = await response.json();
 
             if (!result.error) {
                 // Update local data with saved changes
-                setToponymData(prev => prev ? { ...prev, ...editedData } : null)
-                setIsEditMode(false)
-                setEditedData({})
-                alert('Perubahan berhasil disimpan!')
+                setToponymData((prev) => (prev ? { ...prev, ...editedData } : null));
+                setIsEditMode(false);
+                setEditedData({});
+                alert("Perubahan berhasil disimpan!");
             } else {
-                alert('Gagal menyimpan perubahan: ' + result.message)
+                alert("Gagal menyimpan perubahan: " + result.message);
             }
         } catch (error) {
-            console.error('Failed to save changes:', error)
-            alert('Terjadi kesalahan saat menyimpan perubahan')
+            console.error("Failed to save changes:", error);
+            alert("Terjadi kesalahan saat menyimpan perubahan");
         } finally {
-            setSaving(false)
+            setSaving(false);
         }
-    }
+    };
 
     const handleAccept = async () => {
-        if (!transactionId || !toponymId) return
+        if (!transactionId || !toponymId) return;
 
-        if (!confirm('Apakah Anda yakin ingin menerima toponim ini?')) return
+        if (!confirm("Apakah Anda yakin ingin menerima toponim ini?")) return;
 
-        setSaving(true)
+        setSaving(true);
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem("token");
             const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms/${toponymId}/accept`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-            const result = await response.json()
+            const result = await response.json();
 
             if (!result.error) {
-                alert('Toponim berhasil diterima!')
+                alert("Toponim berhasil diterima!");
                 // redirect back to list
-                router.push('/penelaahan?tab=review-data&view=table')
+                router.push("/penelaahan?tab=review-data&view=table");
             } else {
-                alert('Gagal menerima toponim: ' + result.message)
+                alert("Gagal menerima toponim: " + result.message);
             }
         } catch (error) {
-            console.error('Failed to accept toponym:', error)
-            alert('Terjadi kesalahan saat menerima toponim')
+            console.error("Failed to accept toponym:", error);
+            alert("Terjadi kesalahan saat menerima toponim");
         } finally {
-            setSaving(false)
+            setSaving(false);
         }
-    }
+    };
 
     const handleReject = async () => {
-        if (!transactionId || !toponymId) return
+        if (!transactionId || !toponymId) return;
 
-        if (!confirm('Apakah Anda yakin ingin menolak toponim ini?')) return
+        if (!confirm("Apakah Anda yakin ingin menolak toponim ini?")) return;
 
-        setSaving(true)
+        setSaving(true);
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem("token");
             const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms/${toponymId}/reject`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-            const result = await response.json()
+            const result = await response.json();
 
             if (!result.error) {
-                alert('Toponim berhasil ditolak!')
+                alert("Toponim berhasil ditolak!");
                 // router push to penelaahan
-                router.push('/penelaahan?tab=review-data&view=table')
+                router.push("/penelaahan?tab=review-data&view=table");
             } else {
-                alert('Gagal menolak toponim: ' + result.message)
+                alert("Gagal menolak toponim: " + result.message);
             }
         } catch (error) {
-            console.error('Failed to reject toponym:', error)
-            alert('Terjadi kesalahan saat menolak toponim')
+            console.error("Failed to reject toponym:", error);
+            alert("Terjadi kesalahan saat menolak toponim");
         } finally {
-            setSaving(false)
+            setSaving(false);
         }
-    }
+    };
 
     // Fetch toponym detail data
     useEffect(() => {
-        if (!transactionId || !toponymId) return
+        if (!transactionId || !toponymId) return;
 
         const fetchToponymDetail = async () => {
-            setLoading(true)
+            setLoading(true);
             try {
-                const token = localStorage.getItem('token')
+                const token = localStorage.getItem("token");
                 const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms/${toponymId}`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                const result = await response.json()
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                const result = await response.json();
 
                 if (!result.error && result.data) {
-                    setToponymData(result.data)
+                    setToponymData(result.data);
                 }
             } catch (error) {
-                console.error('Failed to fetch toponym detail:', error)
+                console.error("Failed to fetch toponym detail:", error);
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
-        }
+        };
 
-        fetchToponymDetail()
-    }, [transactionId, toponymId])
+        fetchToponymDetail();
+    }, [transactionId, toponymId]);
 
     useEffect(() => {
         if (!navbarRef.current) return;
 
         // Observe height changes of navbar
-        const observer = new ResizeObserver(entries => {
+        const observer = new ResizeObserver((entries) => {
             for (const entry of entries) {
                 setNavbarHeight(entry.contentRect.height);
             }
@@ -502,7 +891,9 @@ const DetailToponimContent = () => {
                 <div className="flex grow">
                     <div className="block w-1/2 py-4 px-6 overflow-y-scroll max-h-[83vh]">
                         <Link href="/penelaahan?tab=review-data&view=table" className="flex items-center gap-3 mb-5">
-                            <Button size='icon-sm'><ChevronLeft /></Button>
+                            <Button size="icon-sm">
+                                <ChevronLeft />
+                            </Button>
                             Kembali
                         </Link>
                         {loading ? (
@@ -515,18 +906,10 @@ const DetailToponimContent = () => {
                                 <div className="flex gap-3 mb-3">
                                     {!isEditMode ? (
                                         <>
-                                            <Button
-                                                onClick={handleReject}
-                                                disabled={saving}
-                                                className="bg-red-600 hover:bg-red-800"
-                                            >
+                                            <Button onClick={handleReject} disabled={saving} className="bg-red-600 hover:bg-red-800">
                                                 <X /> Ditolak
                                             </Button>
-                                            <Button
-                                                onClick={handleAccept}
-                                                disabled={saving}
-                                                className="bg-green-700 hover:bg-green-800"
-                                            >
+                                            <Button onClick={handleAccept} disabled={saving} className="bg-green-700 hover:bg-green-800">
                                                 <Check /> Diterima
                                             </Button>
                                             <Button onClick={handleEditClick} variant="outline">
@@ -535,254 +918,482 @@ const DetailToponimContent = () => {
                                         </>
                                     ) : (
                                         <>
-                                            <Button
-                                                onClick={handleSaveChanges}
-                                                disabled={saving}
-                                                className="bg-blue-600 hover:bg-blue-700"
-                                            >
-                                                {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                            <Button onClick={handleSaveChanges} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                                                {saving ? "Menyimpan..." : "Simpan Perubahan"}
                                             </Button>
-                                            <Button
-                                                onClick={handleCancelEdit}
-                                                variant="outline"
-                                                disabled={saving}
-                                            >
+                                            <Button onClick={handleCancelEdit} variant="outline" disabled={saving}>
                                                 Batalkan
                                             </Button>
                                         </>
                                     )}
                                 </div>
-                                <div className="flex flex-col gap-3">
-                                    <Collapsible open={openCollapsible.toponim} onOpenChange={() => handleOpenCollapsible('toponim')}>
+                                <div className="flex flex-col gap-6">
+                                    {/* Informasi Spasial Section (Map Controls) */}
+                                    {isEditMode && (
+                                        <Collapsible open={openSpasial} onOpenChange={setOpenSpasial}>
+                                            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left font-semibold text-lg">
+                                                <ChevronDown className={`transition-transform ${openSpasial ? "" : "-rotate-90"}`} size={20} />
+                                                Penggambaran Lokasi
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent className="mt-4 ml-6 space-y-4">
+                                                {!isEditingDraft ? (
+                                                    <Button variant="outline" className="w-full border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-600" onClick={() => setIsEditingDraft(true)}>
+                                                        {savedGeometry ? "Edit Lokasi di Peta" : "Tambah Lokasi di Peta"}
+                                                    </Button>
+                                                ) : (
+                                                    <>
+                                                        <div className="space-y-2">
+                                                            <Label>Tipe Geometri</Label>
+                                                            <RadioGroup value={geometriType} onValueChange={(v) => setGeometriType(v as "titik" | "garis" | "area")} className="flex gap-6">
+                                                                <div className="flex items-center space-x-2">
+                                                                    <RadioGroupItem value="titik" id="titik" />
+                                                                    <Label htmlFor="titik" className="font-normal">
+                                                                        Titik
+                                                                    </Label>
+                                                                </div>
+                                                                <div className="flex items-center space-x-2">
+                                                                    <RadioGroupItem value="garis" id="garis" />
+                                                                    <Label htmlFor="garis" className="font-normal">
+                                                                        Garis
+                                                                    </Label>
+                                                                </div>
+                                                                <div className="flex items-center space-x-2">
+                                                                    <RadioGroupItem value="area" id="area" />
+                                                                    <Label htmlFor="area" className="font-normal">
+                                                                        Area
+                                                                    </Label>
+                                                                </div>
+                                                            </RadioGroup>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2">
+                                                            <Checkbox id="snapping" checked={fiturSnapping} onCheckedChange={(c) => setFiturSnapping(c as boolean)} />
+                                                            <Label htmlFor="snapping" className="font-normal">
+                                                                Fitur Snapping
+                                                            </Label>
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <Button variant="outline" className="border-red-400 text-red-500 hover:bg-red-50" onClick={handleClearGeometry}>
+                                                                <Trash2 size={16} className="mr-2" />
+                                                                Bersihkan Penggambaran
+                                                            </Button>
+                                                            <Button variant="outline" className="border-orange-400 text-orange-500 hover:bg-orange-50" onClick={handleUndoGeometry}>
+                                                                <RotateCcw size={16} className="mr-2" />
+                                                                Kembali ke sebelumnya
+                                                            </Button>
+                                                            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleSaveGeometry}>
+                                                                <Save size={16} className="mr-2" />
+                                                                Simpan Lokasi
+                                                            </Button>
+                                                            <Button variant="outline" className="border-gray-400 text-gray-600 hover:bg-gray-50" onClick={() => setIsEditingDraft(false)}>
+                                                                Batalkan
+                                                            </Button>
+                                                        </div>
+                                                        {drawnPoints.length > 0 && (
+                                                            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                                                                <Label className="text-sm font-medium mb-2 block">Koordinat Titik</Label>
+                                                                <div className="space-y-1 text-sm">
+                                                                    <p className="text-gray-500 text-xs mb-1">Titik yang sedang digambar:</p>
+                                                                    {drawnPoints.map((point, idx) => (
+                                                                        <div key={idx} className="text-blue-600 font-mono font-bold leading-tight mb-2 last:mb-0">
+                                                                            <p>
+                                                                                Lng: {point[0].toFixed(6)} ({ddToDMS(point[0], false)}),
+                                                                            </p>
+                                                                            <p>
+                                                                                Lat: {point[1].toFixed(6)} ({ddToDMS(point[1], true)})
+                                                                            </p>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                                {!isEditingDraft && savedGeometry?.features.length && (
+                                                    <div className="p-3 bg-green-50 rounded-lg max-h-64 overflow-y-auto">
+                                                        <Label className="text-sm font-medium mb-2 block text-green-700">Lokasi Tersimpan</Label>
+                                                        {savedGeometry.features.map((feature, idx) => {
+                                                            const geom = feature.geometry;
+                                                            if (geom.type === "Point") {
+                                                                const coords = (geom as Point).coordinates as number[];
+                                                                return (
+                                                                    <div key={idx} className="space-y-1">
+                                                                        <p className="text-sm text-green-600 font-medium">Tipe: Titik</p>
+                                                                        <div className="font-mono text-green-600 font-bold text-sm leading-tight">
+                                                                            <p>
+                                                                                Lng: {coords[0].toFixed(6)} ({ddToDMS(coords[0], false)}),
+                                                                            </p>
+                                                                            <p>
+                                                                                Lat: {coords[1].toFixed(6)} ({ddToDMS(coords[1], true)})
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            } else if (geom.type === "LineString") {
+                                                                const coords = (geom as LineString).coordinates as number[][];
+                                                                return (
+                                                                    <div key={idx} className="space-y-1">
+                                                                        <p className="text-sm text-green-600 font-medium">Tipe: Garis ({coords.length} titik)</p>
+                                                                        <div className="grid grid-cols-1 gap-0.5">
+                                                                            {coords.map((c, i) => (
+                                                                                <div key={i} className="font-mono text-green-600 font-bold text-sm leading-tight mb-1 last:mb-0">
+                                                                                    <p>
+                                                                                        {i + 1}. Lng: {c[0].toFixed(6)} ({ddToDMS(c[0], false)}),
+                                                                                    </p>
+                                                                                    <p className="pl-4">
+                                                                                        Lat: {c[1].toFixed(6)} ({ddToDMS(c[1], true)})
+                                                                                    </p>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            } else if (geom.type === "Polygon") {
+                                                                const coords = ((geom as Polygon).coordinates as number[][][])[0];
+                                                                const uniqueCoords = coords.slice(0, -1);
+                                                                return (
+                                                                    <div key={idx} className="space-y-1">
+                                                                        <p className="text-sm text-green-600 font-medium">Tipe: Area ({uniqueCoords.length} titik)</p>
+                                                                        <div className="grid grid-cols-1 gap-0.5">
+                                                                            {uniqueCoords.map((c, i) => (
+                                                                                <div key={i} className="font-mono text-green-600 font-bold text-sm leading-tight mb-1 last:mb-0">
+                                                                                    <p>
+                                                                                        {i + 1}. Lng: {c[0].toFixed(6)} ({ddToDMS(c[0], false)}),
+                                                                                    </p>
+                                                                                    <p className="pl-4">
+                                                                                        Lat: {c[1].toFixed(6)} ({ddToDMS(c[1], true)})
+                                                                                    </p>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </CollapsibleContent>
+                                        </Collapsible>
+                                    )}
+                                    <Collapsible open={openCollapsible.toponim} onOpenChange={() => handleOpenCollapsible("toponim")}>
                                         <div className="flex items-center justify-between gap-4 px-4">
-                                            <h3 className="text-xl font-semibold">
-                                                Informasi Unsur Rupabumi
-                                            </h3>
+                                            <h3 className="text-xl font-semibold">Informasi Unsur Rupabumi</h3>
                                             <CollapsibleTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="size-8">
                                                     <ChevronDown />
                                                 </Button>
                                             </CollapsibleTrigger>
                                         </div>
-                                        <CollapsibleContent className="flex flex-col px-6 mt-3">
-                                            <form action="">
-                                                <FieldSet className="gap-y-3">
-                                                    <FieldGroup className="flex flex-row">
-                                                        <Field>
-                                                            <FieldLabel htmlFor="local_name">
-                                                                Nama Lokal
-                                                            </FieldLabel>
-                                                            <Input
-                                                                id="local_name"
-                                                                name="local_name"
-                                                                value={isEditMode ? (editedData.local_name || '') : (toponymData.local_name || '')}
-                                                                onChange={(e) => handleInputChange('local_name', e.target.value)}
-                                                                readOnly={!isEditMode}
-                                                            />
-                                                        </Field>
-                                                        <Field>
-                                                            <FieldLabel htmlFor="map_name">
-                                                                Nama Peta
-                                                            </FieldLabel>
-                                                            <Input
-                                                                id="map_name"
-                                                                name="map_name"
-                                                                value={isEditMode ? (editedData.map_name || '') : (toponymData.map_name || '')}
-                                                                onChange={(e) => handleInputChange('map_name', e.target.value)}
-                                                                readOnly={!isEditMode}
-                                                            />
-                                                        </Field>
-                                                    </FieldGroup>
-                                                    <Field>
-                                                        <FieldLabel htmlFor="element_type">
-                                                            Elemen
-                                                        </FieldLabel>
-                                                        {isEditMode ? (
-                                                            <Popover open={openElementCombobox} onOpenChange={setOpenElementCombobox}>
-                                                                <PopoverTrigger asChild>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        role="combobox"
-                                                                        aria-expanded={openElementCombobox}
-                                                                        className="w-full justify-between font-normal"
-                                                                        disabled={loadingElements}
-                                                                    >
-                                                                        {loadingElements ? (
-                                                                            <span>Memuat...</span>
-                                                                        ) : (editedData.element?.code || toponymData.element?.code) ? (
-                                                                            elements.find((e) => e.code === (editedData.element?.code || toponymData.element?.code))?.name
-                                                                        ) : (
-                                                                            "Pilih Elemen"
-                                                                        )}
-                                                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                                    </Button>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="w-full p-0" align="start">
-                                                                    <Command>
-                                                                        <CommandInput placeholder="Cari elemen..." />
-                                                                        <CommandList>
-                                                                            <CommandEmpty>Elemen tidak ditemukan.</CommandEmpty>
-                                                                            <CommandGroup>
-                                                                                {elements.map((element) => (
-                                                                                    <CommandItem
-                                                                                        key={element.code}
-                                                                                        value={element.name}
-                                                                                        onSelect={() => {
-                                                                                            setEditedData(prev => ({
-                                                                                                ...prev,
-                                                                                                element: {
-                                                                                                    code: element.code,
-                                                                                                    name: element.name
-                                                                                                }
-                                                                                            }))
-                                                                                            setOpenElementCombobox(false)
-                                                                                        }}
-                                                                                    >
-                                                                                        <Check
-                                                                                            className={cn(
-                                                                                                "mr-2 h-4 w-4",
-                                                                                                (editedData.element?.code || toponymData.element?.code) === element.code ? "opacity-100" : "opacity-0"
-                                                                                            )}
-                                                                                        />
-                                                                                        {element.name}
-                                                                                    </CommandItem>
-                                                                                ))}
-                                                                            </CommandGroup>
-                                                                        </CommandList>
-                                                                    </Command>
-                                                                </PopoverContent>
-                                                            </Popover>
-                                                        ) : (
-                                                            <Input
-                                                                id="element_type"
-                                                                name="element_type"
-                                                                value={toponymData.element?.name || '-'}
-                                                                readOnly
-                                                            />
-                                                        )}
-                                                    </Field>
-                                                    <Field>
-                                                        <FieldLabel htmlFor="name_meaning">
-                                                            Arti Nama
-                                                        </FieldLabel>
-                                                        <Input
-                                                            id="name_meaning"
-                                                            name="name_meaning"
-                                                            value={isEditMode ? (editedData.name_meaning || '') : (toponymData.name_meaning || '-')}
-                                                            onChange={(e) => handleInputChange('name_meaning', e.target.value)}
-                                                            readOnly={!isEditMode}
-                                                        />
-                                                    </Field>
-                                                    <Field>
-                                                        <FieldLabel htmlFor="other_name">
-                                                            Nama Lain
-                                                        </FieldLabel>
-                                                        <Input
-                                                            id="other_name"
-                                                            name="other_name"
-                                                            value={isEditMode ? (editedData.other_name || '') : (toponymData.other_name || '-')}
-                                                            onChange={(e) => handleInputChange('other_name', e.target.value)}
-                                                            readOnly={!isEditMode}
-                                                        />
-                                                    </Field>
-                                                    <FieldGroup className="flex flex-row">
-                                                        <Field>
-                                                            <FieldLabel htmlFor="language_origin">
-                                                                Asal Bahasa
-                                                            </FieldLabel>
-                                                            <Input
-                                                                id="language_origin"
-                                                                name="language_origin"
-                                                                value={isEditMode ? (editedData.language_origin || '') : (toponymData.language_origin || '-')}
-                                                                onChange={(e) => handleInputChange('language_origin', e.target.value)}
-                                                                readOnly={!isEditMode}
-                                                            />
-                                                        </Field>
-                                                        <Field>
-                                                            <FieldLabel htmlFor="pronounciation">
-                                                                Pengucapan
-                                                            </FieldLabel>
-                                                            <Input
-                                                                id="pronounciation"
-                                                                name="pronounciation"
-                                                                value={isEditMode ? (editedData.pronounciation || '') : (toponymData.pronounciation || '-')}
-                                                                onChange={(e) => handleInputChange('pronounciation', e.target.value)}
-                                                                readOnly={!isEditMode}
-                                                            />
-                                                        </Field>
-                                                    </FieldGroup>
-                                                    <FieldGroup className="flex flex-row">
-                                                        <Field>
-                                                            <FieldLabel htmlFor="spelling">
-                                                                Ejaan
-                                                            </FieldLabel>
-                                                            <Input
-                                                                id="spelling"
-                                                                name="spelling"
-                                                                value={isEditMode ? (editedData.spelling || '') : (toponymData.spelling || '-')}
-                                                                onChange={(e) => handleInputChange('spelling', e.target.value)}
-                                                                readOnly={!isEditMode}
-                                                            />
-                                                        </Field>
-                                                        <Field>
-                                                            <FieldLabel htmlFor="survey_at">
-                                                                Tanggal Survei
-                                                            </FieldLabel>
-                                                            <Input
-                                                                id="survey_at"
-                                                                name="survey_at"
-                                                                type={isEditMode ? "date" : "text"}
-                                                                value={isEditMode ? (editedData.survey_at || '') : (toponymData.survey_at || '-')}
-                                                                onChange={(e) => handleInputChange('survey_at', e.target.value)}
-                                                                readOnly={!isEditMode}
-                                                            />
-                                                        </Field>
-                                                    </FieldGroup>
-                                                    <Field>
-                                                        <FieldLabel htmlFor="name_history">
-                                                            Sejarah Nama
-                                                        </FieldLabel>
-                                                        <Textarea
-                                                            id="name_history"
-                                                            name="name_history"
-                                                            value={isEditMode ? (editedData.name_history || '') : (toponymData.name_history || '-')}
-                                                            onChange={(e) => handleInputChange('name_history', e.target.value)}
-                                                            readOnly={!isEditMode}
-                                                        />
-                                                    </Field>
-                                                    <Field>
-                                                        <FieldLabel htmlFor="notes">
-                                                            Catatan
-                                                        </FieldLabel>
-                                                        <Textarea
-                                                            id="notes"
-                                                            name="notes"
-                                                            value={isEditMode ? (editedData.notes || '') : (toponymData.notes || '-')}
-                                                            onChange={(e) => handleInputChange('notes', e.target.value)}
-                                                            readOnly={!isEditMode}
-                                                        />
-                                                    </Field>
-                                                    <Field>
-                                                        <FieldLabel htmlFor="sketch">
-                                                            Sketsa (URL)
-                                                        </FieldLabel>
-                                                        <Input
-                                                            id="sketch"
-                                                            name="sketch"
-                                                            value={isEditMode ? (editedData.sketch || '') : (toponymData.sketch || '-')}
-                                                            onChange={(e) => handleInputChange('sketch', e.target.value)}
-                                                            readOnly={!isEditMode}
-                                                        />
-                                                    </Field>
-                                                </FieldSet>
+                                        <CollapsibleContent className="mt-4 ml-6 space-y-4">
+                                            <form action="" className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <Label>Elemen Generik</Label>
+                                                    <Input
+                                                        value={isEditMode ? editedData.generic_element || "" : toponymData.generic_element || ""}
+                                                        onChange={(e) => handleInputChange("generic_element", e.target.value)}
+                                                        readOnly={!isEditMode}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Elemen Spesifik</Label>
+                                                    <Input
+                                                        value={isEditMode ? editedData.specific_element || "" : toponymData.specific_element || ""}
+                                                        onChange={(e) => handleInputChange("specific_element", e.target.value)}
+                                                        readOnly={!isEditMode}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Nama Lokal</Label>
+                                                    <Input value={isEditMode ? editedData.local_name || "" : toponymData.local_name || ""} onChange={(e) => handleInputChange("local_name", e.target.value)} readOnly={!isEditMode} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Nama Peta</Label>
+                                                    <Input value={isEditMode ? editedData.map_name || "" : toponymData.map_name || ""} onChange={(e) => handleInputChange("map_name", e.target.value)} readOnly={!isEditMode} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Nama Lain</Label>
+                                                    <Input value={isEditMode ? editedData.other_name || "" : toponymData.other_name || ""} onChange={(e) => handleInputChange("other_name", e.target.value)} readOnly={!isEditMode} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Asal Bahasa</Label>
+                                                    <Input
+                                                        value={isEditMode ? editedData.language_origin || "" : toponymData.language_origin || ""}
+                                                        onChange={(e) => handleInputChange("language_origin", e.target.value)}
+                                                        readOnly={!isEditMode}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Arti Nama</Label>
+                                                    <Input value={isEditMode ? editedData.name_meaning || "" : toponymData.name_meaning || ""} onChange={(e) => handleInputChange("name_meaning", e.target.value)} readOnly={!isEditMode} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Sejarah Nama</Label>
+                                                    <Input value={isEditMode ? editedData.name_history || "" : toponymData.name_history || ""} onChange={(e) => handleInputChange("name_history", e.target.value)} readOnly={!isEditMode} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Pelafalan</Label>
+                                                    <Input
+                                                        value={isEditMode ? editedData.pronounciation || "" : toponymData.pronounciation || ""}
+                                                        onChange={(e) => handleInputChange("pronounciation", e.target.value)}
+                                                        readOnly={!isEditMode}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Ejaan</Label>
+                                                    <Input value={isEditMode ? editedData.spelling || "" : toponymData.spelling || ""} onChange={(e) => handleInputChange("spelling", e.target.value)} readOnly={!isEditMode} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Elemen</Label>
+                                                    {isEditMode ? (
+                                                        <Popover open={openElementCombobox} onOpenChange={setOpenElementCombobox}>
+                                                            <PopoverTrigger asChild>
+                                                                <Button variant="outline" role="combobox" aria-expanded={openElementCombobox} className="w-full justify-between font-normal" disabled={loadingElements}>
+                                                                    {loadingElements ? (
+                                                                        <>
+                                                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                                            Memuat...
+                                                                        </>
+                                                                    ) : editedData.element?.code || toponymData.element?.code ? (
+                                                                        elements.find((e) => e.code === (editedData.element?.code || toponymData.element?.code))?.name
+                                                                    ) : (
+                                                                        "Pilih Elemen"
+                                                                    )}
+                                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-full p-0" align="start">
+                                                                <Command>
+                                                                    <CommandInput placeholder="Cari elemen..." />
+                                                                    <CommandList>
+                                                                        <CommandEmpty>Elemen tidak ditemukan.</CommandEmpty>
+                                                                        <CommandGroup>
+                                                                            {elements.map((element) => (
+                                                                                <CommandItem
+                                                                                    key={element.code}
+                                                                                    value={element.name}
+                                                                                    onSelect={() => {
+                                                                                        handleInputChange("element", {
+                                                                                            code: element.code,
+                                                                                            name: element.name,
+                                                                                        });
+                                                                                        setOpenElementCombobox(false);
+                                                                                    }}
+                                                                                >
+                                                                                    <Check className={cn("mr-2 h-4 w-4", (editedData.element?.code || toponymData.element?.code) === element.code ? "opacity-100" : "opacity-0")} />
+                                                                                    {element.name}
+                                                                                </CommandItem>
+                                                                            ))}
+                                                                        </CommandGroup>
+                                                                    </CommandList>
+                                                                </Command>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    ) : (
+                                                        <Input value={toponymData.element?.name || "-"} readOnly />
+                                                    )}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Provinsi</Label>
+                                                    {isEditMode ? (
+                                                        <Popover open={openProvincePopover} onOpenChange={setOpenProvincePopover}>
+                                                            <PopoverTrigger asChild>
+                                                                <Button variant="outline" className="w-full justify-between font-normal" disabled={loadingProvinces}>
+                                                                    {loadingProvinces
+                                                                        ? "Memuat..."
+                                                                        : editedData.province_id || toponymData.province_id
+                                                                          ? provinces.find((p) => p.code === (editedData.province_id || toponymData.province_id))?.name || editedData.province_id || toponymData.province_id
+                                                                          : "Pilih Provinsi"}
+                                                                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-full p-0" align="start">
+                                                                <Command>
+                                                                    <CommandInput placeholder="Cari..." />
+                                                                    <CommandList>
+                                                                        <CommandEmpty>Tidak ditemukan.</CommandEmpty>
+                                                                        <CommandGroup>
+                                                                            {provinces.map((p) => (
+                                                                                <CommandItem
+                                                                                    key={p.code}
+                                                                                    value={p.name}
+                                                                                    onSelect={() => {
+                                                                                        setEditedData((prev) => ({ ...prev, province_id: p.code, regency_id: "", district_id: "", village_id: "" }));
+                                                                                        setOpenProvincePopover(false);
+                                                                                    }}
+                                                                                >
+                                                                                    <Check className={cn("mr-2 h-4 w-4", (editedData.province_id || toponymData.province_id) === p.code ? "opacity-100" : "opacity-0")} />
+                                                                                    {p.name}
+                                                                                </CommandItem>
+                                                                            ))}
+                                                                        </CommandGroup>
+                                                                    </CommandList>
+                                                                </Command>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    ) : (
+                                                        <Input value={provinces.find((p) => p.code === toponymData.province_id)?.name || toponymData.province_id || "-"} readOnly />
+                                                    )}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Kabupaten/Kota</Label>
+                                                    {isEditMode ? (
+                                                        <Popover open={openRegencyPopover} onOpenChange={setOpenRegencyPopover}>
+                                                            <PopoverTrigger asChild>
+                                                                <Button variant="outline" className="w-full justify-between font-normal" disabled={loadingRegencies || !(editedData.province_id || toponymData.province_id)}>
+                                                                    {loadingRegencies
+                                                                        ? "Memuat..."
+                                                                        : editedData.regency_id || toponymData.regency_id
+                                                                          ? regencies.find((r) => r.code === (editedData.regency_id || toponymData.regency_id))?.name || editedData.regency_id || toponymData.regency_id
+                                                                          : editedData.province_id || toponymData.province_id
+                                                                            ? "Pilih Kabupaten/Kota"
+                                                                            : "Pilih Provinsi dulu"}
+                                                                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-full p-0" align="start">
+                                                                <Command>
+                                                                    <CommandInput placeholder="Cari..." />
+                                                                    <CommandList>
+                                                                        <CommandEmpty>Tidak ditemukan.</CommandEmpty>
+                                                                        <CommandGroup>
+                                                                            {regencies.map((r) => (
+                                                                                <CommandItem
+                                                                                    key={r.code}
+                                                                                    value={r.name}
+                                                                                    onSelect={() => {
+                                                                                        setEditedData((prev) => ({ ...prev, regency_id: r.code, district_id: "", village_id: "" }));
+                                                                                        setOpenRegencyPopover(false);
+                                                                                    }}
+                                                                                >
+                                                                                    <Check className={cn("mr-2 h-4 w-4", (editedData.regency_id || toponymData.regency_id) === r.code ? "opacity-100" : "opacity-0")} />
+                                                                                    {r.name}
+                                                                                </CommandItem>
+                                                                            ))}
+                                                                        </CommandGroup>
+                                                                    </CommandList>
+                                                                </Command>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    ) : (
+                                                        <Input value={regencies.find((r) => r.code === toponymData.regency_id)?.name || toponymData.regency_id || "-"} readOnly />
+                                                    )}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Kecamatan</Label>
+                                                    {isEditMode ? (
+                                                        <Popover open={openDistrictPopover} onOpenChange={setOpenDistrictPopover}>
+                                                            <PopoverTrigger asChild>
+                                                                <Button variant="outline" className="w-full justify-between font-normal" disabled={loadingDistricts || !(editedData.regency_id || toponymData.regency_id)}>
+                                                                    {loadingDistricts
+                                                                        ? "Memuat..."
+                                                                        : editedData.district_id || toponymData.district_id
+                                                                          ? districts.find((d) => d.code === (editedData.district_id || toponymData.district_id))?.name || editedData.district_id || toponymData.district_id
+                                                                          : editedData.regency_id || toponymData.regency_id
+                                                                            ? "Pilih Kecamatan"
+                                                                            : "Pilih Kabupaten dulu"}
+                                                                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-full p-0" align="start">
+                                                                <Command>
+                                                                    <CommandInput placeholder="Cari..." />
+                                                                    <CommandList>
+                                                                        <CommandEmpty>Tidak ditemukan.</CommandEmpty>
+                                                                        <CommandGroup>
+                                                                            {districts.map((d) => (
+                                                                                <CommandItem
+                                                                                    key={d.code}
+                                                                                    value={d.name}
+                                                                                    onSelect={() => {
+                                                                                        setEditedData((prev) => ({ ...prev, district_id: d.code, village_id: "" }));
+                                                                                        setOpenDistrictPopover(false);
+                                                                                    }}
+                                                                                >
+                                                                                    <Check className={cn("mr-2 h-4 w-4", (editedData.district_id || toponymData.district_id) === d.code ? "opacity-100" : "opacity-0")} />
+                                                                                    {d.name}
+                                                                                </CommandItem>
+                                                                            ))}
+                                                                        </CommandGroup>
+                                                                    </CommandList>
+                                                                </Command>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    ) : (
+                                                        <Input value={districts.find((d) => d.code === toponymData.district_id)?.name || toponymData.district_id || "-"} readOnly />
+                                                    )}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Desa/Kelurahan</Label>
+                                                    {isEditMode ? (
+                                                        <Popover open={openVillagePopover} onOpenChange={setOpenVillagePopover}>
+                                                            <PopoverTrigger asChild>
+                                                                <Button variant="outline" className="w-full justify-between font-normal" disabled={loadingVillages || !(editedData.district_id || toponymData.district_id)}>
+                                                                    {loadingVillages
+                                                                        ? "Memuat..."
+                                                                        : editedData.village_id || toponymData.village_id
+                                                                          ? villages.find((v) => v.code === (editedData.village_id || toponymData.village_id))?.name || editedData.village_id || toponymData.village_id
+                                                                          : editedData.district_id || toponymData.district_id
+                                                                            ? "Pilih Desa/Kelurahan"
+                                                                            : "Pilih Kecamatan dulu"}
+                                                                    <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-full p-0" align="start">
+                                                                <Command>
+                                                                    <CommandInput placeholder="Cari..." />
+                                                                    <CommandList>
+                                                                        <CommandEmpty>Tidak ditemukan.</CommandEmpty>
+                                                                        <CommandGroup>
+                                                                            {villages.map((v) => (
+                                                                                <CommandItem
+                                                                                    key={v.code}
+                                                                                    value={v.name}
+                                                                                    onSelect={() => {
+                                                                                        setEditedData((prev) => ({ ...prev, village_id: v.code }));
+                                                                                        setOpenVillagePopover(false);
+                                                                                    }}
+                                                                                >
+                                                                                    <Check className={cn("mr-2 h-4 w-4", (editedData.village_id || toponymData.village_id) === v.code ? "opacity-100" : "opacity-0")} />
+                                                                                    {v.name}
+                                                                                </CommandItem>
+                                                                            ))}
+                                                                        </CommandGroup>
+                                                                    </CommandList>
+                                                                </Command>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    ) : (
+                                                        <Input value={villages.find((v) => v.code === toponymData.village_id)?.name || toponymData.village_id || "-"} readOnly />
+                                                    )}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Tanggal Survei</Label>
+                                                    <Input
+                                                        type={isEditMode ? "date" : "text"}
+                                                        value={isEditMode ? editedData.survey_at || "" : formatDate(toponymData.survey_at)}
+                                                        onChange={(e) => handleInputChange("survey_at", e.target.value)}
+                                                        readOnly={!isEditMode}
+                                                    />
+                                                </div>
+                                                {toponymData.location_point?.coordinates && (
+                                                    <div className="space-y-2">
+                                                        <Label>Koordinat</Label>
+                                                        <div className="p-3 bg-gray-50 border rounded-md font-mono text-sm space-y-1">
+                                                            <p>
+                                                                Lng: {toponymData.location_point.coordinates[0].toFixed(6)} ({ddToDMS(toponymData.location_point.coordinates[0], false)})
+                                                            </p>
+                                                            <p>
+                                                                Lat: {toponymData.location_point.coordinates[1].toFixed(6)} ({ddToDMS(toponymData.location_point.coordinates[1], true)})
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </form>
                                         </CollapsibleContent>
                                     </Collapsible>
-                                    <Collapsible open={openCollapsible.additional} onOpenChange={() => handleOpenCollapsible('additional')}>
+                                    <Collapsible open={openCollapsible.additional} onOpenChange={() => handleOpenCollapsible("additional")}>
                                         <div className="flex items-center justify-between gap-4 px-4">
-                                            <h3 className="text-xl font-semibold">
-                                                Informasi Pendukung
-                                            </h3>
+                                            <h3 className="text-xl font-semibold">Informasi Pendukung</h3>
                                             <CollapsibleTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="size-8">
                                                     <ChevronDown />
@@ -792,17 +1403,8 @@ const DetailToponimContent = () => {
                                         <CollapsibleContent className="grid grid-cols-2 gap-x-6 gap-y-8 place-items-center px-6 mt-3">
                                             {toponymData.photos && toponymData.photos.length > 0 ? (
                                                 toponymData.photos.map((photo, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="w-48 h-32 relative cursor-pointer hover:scale-103 transition-all ease-in-out"
-                                                        onClick={() => handlePhotoClick(index)}
-                                                    >
-                                                        <Image
-                                                            src={photo.url}
-                                                            alt={photo.filename}
-                                                            fill
-                                                            className="object-cover rounded-lg"
-                                                        />
+                                                    <div key={index} className="w-48 h-32 relative cursor-pointer hover:scale-103 transition-all ease-in-out" onClick={() => handlePhotoClick(index)}>
+                                                        <Image src={photo.url} alt={photo.filename} fill className="object-cover rounded-lg" />
                                                     </div>
                                                 ))
                                             ) : (
@@ -814,50 +1416,54 @@ const DetailToponimContent = () => {
 
                                 {/* Photo Modal */}
                                 <Dialog open={isPhotoModalOpen} onOpenChange={setIsPhotoModalOpen}>
-                                    <DialogContent className="max-w-4xl p-0">
+                                    <DialogContent className="max-w-none sm:max-w-none w-screen h-screen p-0 m-0 bg-black/60 border-none shadow-none rounded-none overflow-hidden flex items-center justify-center">
                                         <DialogTitle className="sr-only">Foto</DialogTitle>
                                         {selectedPhotoIndex !== null && toponymData?.photos && (
-                                            <div className="relative">
-                                                <div className="relative w-full h-[70vh]">
-                                                    <Image
-                                                        src={toponymData.photos[selectedPhotoIndex].url}
-                                                        alt={toponymData.photos[selectedPhotoIndex].filename}
-                                                        fill
-                                                        className="object-contain"
-                                                    />
-                                                </div>
-                                                <div className="p-4 bg-white">
-                                                    <p className="text-sm text-gray-600">
-                                                        {toponymData.photos[selectedPhotoIndex].filename}
-                                                    </p>
-                                                    <p className="text-xs text-gray-400 mt-1">
-                                                        Foto {selectedPhotoIndex + 1} dari {toponymData.photos.length}
+                                            <div className="w-screen h-screen flex items-center justify-center bg-transparent py-1 px-4 relative group/gallery">
+                                                <img src={toponymData.photos[selectedPhotoIndex].url} alt={toponymData.photos[selectedPhotoIndex].filename} className="max-w-full max-h-full object-contain" />
+
+                                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 text-white text-center z-50">
+                                                    <p className="text-sm font-medium">{toponymData.photos[selectedPhotoIndex].filename}</p>
+                                                    <p className="text-xs opacity-80">
+                                                        {selectedPhotoIndex + 1} dari {toponymData.photos.length}
                                                     </p>
                                                 </div>
-                                                {/* Navigation buttons */}
+
                                                 {toponymData.photos.length > 1 && (
                                                     <>
                                                         <Button
                                                             size="icon"
-                                                            variant="secondary"
-                                                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white"
-                                                            onClick={handlePrevPhoto}
+                                                            variant="ghost"
+                                                            className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full h-12 w-12 transition-all border border-white/20 backdrop-blur-md z-50"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handlePrevPhoto();
+                                                            }}
                                                         >
-                                                            <ChevronLeft />
+                                                            <ChevronLeft size={28} />
                                                         </Button>
                                                         <Button
                                                             size="icon"
-                                                            variant="secondary"
-                                                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white"
+                                                            variant="ghost"
+                                                            className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white rounded-full h-12 w-12 transition-all border border-white/20 backdrop-blur-md z-50"
                                                             onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                handleNextPhoto()
+                                                                e.stopPropagation();
+                                                                handleNextPhoto();
                                                             }}
                                                         >
-                                                            <ChevronLeft className="rotate-180" />
+                                                            <ChevronLeft size={28} className="rotate-180" />
                                                         </Button>
                                                     </>
                                                 )}
+
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="absolute top-6 right-6 bg-white/10 hover:bg-white/20 text-white rounded-full h-12 w-12 transition-all border border-white/20 backdrop-blur-md z-50"
+                                                    onClick={() => setIsPhotoModalOpen(false)}
+                                                >
+                                                    <X size={28} />
+                                                </Button>
                                             </div>
                                         )}
                                     </DialogContent>
@@ -867,20 +1473,31 @@ const DetailToponimContent = () => {
                             <p className="text-gray-500">Data tidak ditemukan atau sudah melalui proses penelaahan</p>
                         )}
                     </div>
-                    <PreviewMap coordinates={toponymData?.location_point?.coordinates || null} />
+                    <div className="flex-1 h-full">
+                        <PreviewMap
+                            isEditing={isEditingDraft}
+                            geometriType={geometriType}
+                            snappingEnabled={fiturSnapping}
+                            drawnPoints={drawnPoints}
+                            onPointsChange={handlePointsChange}
+                            savedGeometry={savedGeometry}
+                            onClearSaved={handleClearSavedGeometry}
+                            onSave={handleSaveGeometry}
+                            onUndo={handleUndoGeometry}
+                        />
+                    </div>
                 </div>
             </div>
         </ReviewerLayout>
-
     );
-}
+};
 
 const Page = () => {
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <DetailToponimContent />
         </Suspense>
-    )
-}
+    );
+};
 
-export default Page
+export default Page;

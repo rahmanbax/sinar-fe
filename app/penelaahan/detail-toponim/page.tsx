@@ -520,6 +520,13 @@ const DetailToponimContent = () => {
         [drawnPoints],
     );
 
+    // Set default geometry type to 'titik' when entering edit mode
+    useEffect(() => {
+        if (isEditingDraft) {
+            setGeometriType("titik");
+        }
+    }, [isEditingDraft]);
+
     const handleSaveGeometry = useCallback(() => {
         if (drawnPoints.length === 0) return;
         let newFeature: Feature | null = null;
@@ -576,6 +583,43 @@ const DetailToponimContent = () => {
     const handleClearSavedGeometry = useCallback(() => {
         setSavedGeometry(null);
     }, []);
+
+    const getGeometry = (): { type: string; coordinates: any } | null => {
+        // Filter features in savedGeometry that match current geometriType
+        const matchingSaved = savedGeometry?.features.filter((f) => {
+            if (geometriType === "titik") return f.geometry.type === "Point";
+            if (geometriType === "garis") return f.geometry.type === "LineString";
+            if (geometriType === "area") return f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon";
+            return false;
+        });
+
+        if (!matchingSaved || matchingSaved.length === 0) return null;
+
+        // For titik mode, return single point
+        if (geometriType === "titik") {
+            return { type: "Point", coordinates: (matchingSaved[0].geometry as Point).coordinates };
+        }
+
+        // For garis mode, return single line
+        if (geometriType === "garis") {
+            return { type: "LineString", coordinates: (matchingSaved[0].geometry as LineString).coordinates };
+        }
+
+        // For area mode, combine all polygons into MultiPolygon
+        if (geometriType === "area") {
+            const allPolygons: any[] = [];
+            matchingSaved.forEach((f) => {
+                if (f.geometry.type === "Polygon") {
+                    allPolygons.push((f.geometry as Polygon).coordinates);
+                } else if (f.geometry.type === "MultiPolygon") {
+                    allPolygons.push(...(f.geometry as any).coordinates);
+                }
+            });
+            return { type: "MultiPolygon", coordinates: allPolygons };
+        }
+
+        return null;
+    };
 
     const handleOpenCollapsible = (key: keyof typeof openCollapsible) => {
         setOpenCollapsible({ ...openCollapsible, [key]: !openCollapsible[key] });
@@ -753,6 +797,8 @@ const DetailToponimContent = () => {
                 pronounciation: editedData.pronounciation || toponymData.pronounciation,
                 spelling: editedData.spelling || toponymData.spelling,
                 element: editedData.element?.code || toponymData.element.code,
+                generic_element: editedData.generic_element || toponymData.generic_element,
+                specific_element: editedData.specific_element || toponymData.specific_element,
                 province_code: toponymData.province_id,
                 regency_code: toponymData.regency_id,
                 district_code: toponymData.district_id,
@@ -761,17 +807,12 @@ const DetailToponimContent = () => {
                 notes: editedData.notes || toponymData.notes,
                 sketch: editedData.sketch || toponymData.sketch,
                 photos: toponymData.photos || [],
-                geometry: savedGeometry?.features[0]
+                geometry: getGeometry() || (toponymData.location_point
                     ? {
-                        type: savedGeometry.features[0].geometry.type,
-                        coordinates: (savedGeometry.features[0].geometry as any).coordinates,
+                        type: toponymData.geometry_type || toponymData.location_point.type,
+                        coordinates: toponymData.location_point.coordinates,
                     }
-                    : toponymData.location_point
-                        ? {
-                            type: toponymData.geometry_type || toponymData.location_point.type,
-                            coordinates: toponymData.location_point.coordinates,
-                        }
-                        : null,
+                    : null),
                 element_id: editedData.element?.code || toponymData.element.code,
             };
 

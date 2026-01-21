@@ -205,14 +205,12 @@ const PreviewMap: React.FC<PreviewMapProps> = ({ isEditing, geometriType, snappi
                 }
 
                 clickTimeoutRef.current = setTimeout(() => {
-                    if (drawnPoints.length === 0) onClearSaved();
                     const { lng, lat } = e.lngLat;
                     const snappedPoint = snapToNearestPoint(lng, lat);
                     onPointsChange([...drawnPoints, snappedPoint]);
                 }, 200);
             } else {
                 // Point mode - immediate response
-                if (drawnPoints.length === 0) onClearSaved();
                 const { lng, lat } = e.lngLat;
                 const snappedPoint = snapToNearestPoint(lng, lat);
                 onPointsChange([snappedPoint]);
@@ -522,17 +520,50 @@ const DetailToponimContent = () => {
         [drawnPoints],
     );
 
+    // Set default geometry type to 'titik' when entering edit mode
+    useEffect(() => {
+        if (isEditingDraft) {
+            setGeometriType("titik");
+        }
+    }, [isEditingDraft]);
+
     const handleSaveGeometry = useCallback(() => {
         if (drawnPoints.length === 0) return;
-        const features: Feature[] = [];
-        if (geometriType === "titik" && drawnPoints.length >= 1) features.push({ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: drawnPoints[0] } });
-        else if (geometriType === "garis" && drawnPoints.length >= 2) features.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: drawnPoints } });
-        else if (geometriType === "area" && drawnPoints.length >= 3) features.push({ type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[...drawnPoints, drawnPoints[0]]] } });
-        if (features.length > 0) {
-            setSavedGeometry({ type: "FeatureCollection", features });
+        let newFeature: Feature | null = null;
+        if (geometriType === "titik" && drawnPoints.length >= 1) {
+            newFeature = { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: drawnPoints[0] } };
+        } else if (geometriType === "garis" && drawnPoints.length >= 2) {
+            newFeature = { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: drawnPoints } };
+        } else if (geometriType === "area" && drawnPoints.length >= 3) {
+            newFeature = { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[...drawnPoints, drawnPoints[0]]] } };
+        }
+
+        if (newFeature) {
+            setSavedGeometry((prev) => {
+                const existingFeatures = prev?.features || [];
+
+                // For titik mode, replace existing point (only one point allowed)
+                if (geometriType === "titik") {
+                    return {
+                        type: "FeatureCollection",
+                        features: [newFeature!],
+                    };
+                }
+
+                // For other modes, filter and append
+                const currentTypeFeatures = existingFeatures.filter((f) => {
+                    if (geometriType === "garis") return f.geometry.type === "LineString";
+                    if (geometriType === "area") return f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon";
+                    return false;
+                });
+
+                return {
+                    type: "FeatureCollection",
+                    features: [...currentTypeFeatures, newFeature!],
+                };
+            });
             setDrawnPoints([]);
             setHistoryStack([]);
-            setIsEditingDraft(false);
         }
     }, [drawnPoints, geometriType]);
 
@@ -552,6 +583,43 @@ const DetailToponimContent = () => {
     const handleClearSavedGeometry = useCallback(() => {
         setSavedGeometry(null);
     }, []);
+
+    const getGeometry = (): { type: string; coordinates: any } | null => {
+        // Filter features in savedGeometry that match current geometriType
+        const matchingSaved = savedGeometry?.features.filter((f) => {
+            if (geometriType === "titik") return f.geometry.type === "Point";
+            if (geometriType === "garis") return f.geometry.type === "LineString";
+            if (geometriType === "area") return f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon";
+            return false;
+        });
+
+        if (!matchingSaved || matchingSaved.length === 0) return null;
+
+        // For titik mode, return single point
+        if (geometriType === "titik") {
+            return { type: "Point", coordinates: (matchingSaved[0].geometry as Point).coordinates };
+        }
+
+        // For garis mode, return single line
+        if (geometriType === "garis") {
+            return { type: "LineString", coordinates: (matchingSaved[0].geometry as LineString).coordinates };
+        }
+
+        // For area mode, combine all polygons into MultiPolygon
+        if (geometriType === "area") {
+            const allPolygons: any[] = [];
+            matchingSaved.forEach((f) => {
+                if (f.geometry.type === "Polygon") {
+                    allPolygons.push((f.geometry as Polygon).coordinates);
+                } else if (f.geometry.type === "MultiPolygon") {
+                    allPolygons.push(...(f.geometry as any).coordinates);
+                }
+            });
+            return { type: "MultiPolygon", coordinates: allPolygons };
+        }
+
+        return null;
+    };
 
     const handleOpenCollapsible = (key: keyof typeof openCollapsible) => {
         setOpenCollapsible({ ...openCollapsible, [key]: !openCollapsible[key] });
@@ -729,6 +797,8 @@ const DetailToponimContent = () => {
                 pronounciation: editedData.pronounciation || toponymData.pronounciation,
                 spelling: editedData.spelling || toponymData.spelling,
                 element: editedData.element?.code || toponymData.element.code,
+                generic_element: editedData.generic_element || toponymData.generic_element,
+                specific_element: editedData.specific_element || toponymData.specific_element,
                 province_code: toponymData.province_id,
                 regency_code: toponymData.regency_id,
                 district_code: toponymData.district_id,
@@ -737,17 +807,12 @@ const DetailToponimContent = () => {
                 notes: editedData.notes || toponymData.notes,
                 sketch: editedData.sketch || toponymData.sketch,
                 photos: toponymData.photos || [],
-                geometry: savedGeometry?.features[0]
+                geometry: getGeometry() || (toponymData.location_point
                     ? {
-                          type: savedGeometry.features[0].geometry.type,
-                          coordinates: (savedGeometry.features[0].geometry as any).coordinates,
-                      }
-                    : toponymData.location_point
-                      ? {
-                            type: toponymData.geometry_type || toponymData.location_point.type,
-                            coordinates: toponymData.location_point.coordinates,
-                        }
-                      : null,
+                        type: toponymData.geometry_type || toponymData.location_point.type,
+                        coordinates: toponymData.location_point.coordinates,
+                    }
+                    : null),
                 element_id: editedData.element?.code || toponymData.element.code,
             };
 
@@ -890,12 +955,12 @@ const DetailToponimContent = () => {
             <div className="flex flex-col overflow-hidden grow pt-23 h-full">
                 <div className="flex grow">
                     <div className="block w-1/2 py-4 px-6 overflow-y-scroll max-h-[83vh]">
-                        <Link href="/penelaahan?tab=review-data&view=table" className="flex items-center gap-3 mb-5">
+                        <button onClick={() => router.back()} className="flex items-center gap-3 mb-5 hover:opacity-70 transition-opacity">
                             <Button size="icon-sm">
                                 <ChevronLeft />
                             </Button>
-                            Kembali
-                        </Link>
+                            <span className="font-medium">Kembali</span>
+                        </button>
                         {loading ? (
                             <div className="flex items-center justify-center py-20">
                                 <p className="text-gray-500">Memuat data toponim...</p>
@@ -980,11 +1045,18 @@ const DetailToponimContent = () => {
                                                                 <RotateCcw size={16} className="mr-2" />
                                                                 Kembali ke sebelumnya
                                                             </Button>
-                                                            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleSaveGeometry}>
+                                                            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => {
+                                                                handleSaveGeometry();
+                                                                setIsEditingDraft(false);
+                                                            }}>
                                                                 <Save size={16} className="mr-2" />
                                                                 Simpan Lokasi
                                                             </Button>
-                                                            <Button variant="outline" className="border-gray-400 text-gray-600 hover:bg-gray-50" onClick={() => setIsEditingDraft(false)}>
+                                                            <Button variant="outline" className="border-gray-400 text-gray-600 hover:bg-gray-50" onClick={() => {
+                                                                setDrawnPoints([]);
+                                                                setHistoryStack([]);
+                                                                setIsEditingDraft(false);
+                                                            }}>
                                                                 Batalkan
                                                             </Button>
                                                         </div>
@@ -1201,8 +1273,8 @@ const DetailToponimContent = () => {
                                                                     {loadingProvinces
                                                                         ? "Memuat..."
                                                                         : editedData.province_id || toponymData.province_id
-                                                                          ? provinces.find((p) => p.code === (editedData.province_id || toponymData.province_id))?.name || editedData.province_id || toponymData.province_id
-                                                                          : "Pilih Provinsi"}
+                                                                            ? provinces.find((p) => p.code === (editedData.province_id || toponymData.province_id))?.name || editedData.province_id || toponymData.province_id
+                                                                            : "Pilih Provinsi"}
                                                                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                                                                 </Button>
                                                             </PopoverTrigger>
@@ -1243,10 +1315,10 @@ const DetailToponimContent = () => {
                                                                     {loadingRegencies
                                                                         ? "Memuat..."
                                                                         : editedData.regency_id || toponymData.regency_id
-                                                                          ? regencies.find((r) => r.code === (editedData.regency_id || toponymData.regency_id))?.name || editedData.regency_id || toponymData.regency_id
-                                                                          : editedData.province_id || toponymData.province_id
-                                                                            ? "Pilih Kabupaten/Kota"
-                                                                            : "Pilih Provinsi dulu"}
+                                                                            ? regencies.find((r) => r.code === (editedData.regency_id || toponymData.regency_id))?.name || editedData.regency_id || toponymData.regency_id
+                                                                            : editedData.province_id || toponymData.province_id
+                                                                                ? "Pilih Kabupaten/Kota"
+                                                                                : "Pilih Provinsi dulu"}
                                                                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                                                                 </Button>
                                                             </PopoverTrigger>
@@ -1287,10 +1359,10 @@ const DetailToponimContent = () => {
                                                                     {loadingDistricts
                                                                         ? "Memuat..."
                                                                         : editedData.district_id || toponymData.district_id
-                                                                          ? districts.find((d) => d.code === (editedData.district_id || toponymData.district_id))?.name || editedData.district_id || toponymData.district_id
-                                                                          : editedData.regency_id || toponymData.regency_id
-                                                                            ? "Pilih Kecamatan"
-                                                                            : "Pilih Kabupaten dulu"}
+                                                                            ? districts.find((d) => d.code === (editedData.district_id || toponymData.district_id))?.name || editedData.district_id || toponymData.district_id
+                                                                            : editedData.regency_id || toponymData.regency_id
+                                                                                ? "Pilih Kecamatan"
+                                                                                : "Pilih Kabupaten dulu"}
                                                                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                                                                 </Button>
                                                             </PopoverTrigger>
@@ -1331,10 +1403,10 @@ const DetailToponimContent = () => {
                                                                     {loadingVillages
                                                                         ? "Memuat..."
                                                                         : editedData.village_id || toponymData.village_id
-                                                                          ? villages.find((v) => v.code === (editedData.village_id || toponymData.village_id))?.name || editedData.village_id || toponymData.village_id
-                                                                          : editedData.district_id || toponymData.district_id
-                                                                            ? "Pilih Desa/Kelurahan"
-                                                                            : "Pilih Kecamatan dulu"}
+                                                                            ? villages.find((v) => v.code === (editedData.village_id || toponymData.village_id))?.name || editedData.village_id || toponymData.village_id
+                                                                            : editedData.district_id || toponymData.district_id
+                                                                                ? "Pilih Desa/Kelurahan"
+                                                                                : "Pilih Kecamatan dulu"}
                                                                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                                                                 </Button>
                                                             </PopoverTrigger>

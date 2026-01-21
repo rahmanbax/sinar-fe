@@ -133,6 +133,7 @@ interface IReviewCard {
     handledData?: number;
     status?: string;
     onRefresh?: () => void;
+    onClick?: () => void;
 }
 
 const ReviewCard: React.FC<IReviewCard> = ({
@@ -151,6 +152,7 @@ const ReviewCard: React.FC<IReviewCard> = ({
     handledData = 0,
     status,
     onRefresh,
+    onClick,
 }) => {
     const router = useRouter();
     const isVerificationDone = totalData > 0 && totalData === handledData;
@@ -183,7 +185,7 @@ const ReviewCard: React.FC<IReviewCard> = ({
     };
 
     return (
-        <Card className="p-4 rounded-none border border-black shadow-none sm:w-full">
+        <Card className="p-4 rounded-none border border-black shadow-none sm:w-full cursor-pointer hover:bg-gray-50 transition-colors" onClick={onClick}>
             {/* <CardHeader className="flex justify-end px-0">
           <CardTitle>ID Penelaahan #{id}</CardTitle>
           <div className="border border-blue-600 text-blue-600 flex items-center justify-center text-center p-1 text-sm">
@@ -191,6 +193,16 @@ const ReviewCard: React.FC<IReviewCard> = ({
           </div>
         </CardHeader> */}
             <CardContent className="px-0">
+                <div className="flex justify-end mb-2">
+                    <div
+                        className={cn(
+                            "flex px-2 py-1 border w-fit ",
+                            status === "completed" ? "bg-green-50 border-green-600 text-green-600" : status === "issued" ? "bg-blue-50 border-blue-600 text-blue-600" : "bg-gray-50 border-gray-200 text-gray-600",
+                        )}
+                    >
+                        {status}
+                    </div>
+                </div>
                 <h3 className="text-xl mb-3">{title}</h3>
                 <div className="flex justify-between">
                     <div className="text-start">
@@ -230,7 +242,13 @@ const ReviewCard: React.FC<IReviewCard> = ({
 
                 {isVerificationDone && (
                     <div className="mt-4">
-                        <Button className={`w-full  text-white ${isCompleted ? "disabled bg-gray-300 hover:bg-gray-300" : "cursor-pointer bg-green-500 hover:bg-green-600"}`} onClick={() => !isCompleted && setShowConfirmModal(true)}>
+                        <Button
+                            className={`w-full  text-white ${isCompleted ? "disabled bg-gray-300 hover:bg-gray-300" : "cursor-pointer bg-green-500 hover:bg-green-600"}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isCompleted) setShowConfirmModal(true);
+                            }}
+                        >
                             {isCompleted ? (
                                 "Selesai"
                             ) : (
@@ -244,7 +262,7 @@ const ReviewCard: React.FC<IReviewCard> = ({
 
                 {isCompleted && (
                     <div className="mt-4">
-                        <Link href={`/penelaahan/cetak-berita-acara?transactionId=${id}`}>
+                        <Link href={`/penelaahan/cetak-berita-acara?transactionId=${id}`} onClick={(e) => e.stopPropagation()}>
                             <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">
                                 <FileText />
                                 Cetak Berita Acara
@@ -254,8 +272,13 @@ const ReviewCard: React.FC<IReviewCard> = ({
                 )}
 
                 {/* Confirmation Modal */}
-                <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
-                    <DialogContent className="sm:max-w-[700px]">
+                <Dialog
+                    open={showConfirmModal}
+                    onOpenChange={(open) => {
+                        setShowConfirmModal(open);
+                    }}
+                >
+                    <DialogContent className="sm:max-w-[700px]" onClick={(e) => e.stopPropagation()}>
                         <DialogHeader>
                             <DialogTitle className="text-lg font-semibold">Konfirmasi Penyelesaian</DialogTitle>
                             <DialogDescription className="text-gray-600 mt-2 text-md">
@@ -421,7 +444,7 @@ const ReviewDataTab: React.FC = () => {
                     const transformedData = result.data.map((item: ToponymData, index: number) => {
                         // Determine status from accepted field
                         const accepted = item.review_transaction_data?.[0]?.accepted;
-                        let status = "Proses Penelaahan";
+                        let status = "Belum Ditelaah";
                         if (accepted === true) {
                             status = "Disetujui";
                         } else if (accepted === false) {
@@ -438,7 +461,7 @@ const ReviewDataTab: React.FC = () => {
                             artiNama: item.name_meaning || "-",
                             asalBahasa: item.language_origin || "-",
                             reviewTransaction: item.review_transaction_data?.[0],
-                            koordinat: item.location_point ? `${item.location_point.coordinates[0]}, ${item.location_point.coordinates[1]}` : "-",
+                            koordinat: item.location_point ? `${item.location_point.coordinates[0].toFixed(3)}, ${item.location_point.coordinates[1].toFixed(3)}` : "-",
                             status: status,
                         };
                     });
@@ -463,6 +486,9 @@ const ReviewDataTab: React.FC = () => {
         const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
             issued: { bg: "bg-blue-100", text: "text-blue-800", label: "issued" },
             completed: { bg: "bg-green-100", text: "text-green-800", label: "completed" },
+            Disetujui: { bg: "bg-green-100", text: "text-green-800", label: "Disetujui" },
+            Ditolak: { bg: "bg-red-100", text: "text-red-800", label: "Ditolak" },
+            "Belum Ditelaah": { bg: "bg-gray-100", text: "text-gray-800", label: "Belum Ditelaah" },
         };
 
         const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800", label: status };
@@ -490,7 +516,7 @@ const ReviewDataTab: React.FC = () => {
                     const transformedData = result.data.map((item: ToponymData, index: number) => {
                         // Determine status from accepted field
                         const accepted = item.review_transaction_data?.[0]?.accepted;
-                        let status = "Proses Penelaahan";
+                        let status = "Belum Ditelaah";
                         if (accepted === true) {
                             status = "Disetujui";
                         } else if (accepted === false) {
@@ -506,7 +532,7 @@ const ReviewDataTab: React.FC = () => {
                             namaLain: item.other_name || "-",
                             artiNama: item.name_meaning || "-",
                             asalBahasa: item.language_origin || "-",
-                            koordinat: item.location_point ? `${item.location_point.coordinates[0]}, ${item.location_point.coordinates[1]}` : "-",
+                            koordinat: item.location_point ? `${item.location_point.coordinates[0].toFixed(3)}, ${item.location_point.coordinates[1].toFixed(3)}` : "-",
                             status: status,
                         };
                     });
@@ -801,6 +827,7 @@ const ReviewDataTab: React.FC = () => {
                             handledData={item.handledData}
                             status={item.status}
                             onRefresh={fetchReviewData}
+                            onClick={() => handleSelectTransaction(item.id)}
                         />
                     ))}
                 </div>

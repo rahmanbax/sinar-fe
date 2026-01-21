@@ -459,7 +459,7 @@ const CetakBeritaAcaraContent = () => {
 
             {/* Modal for Real PDF Preview */}
             {showFullPreview && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-8">
+                <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 p-8">
                     <div className="relative w-full h-full max-w-5xl bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col">
                         <div className="flex items-center justify-between p-4 border-b">
                             <h3 className="font-bold text-lg">Pratinjau Berita Acara</h3>

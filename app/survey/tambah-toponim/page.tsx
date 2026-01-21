@@ -155,11 +155,6 @@ const PreviewMap: React.FC<PreviewMapProps> = ({ isEditing, geometriType, snappi
                 }
 
                 clickTimeoutRef.current = setTimeout(() => {
-                    // Clear saved geometry when starting new drawing
-                    if (drawnPoints.length === 0) {
-                        onClearSaved();
-                    }
-
                     const { lng, lat } = e.lngLat;
                     const snappedPoint = snapToNearestPoint(lng, lat);
 
@@ -167,10 +162,7 @@ const PreviewMap: React.FC<PreviewMapProps> = ({ isEditing, geometriType, snappi
                     onPointsChange([...drawnPoints, snappedPoint]);
                 }, 200); // 200ms delay to detect double-click
             } else {
-                // Point mode - immediate response, replace with single point
-                if (drawnPoints.length === 0) {
-                    onClearSaved();
-                }
+                // Point mode - immediate response
                 const { lng, lat } = e.lngLat;
                 const snappedPoint = snapToNearestPoint(lng, lat);
                 onPointsChange([snappedPoint]);
@@ -702,45 +694,40 @@ const Page = () => {
 
     // Get geometry from saved geometry or drawn points
     const getGeometry = (): { type: string; coordinates: any } | null => {
-        if (savedGeometry && savedGeometry.features.length > 0) {
-            const feature = savedGeometry.features[0];
-            const geom = feature.geometry as any;
+        // Filter features in savedGeometry that match current geometriType
+        const matchingSaved = savedGeometry?.features.filter((f) => {
+            if (geometriType === "titik") return f.geometry.type === "Point";
+            if (geometriType === "garis") return f.geometry.type === "LineString";
+            if (geometriType === "area") return f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon";
+            return false;
+        });
 
-            if (geom.type === "Point") {
-                return {
-                    type: "Point",
-                    coordinates: geom.coordinates,
-                };
-            } else if (geom.type === "LineString") {
-                return {
-                    type: "LineString",
-                    coordinates: geom.coordinates,
-                };
-            } else if (geom.type === "Polygon") {
-                // Return as MultiPolygon as per user request
-                return {
-                    type: "MultiPolygon",
-                    coordinates: [geom.coordinates], // Wrap in another array for MultiPolygon
-                };
+        if (matchingSaved && matchingSaved.length > 0) {
+            if (geometriType === "titik") {
+                return { type: "Point", coordinates: (matchingSaved[0].geometry as Point).coordinates };
+            } else if (geometriType === "garis") {
+                return { type: "LineString", coordinates: (matchingSaved[0].geometry as LineString).coordinates };
+            } else if (geometriType === "area") {
+                // Combine all polygons into a single MultiPolygon
+                const allPolygons: any[] = [];
+                matchingSaved.forEach((f) => {
+                    if (f.geometry.type === "Polygon") {
+                        allPolygons.push(f.geometry.coordinates);
+                    } else if (f.geometry.type === "MultiPolygon") {
+                        allPolygons.push(...(f.geometry as any).coordinates);
+                    }
+                });
+                return { type: "MultiPolygon", coordinates: allPolygons };
             }
-            return geom;
         }
+
         if (drawnPoints.length > 0) {
             if (geometriType === "titik") {
-                return {
-                    type: "Point",
-                    coordinates: [drawnPoints[0][0], drawnPoints[0][1]],
-                };
+                return { type: "Point", coordinates: [drawnPoints[0][0], drawnPoints[0][1]] };
             } else if (geometriType === "garis" && drawnPoints.length >= 2) {
-                return {
-                    type: "LineString",
-                    coordinates: drawnPoints,
-                };
+                return { type: "LineString", coordinates: drawnPoints };
             } else if (geometriType === "area" && drawnPoints.length >= 3) {
-                return {
-                    type: "MultiPolygon",
-                    coordinates: [[[...drawnPoints, drawnPoints[0]]]],
-                };
+                return { type: "MultiPolygon", coordinates: [[[...drawnPoints, drawnPoints[0]]]] };
             }
         }
         return null;
@@ -759,36 +746,42 @@ const Page = () => {
     const handleSaveGeometry = useCallback(() => {
         if (drawnPoints.length === 0) return;
 
-        const features: Feature[] = [];
-
+        let newFeature: Feature | null = null;
         if (geometriType === "titik" && drawnPoints.length >= 1) {
-            features.push({
-                type: "Feature",
-                properties: {},
-                geometry: { type: "Point", coordinates: drawnPoints[0] },
-            });
+            newFeature = { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: drawnPoints[0] } };
         } else if (geometriType === "garis" && drawnPoints.length >= 2) {
-            features.push({
-                type: "Feature",
-                properties: {},
-                geometry: { type: "LineString", coordinates: drawnPoints },
-            });
+            newFeature = { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: drawnPoints } };
         } else if (geometriType === "area" && drawnPoints.length >= 3) {
-            features.push({
-                type: "Feature",
-                properties: {},
-                geometry: { type: "Polygon", coordinates: [[...drawnPoints, drawnPoints[0]]] },
-            });
+            newFeature = { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [[...drawnPoints, drawnPoints[0]]] } };
         }
 
-        if (features.length > 0) {
-            setSavedGeometry({
-                type: "FeatureCollection",
-                features,
+        if (newFeature) {
+            setSavedGeometry((prev) => {
+                const existingFeatures = prev?.features || [];
+
+                // For titik mode, replace existing point (only one point allowed)
+                if (geometriType === "titik") {
+                    return {
+                        type: "FeatureCollection",
+                        features: [newFeature!],
+                    };
+                }
+
+                // For other modes, filter and append
+                const currentTypeFeatures = existingFeatures.filter((f) => {
+                    if (geometriType === "garis") return f.geometry.type === "LineString";
+                    if (geometriType === "area") return f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon";
+                    return false;
+                });
+
+                return {
+                    type: "FeatureCollection",
+                    features: [...currentTypeFeatures, newFeature!],
+                };
             });
+
             setDrawnPoints([]);
             setHistoryStack([]);
-            setIsEditingDraft(false);
         }
     }, [drawnPoints, geometriType]);
 
@@ -837,8 +830,17 @@ const Page = () => {
                 local_name: localName,
                 generic_element: genericElement,
                 specific_element: specificElement,
-                geometry: geometry,
             };
+
+            // Set geometry field and specific location fields
+            if (geometry.type === "Point") {
+                payload.location_point = geometry;
+            } else if (geometry.type === "LineString") {
+                payload.location_line = geometry;
+            } else if (geometry.type === "MultiPolygon") {
+                payload.location_area = geometry;
+            }
+            payload.geometry = geometry;
 
             // Optional fields
             if (mapName) payload.map_name = mapName;
@@ -868,7 +870,7 @@ const Page = () => {
             const result = await res.json();
             if (!result.error) {
                 alert("Toponim berhasil ditambahkan!");
-                router.push("/survey");
+                router.push("/survey?tab=my-data");
             } else {
                 alert(`Gagal: ${result.message}`);
             }
@@ -948,11 +950,21 @@ const Page = () => {
                                                 <RotateCcw size={16} className="mr-2" />
                                                 Kembali ke sebelumnya
                                             </Button>
-                                            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleSaveGeometry}>
+                                            <Button
+                                                className="bg-blue-600 hover:bg-blue-700"
+                                                onClick={() => {
+                                                    handleSaveGeometry();
+                                                    setIsEditingDraft(false);
+                                                }}
+                                            >
                                                 <Save size={16} className="mr-2" />
                                                 Simpan Lokasi
                                             </Button>
-                                            <Button variant="outline" className="border-gray-400 text-gray-600 hover:bg-gray-50" onClick={() => setIsEditingDraft(false)}>
+                                            <Button variant="outline" className="border-gray-400 text-gray-600 hover:bg-gray-50" onClick={() => {
+                                                setDrawnPoints([]);
+                                                setHistoryStack([]);
+                                                setIsEditingDraft(false);
+                                            }}>
                                                 Batalkan
                                             </Button>
                                         </div>

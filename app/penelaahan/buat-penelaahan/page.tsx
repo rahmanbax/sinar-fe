@@ -177,12 +177,12 @@ const Page = () => {
         <ReviewerLayout>
             <div className="pt-20 p-6 mt-6 h-screen">
                 <div className="flex items-center gap-3 mb-6">
-                    <Link href="/penelaahan?tab=review-data">
-                        <Button size='icon-sm' variant="ghost">
+                    <button onClick={() => router.back()} className="flex items-center gap-3 mb-5 hover:opacity-70 transition-opacity">
+                        <Button size="icon-sm">
                             <ChevronLeft />
                         </Button>
-                    </Link>
-                    <h1 className="text-xl font-bold">Buat Penelaahan</h1>
+                        <span className="font-medium">Kembali</span>
+                    </button>
                 </div>
 
                 <Card className="max-w-1/3">

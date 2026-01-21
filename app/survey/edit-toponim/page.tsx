@@ -1225,11 +1225,11 @@ const EditToponimContent = () => {
 
                                     {/* Dialog Preview Gambar */}
                                     <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
-                                        <DialogContent className="max-w-none sm:max-w-none w-screen h-screen p-0 m-0 bg-black border-none shadow-none rounded-none overflow-hidden flex items-center justify-center" showCloseButton={false}>
+                                        <DialogContent className="max-w-none sm:max-w-none w-screen h-screen p-0 m-0 bg-black/60 border-none shadow-none rounded-none overflow-hidden flex items-center justify-center" showCloseButton={false}>
                                             <DialogHeader className="sr-only">
                                                 <DialogTitle>{previewImage?.name || "Preview Gambar"}</DialogTitle>
                                             </DialogHeader>
-                                            <div className="w-screen h-screen flex items-center justify-center bg-black py-1 px-4 relative group/gallery">
+                                            <div className="w-screen h-screen flex items-center justify-center bg-transparent py-1 px-4 relative group/gallery">
                                                 <img src={previewImage?.url} alt={previewImage?.name} className="max-w-full max-h-full object-contain" />
 
                                                 {/* Navigation Buttons */}

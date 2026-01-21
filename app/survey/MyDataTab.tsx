@@ -40,13 +40,16 @@ type ApiResponse = {
 };
 
 const getStatusBadge = (status: string) => {
-    const statusStyles: Record<string, { bg: string; text: string }> = {
-        pengajuan: { bg: "bg-gray-100", text: "text-gray-800" },
-        penelaahan: { bg: "bg-yellow-100", text: "text-yellow-800" },
-        baku: { bg: "bg-green-100", text: "text-green-800" },
+    // fecting data dari endpoint
+    const s = status?.toLowerCase() || "";
+    const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
+        pengajuan: { bg: "bg-gray-100", text: "text-gray-800", label: "Pengajuan" },
+        penelaahan: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Penelaahan" },
+        penetapan: { bg: "bg-green-100", text: "text-green-800", label: "Penetapan" },
+        ditolak: { bg: "bg-red-100", text: "text-red-800", label: "Ditolak" },
     };
-    const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800" };
-    return <span className={`px-3 py-1 rounded-full text-sm font-medium ${style.bg} ${style.text}`}> {status}</span>;
+    const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800", label: status };
+    return <span className={`px-3 py-1 rounded-full text-sm font-medium ${style.bg} ${style.text}`}> {style.label}</span>;
 };
 
 const MyDataTab: React.FC = () => {
@@ -57,7 +60,7 @@ const MyDataTab: React.FC = () => {
         created_at: { label: "Tanggal Dibuat" },
         survey_at: { label: "Tanggal Survei" },
         element_type: { label: "Jenis Unsur" },
-        generic_element: { label: "Elemen Generik" }, 
+        generic_element: { label: "Elemen Generik" },
         specific_element: { label: "Elemen Spesifik" },
         province: { label: "Provinsi" },
         regency: { label: "Kota/Kabupaten" },
@@ -103,7 +106,7 @@ const MyDataTab: React.FC = () => {
                 province: item.province?.name ?? "-",
                 regency: item.regency?.name ?? "-",
                 source: item.source,
-                status: item.status,
+                status: item.status || "pengajuan",
             }));
             setData(mapped);
             if (r.pagination) {

@@ -170,6 +170,7 @@ const ReviewCard: React.FC<IReviewCard> = ({
             });
             const result = await response.json();
             if (!result.error) {
+                setShowConfirmModal(false);
                 if (onRefresh) onRefresh();
                 // router.push(`/penelaahan/cetak-berita-acara?transactionId=${id}`)
             } else {

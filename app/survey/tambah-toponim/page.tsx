@@ -64,6 +64,15 @@ interface Element {
     subcategory_id: number;
 }
 
+const ddToDMS = (dd: number, isLat: boolean): string => {
+    const absDd = Math.abs(dd);
+    const deg = Math.floor(absDd);
+    const min = Math.floor((absDd - deg) * 60);
+    const sec = ((absDd - deg - min / 60) * 3600).toFixed(2);
+    const direction = isLat ? (dd >= 0 ? "LU" : "LS") : dd >= 0 ? "BT" : "BB";
+    return `${deg}° ${min}' ${sec}" ${direction}`;
+};
+
 interface PreviewMapProps {
     isEditing: boolean;
     geometriType: "titik" | "garis" | "area";
@@ -956,9 +965,14 @@ const Page = () => {
                                                     <div className="space-y-1 text-sm">
                                                         <p className="text-gray-500 text-xs mb-1">Titik yang sedang digambar:</p>
                                                         {drawnPoints.map((point, idx) => (
-                                                            <p key={idx} className="text-blue-600 font-mono font-bold">
-                                                                Lng: {point[0].toFixed(6)}, Lat:{point[1].toFixed(6)}
-                                                            </p>
+                                                            <div key={idx} className="text-blue-600 font-mono font-bold leading-tight mb-2 last:mb-0">
+                                                                <p>
+                                                                    Lng: {point[0].toFixed(6)} ({ddToDMS(point[0], false)}),
+                                                                </p>
+                                                                <p>
+                                                                    Lat: {point[1].toFixed(6)} ({ddToDMS(point[1], true)})
+                                                                </p>
+                                                            </div>
                                                         ))}
                                                     </div>
                                                 )}
@@ -978,9 +992,14 @@ const Page = () => {
                                                 return (
                                                     <div key={idx} className="space-y-1">
                                                         <p className="text-sm text-green-600 font-medium">Tipe: Titik</p>
-                                                        <p key={idx} className="font-mono text-green-600 font-bold text-sm">
-                                                            Lng: {coords[0].toFixed(6)}, Lat: {coords[1].toFixed(6)}
-                                                        </p>
+                                                        <div className="font-mono text-green-600 font-bold text-sm leading-tight">
+                                                            <p>
+                                                                Lng: {coords[0].toFixed(6)} ({ddToDMS(coords[0], false)}),
+                                                            </p>
+                                                            <p>
+                                                                Lat: {coords[1].toFixed(6)} ({ddToDMS(coords[1], true)})
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 );
                                             } else if (geom.type === "LineString") {
@@ -990,9 +1009,14 @@ const Page = () => {
                                                         <p className="text-sm text-green-600 font-medium">Tipe: Garis ({coords.length} titik)</p>
                                                         <div className="grid grid-cols-1 gap-0.5">
                                                             {coords.map((c, i) => (
-                                                                <p key={i} className="font-mono text-green-600 font-bold text-sm">
-                                                                    {i + 1}. Lng: {c[0].toFixed(6)}, Lat: {c[1].toFixed(6)}
-                                                                </p>
+                                                                <div key={i} className="font-mono text-green-600 font-bold text-sm leading-tight mb-1 last:mb-0">
+                                                                    <p>
+                                                                        {i + 1}. Lng: {c[0].toFixed(6)} ({ddToDMS(c[0], false)}),
+                                                                    </p>
+                                                                    <p className="pl-4">
+                                                                        Lat: {c[1].toFixed(6)} ({ddToDMS(c[1], true)})
+                                                                    </p>
+                                                                </div>
                                                             ))}
                                                         </div>
                                                     </div>
@@ -1006,9 +1030,14 @@ const Page = () => {
                                                         <p className="text-sm text-green-600 font-medium">Tipe: Area ({uniqueCoords.length} titik)</p>
                                                         <div className="grid grid-cols-1 gap-0.5">
                                                             {uniqueCoords.map((c, i) => (
-                                                                <p key={i} className="font-mono text-green-600 font-bold text-sm">
-                                                                    {i + 1}. Lng: {c[0].toFixed(6)}, Lat: {c[1].toFixed(6)}
-                                                                </p>
+                                                                <div key={i} className="font-mono text-green-600 font-bold text-sm leading-tight mb-1 last:mb-0">
+                                                                    <p>
+                                                                        {i + 1}. Lng: {c[0].toFixed(6)} ({ddToDMS(c[0], false)}),
+                                                                    </p>
+                                                                    <p className="pl-4">
+                                                                        Lat: {c[1].toFixed(6)} ({ddToDMS(c[1], true)})
+                                                                    </p>
+                                                                </div>
                                                             ))}
                                                         </div>
                                                     </div>
@@ -1385,11 +1414,11 @@ const Page = () => {
 
                                     {/* Dialog Preview Gambar */}
                                     <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
-                                        <DialogContent className="max-w-none sm:max-w-none w-screen h-screen p-0 m-0 bg-black border-none shadow-none rounded-none overflow-hidden flex items-center justify-center" showCloseButton={false}>
+                                        <DialogContent className="max-w-none sm:max-w-none w-screen h-screen p-0 m-0 bg-black/60 border-none shadow-none rounded-none overflow-hidden flex items-center justify-center" showCloseButton={false}>
                                             <DialogHeader className="sr-only">
                                                 <DialogTitle>{previewImage?.name || "Preview Gambar"}</DialogTitle>
                                             </DialogHeader>
-                                            <div className="w-screen h-screen flex items-center justify-center bg-black py-1 px-4 relative group/gallery">
+                                            <div className="w-screen h-screen flex items-center justify-center bg-transparent py-1 px-4 relative group/gallery">
                                                 <img src={previewImage?.url} alt={previewImage?.name} className="max-w-full max-h-full object-contain" />
 
                                                 {/* Navigation Buttons */}

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { cn } from "@/lib/utils"
 import { useApiHandler, useApiHandlerWithPagination } from "@/utils/apiHandler"
 import { ChevronLeft, ChevronRight, Download, Plus, Search, SlidersVertical, ArrowLeft } from "lucide-react"
+import Link from "next/link"
 import React, { useCallback, useEffect, useState } from 'react'
 import dayjs from "dayjs"
 import { Label } from "@radix-ui/react-label"
@@ -25,116 +26,8 @@ type Announcement = {
     updated_at: string
 }
 
-// Sub-komponen: Form Tambah Pengumuman
-interface TambahPengumumanFormProps {
-    onBack: () => void
-}
 
-const TambahPengumumanForm: React.FC<TambahPengumumanFormProps> = ({ onBack }) => {
-    const [loading, setLoading] = useState(false)
-    const apiHandler = useApiHandler<Announcement>({ setLoading, shouldHandleError: true })
-
-    const [code, setCode] = useState('')
-    const [amount, setAmount] = useState('')
-    const [start, setStart] = useState('')
-    const [end, setEnd] = useState('')
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-
-        apiHandler('POST', '/announcements', {
-            code,
-            amount: parseInt(amount),
-            start,
-            end
-        }).then(() => {
-            onBack()
-        })
-    }
-
-    return (
-        <div className="flex flex-col">
-            <Button
-                variant="ghost"
-                className="self-start mb-4 gap-2"
-                onClick={onBack}
-            >
-                <ArrowLeft size={18} />
-                Kembali ke Daftar
-            </Button>
-
-            <p className="text-muted-foreground mb-2">Pengumuman</p>
-            <h1 className="text-2xl font-bold mb-6">Tambah Pengumuman</h1>
-
-            <div className="bg-white rounded-lg border p-6">
-                <h2 className="text-lg font-semibold mb-6">Form Tambah Pengumuman</h2>
-
-                <form className="space-y-6" onSubmit={handleSubmit}>
-                    <div className="space-y-2 w-full md:w-1/3">
-                        <Label htmlFor="kodePengumuman">Kode Pengumuman</Label>
-                        <Input
-                            id="kodePengumuman"
-                            placeholder="Contoh: PGM-001/2025"
-                            value={code}
-                            onChange={(e) => setCode(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="space-y-2 w-full md:w-1/3">
-                        <Label htmlFor="jumlahData">Jumlah Data</Label>
-                        <Input
-                            id="jumlahData"
-                            type="number"
-                            placeholder="Jumlah data"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="space-y-2 w-full md:w-1/3">
-                        <Label htmlFor="tanggalMulai" className="text-sm text-muted-foreground w-fit">Tanggal Mulai</Label>
-                        <Input
-                            id="tanggalMulai"
-                            type="date"
-                            value={start}
-                            onChange={(e) => setStart(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="space-y-2 w-full md:w-1/3">
-                        <Label htmlFor="tanggalSelesai" className="text-sm text-muted-foreground w-fit">Tanggal Selesai</Label>
-                        <Input
-                            id="tanggalSelesai"
-                            type="date"
-                            value={end}
-                            onChange={(e) => setEnd(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="flex gap-4 pt-4">
-                        <Button type="button" variant="outline" onClick={onBack} disabled={loading}>
-                            Batal
-                        </Button>
-                        <Button type="submit" className="bg-green-500 hover:bg-green-600" disabled={loading}>
-                            {loading ? 'Menyimpan...' : 'Simpan'}
-                        </Button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    )
-}
-
-// Sub-komponen: Daftar Pengumuman
-interface DaftarPengumumanProps {
-    onAddClick: () => void
-}
-
-const DaftarPengumuman: React.FC<DaftarPengumumanProps> = ({ onAddClick }) => {
+const DaftarPengumuman: React.FC = () => {
     const columnsPengumuman: ColumnConfig = {
         code: { label: 'Kode Pengumuman' },
         amount: { label: 'Jumlah Data' },
@@ -178,12 +71,14 @@ const DaftarPengumuman: React.FC<DaftarPengumumanProps> = ({ onAddClick }) => {
     return (
         <div className="flex flex-col gap-4">
             <div className="flex justify-end">
-                <Button size='sm' className="bg-green-500 hover:bg-green-700" onClick={onAddClick}>
-                    <div className="flex items-center gap-2">
-                        <Plus className="text-white" />
-                        Tambah Pengumuman
-                    </div>
-                </Button>
+                <Link href="/big/tambah-pengumuman">
+                    <Button size='sm' className="bg-green-500 hover:bg-green-700">
+                        <div className="flex items-center gap-2">
+                            <Plus className="text-white" />
+                            Tambah Pengumuman
+                        </div>
+                    </Button>
+                </Link>
             </div>
             <Card>
                 <CardContent className="px-8">
@@ -276,17 +171,10 @@ const DaftarPengumuman: React.FC<DaftarPengumumanProps> = ({ onAddClick }) => {
     )
 }
 
-// Komponen utama PengumumanTab
 const PengumumanTab: React.FC = () => {
-    const [view, setView] = useState<'list' | 'add'>('list')
-
     return (
         <div>
-            {view === 'list' ? (
-                <DaftarPengumuman onAddClick={() => setView('add')} />
-            ) : (
-                <TambahPengumumanForm onBack={() => setView('list')} />
-            )}
+            <DaftarPengumuman />
         </div>
     )
 }

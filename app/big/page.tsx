@@ -1,5 +1,6 @@
 "use client"
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { PiPencilSimpleLineDuotone } from 'react-icons/pi'
 
 import { Button } from "@/components/ui/button";
@@ -28,19 +29,31 @@ import PengumumanTab from "./PengumumanTab";
 import PenelahaanTanggapanTab from "./PenelahaanTanggapanTab";
 import PenetapanTab from "./PenetapanTab";
 
-const Page = () => {
+const PageContent = () => {
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const currentTab = searchParams.get('tab') || ''
+
     const [fullTab, setFulltab] = useState(false)
     const navbarRef = useRef<HTMLDivElement>(null);
     const [navbarHeight, setNavbarHeight] = useState(0);
     const tabs = [
-        { key: 'statistic', label: 'Statistik', component: <StatisticTab /> },
-        { key: 'announcement', label: 'Pengumuman', component: <PengumumanTab /> },
-        { key: 'response-review', label: 'Penelaahan Tanggapan', component: <PenelahaanTanggapanTab /> },
-        { key: 'publication', label: 'Penetapan', component: <PenetapanTab /> },
-        { key: 'create-gazeter', label: 'Pembuatan GRI', component: <GazeterTab /> },
-        { key: 'update-review', label: 'Penelaahan Perubahan', component: <StatisticTab /> },
-        { key: 'my-team', label: 'Tim Saya', component: <MyTeamTab /> }
+        { key: '', label: 'Statistik', component: <StatisticTab /> },
+        { key: 'pengumuman', label: 'Pengumuman', component: <PengumumanTab /> },
+        { key: 'penelaahan-tanggapan', label: 'Penelaahan Tanggapan', component: <PenelahaanTanggapanTab /> },
+        { key: 'penetapan', label: 'Penetapan', component: <PenetapanTab /> },
+        { key: 'pembuatan-gri', label: 'Pembuatan GRI', component: <GazeterTab /> },
+        { key: 'penelaahan-perubahan', label: 'Penelaahan Perubahan', component: <StatisticTab /> },
+        { key: 'tim-saya', label: 'Tim Saya', component: <MyTeamTab /> }
     ]
+
+    const onTabChange = (value: string) => {
+        if (!value) {
+            router.push('/big')
+        } else {
+            router.push(`/big?tab=${value}`)
+        }
+    }
 
     useEffect(() => {
         if (!navbarRef.current) return;
@@ -93,7 +106,8 @@ const Page = () => {
                 {/* --- Tabs Section --- */}
                 <div className={`flex flex-col grow transition-all duration-500 ${fullTab ? 'h-full' : 'h-1/2 overflow-hidden'}`}>
                     <Tabs
-                        defaultValue="statistic"
+                        value={currentTab}
+                        onValueChange={onTabChange}
                         className={`flex flex-col grow w-full overflow-y-hidden gap-0 ${fullTab ? 'bg-muted' : 'bg-white'}`}
                     >
                         <TabsList
@@ -142,6 +156,14 @@ const Page = () => {
             </div>
         </BigLayout>
     );
+}
+
+const Page = () => {
+    return (
+        <Suspense fallback={null}>
+            <PageContent />
+        </Suspense>
+    )
 }
 
 export default Page

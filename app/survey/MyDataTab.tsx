@@ -115,6 +115,11 @@ const MyDataTab: React.FC = () => {
         });
     }, [apiHandler, page, limit, debouncedSearch]);
 
+    // Reset to page 1 when search or limit changes
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch, limit]);
+
     useEffect(refresh, [refresh]);
 
     return (

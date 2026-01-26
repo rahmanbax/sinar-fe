@@ -32,12 +32,12 @@ const BigLayout: React.FC<React.PropsWithChildren<IBigLayout>> = ({ children, na
 
     return (
         <ProtectedRoute allowedRoles={[Role.BIG, Role.ADMIN]}>
-            <div className="flex w-full flex-col h-screen bg-neutral-50">
+            <div className="flex w-full flex-col h-screen bg-neutral-50 overflow-hidden">
                 <UserNav isMobile={isMobile} menuItems={menuItems} setOpenLoginDialog={setOpenLoginDialog} navbarRef={navbarRef} />
-                <main className="flex-1 bg-white flex flex-col h-full">
+                <main className="flex-1 bg-white overflow-y-auto relative">
                     {children}
-                    <Footer />
                 </main>
+                <Footer />
                 <LoginDialog open={openLoginDialog} setOpen={setOpenLoginDialog} />
             </div>
         </ProtectedRoute>

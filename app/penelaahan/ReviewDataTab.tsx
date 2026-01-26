@@ -193,17 +193,17 @@ const ReviewCard: React.FC<IReviewCard> = ({
           </div>
         </CardHeader> */}
             <CardContent className="px-0">
-                <div className="flex justify-end mb-2">
+                <div className="flex gap-2 mb-4">
+                    <h3 className="text-xl mb-3 w-full">{title}</h3>
                     <div
                         className={cn(
-                            "flex px-2 py-1 border w-fit ",
+                            "flex px-2 py-1 border w-fit h-fit",
                             status === "completed" ? "bg-green-50 border-green-600 text-green-600" : status === "issued" ? "bg-blue-50 border-blue-600 text-blue-600" : "bg-gray-50 border-gray-200 text-gray-600",
                         )}
                     >
-                        {status}
+                        {status === "completed" ? "Selesai" : status === "issued" ? "Proses Penelaahan" : ""}
                     </div>
                 </div>
-                <h3 className="text-xl mb-3">{title}</h3>
                 <div className="flex justify-between">
                     <div className="text-start">
                         <h5 className="mb-3">

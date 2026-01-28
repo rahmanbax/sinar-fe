@@ -2,7 +2,15 @@
 import { useState, useRef, useEffect, Suspense, useCallback } from "react";
 import { PiPencilSimpleLineDuotone } from "react-icons/pi";
 import { useSearchParams, useRouter } from "next/navigation";
-import { API_URL } from "@/lib/config";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+    getVerificationToponymDetail,
+    updateVerificationToponym,
+    acceptVerificationToponym,
+    rejectVerificationToponym
+} from "@/api/verification";
+import { getElements } from "@/api/classification";
+import { getRegions } from "@/api/region";
 
 import { Button } from "@/components/ui/button";
 import { Check, ChevronDown, ChevronLeft, ChevronsUpDown, X, Trash2, RotateCcw, Save, CircleDot } from "lucide-react";
@@ -444,6 +452,7 @@ const DetailToponimContent = () => {
     const router = useRouter();
     const transactionId = searchParams.get("transactionId");
     const toponymId = searchParams.get("toponymId");
+    const { token } = useAuth();
 
     const [fullTab, setFulltab] = useState(false);
     const navbarRef = useRef<HTMLDivElement>(null);
@@ -724,13 +733,7 @@ const DetailToponimContent = () => {
     const fetchElements = async () => {
         setLoadingElements(true);
         try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(`${API_URL}/classification/elements`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const result = await response.json();
+            const result = await getElements(token);
             if (!result.error && result.data) {
                 setElements(result.data);
             }
@@ -747,13 +750,7 @@ const DetailToponimContent = () => {
 
         setLoading(true);
         try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms/${toponymId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const result = await response.json();
+            const result = await getVerificationToponymDetail(token, transactionId, toponymId);
 
             if (!result.error && result.data) {
                 setToponymData(result.data);
@@ -763,7 +760,7 @@ const DetailToponimContent = () => {
         } finally {
             setLoading(false);
         }
-    }, [transactionId, toponymId]);
+    }, [transactionId, toponymId, token]);
 
     const handleCancelDraft = useCallback(() => {
         // Restore from backup
@@ -785,15 +782,13 @@ const DetailToponimContent = () => {
     // Regional Fetching
     useEffect(() => {
         if (!isEditMode && !toponymData) return;
-        const token = localStorage.getItem("token");
         setLoadingProvinces(true);
-        fetch(`${API_URL}/regions?level=PROVINCE&limit=100`, { headers: { Authorization: `Bearer ${token}` } })
-            .then((r) => r.json())
+        getRegions({ level: "PROVINCE", token, limit: 100 })
             .then((result) => {
                 if (!result.error && result.data) setProvinces(result.data);
             })
             .finally(() => setLoadingProvinces(false));
-    }, [isEditMode, toponymData]);
+    }, [isEditMode, toponymData, token]);
 
     useEffect(() => {
         const provCode = isEditMode ? editedData.province_id : toponymData?.province_id;
@@ -803,15 +798,13 @@ const DetailToponimContent = () => {
         }
         const selectedProvince = provinces.find((p) => p.code === provCode);
         if (!selectedProvince) return;
-        const token = localStorage.getItem("token");
         setLoadingRegencies(true);
-        fetch(`${API_URL}/regions?level=CITY&parent=${selectedProvince.path}&limit=100`, { headers: { Authorization: `Bearer ${token}` } })
-            .then((r) => r.json())
+        getRegions({ level: "CITY", parent: selectedProvince.path, token, limit: 100 })
             .then((result) => {
                 if (!result.error && result.data) setRegencies(result.data);
             })
             .finally(() => setLoadingRegencies(false));
-    }, [isEditMode, editedData.province_id, toponymData?.province_id, provinces]);
+    }, [isEditMode, editedData.province_id, toponymData?.province_id, provinces, token]);
 
     useEffect(() => {
         const provCode = isEditMode ? editedData.province_id : toponymData?.province_id;
@@ -822,15 +815,13 @@ const DetailToponimContent = () => {
         }
         const selectedRegency = regencies.find((r) => r.code === regCode);
         if (!selectedRegency) return;
-        const token = localStorage.getItem("token");
         setLoadingDistricts(true);
-        fetch(`${API_URL}/regions?level=DISTRICT&parent=${selectedRegency.path}&limit=100`, { headers: { Authorization: `Bearer ${token}` } })
-            .then((r) => r.json())
+        getRegions({ level: "DISTRICT", parent: selectedRegency.path, token, limit: 100 })
             .then((result) => {
                 if (!result.error && result.data) setDistricts(result.data);
             })
             .finally(() => setLoadingDistricts(false));
-    }, [isEditMode, editedData.regency_id, toponymData?.regency_id, regencies]);
+    }, [isEditMode, editedData.regency_id, toponymData?.regency_id, regencies, token]);
 
     useEffect(() => {
         const distCode = isEditMode ? editedData.district_id : toponymData?.district_id;
@@ -840,15 +831,13 @@ const DetailToponimContent = () => {
         }
         const selectedDistrict = districts.find((d) => d.code === distCode);
         if (!selectedDistrict) return;
-        const token = localStorage.getItem("token");
         setLoadingVillages(true);
-        fetch(`${API_URL}/regions?level=VILLAGE&parent=${selectedDistrict.path}&limit=100`, { headers: { Authorization: `Bearer ${token}` } })
-            .then((r) => r.json())
+        getRegions({ level: "VILLAGE", parent: selectedDistrict.path, token, limit: 100 })
             .then((result) => {
                 if (!result.error && result.data) setVillages(result.data);
             })
             .finally(() => setLoadingVillages(false));
-    }, [isEditMode, editedData.district_id, toponymData?.district_id, districts]);
+    }, [isEditMode, editedData.district_id, toponymData?.district_id, districts, token]);
 
     useEffect(() => {
         if (toponymData) {
@@ -901,16 +890,7 @@ const DetailToponimContent = () => {
                 element_id: editedData.element?.code || toponymData.element.code,
             };
 
-            const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms/${toponymId}`, {
-                method: "PUT",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody),
-            });
-
-            const result = await response.json();
+            const result = await updateVerificationToponym(token, transactionId, toponymId, requestBody);
 
             if (!result.error) {
                 // Reload data from server to get updated geometry and all fields
@@ -937,15 +917,7 @@ const DetailToponimContent = () => {
 
         setSaving(true);
         try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms/${toponymId}/accept`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const result = await response.json();
+            const result = await acceptVerificationToponym(token, transactionId, toponymId);
 
             if (!result.error) {
                 alert("Toponim berhasil diterima!");
@@ -969,15 +941,7 @@ const DetailToponimContent = () => {
 
         setSaving(true);
         try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms/${toponymId}/reject`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const result = await response.json();
+            const result = await rejectVerificationToponym(token, transactionId, toponymId);
 
             if (!result.error) {
                 alert("Toponim berhasil ditolak!");

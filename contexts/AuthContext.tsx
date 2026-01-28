@@ -2,8 +2,14 @@
 "use client"
 import { UserType, Role, getRoleDefaultRoute } from "@/types/User"
 import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback, useRef } from "react"
-import { API_URL } from "@/lib/config"
 import { useRouter } from "next/navigation"
+import {
+  loginUser,
+  registerUser,
+  logoutUser,
+  refreshAuthToken,
+  getUserProfile
+} from "@/api/auth"
 
 interface AuthContextType {
   user: UserType | null
@@ -40,15 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Refresh token function
   const refreshToken = useCallback(async (currentToken: string) => {
     try {
-      const res = await fetch(`${API_URL}/auth/refresh`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${currentToken}`
-        },
-      })
-
-      const result = await res.json()
+      const result = await refreshAuthToken(currentToken)
 
       if (!result.error && result.token) {
         setToken(result.token)
@@ -102,13 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fetch profile from API to validate token and get fresh user data
   async function fetchProfile(storedToken: string): Promise<UserType | null> {
     try {
-      const res = await fetch(`${API_URL}/auth/profile`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${storedToken}`
-        },
-      })
+      const res = await getUserProfile(storedToken)
 
       // Only clear token on auth errors (401, 403)
       if (res.status === 401 || res.status === 403) {
@@ -184,13 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [scheduleRefresh])
 
   async function login(email: string, password: string) {
-    const res = await fetch(`${API_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    })
-
-    const result = await res.json()
+    const result = await loginUser(email, password)
 
     if (result.error) {
       throw new Error(result.message || "Login gagal")
@@ -218,22 +204,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     passwordConfirmation: string,
-    phone: string,
-    orgId: number
+    phone: string
   ) {
-    const res = await fetch(`${API_URL}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-        password_confirmation: passwordConfirmation,
-        phone,
-      }),
+    const result = await registerUser({
+      name,
+      email,
+      password,
+      password_confirmation: passwordConfirmation,
+      phone,
     })
-
-    const result = await res.json()
 
     if (result.error) {
       throw new Error(result.message || "Registrasi gagal")
@@ -266,13 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Call logout API to invalidate token on backend
     if (token) {
       try {
-        await fetch(`${API_URL}/auth/logout`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-        })
+        await logoutUser(token)
       } catch {
         // Continue with local logout even if API fails
       }

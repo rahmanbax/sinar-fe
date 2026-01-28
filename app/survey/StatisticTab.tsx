@@ -11,7 +11,7 @@ import { IoLocationOutline } from "react-icons/io5";
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import Image from "next/image";
-import { API_URL } from "@/lib/config";
+import { getPersonalPerformance } from "@/api/personal";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -136,26 +136,23 @@ const StatisticTab: React.FC = () => {
     useEffect(() => {
         const fetchPerformance = async () => {
             try {
-                const token = localStorage.getItem('token')
-                const response = await fetch(`${API_URL}/personal/performance`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                const result = await response.json()
+                const token = localStorage.getItem("token");
+                if (!token) return;
+
+                const result = await getPersonalPerformance(token);
 
                 if (!result.error && result.data) {
-                    setPerformanceData(result.data)
+                    setPerformanceData(result.data);
                 }
             } catch (error) {
-                console.error('Failed to fetch performance data:', error)
+                console.error("Failed to fetch performance data:", error);
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
-        }
+        };
 
-        fetchPerformance()
-    }, [])
+        fetchPerformance();
+    }, []);
 
     if (loading) {
         return (

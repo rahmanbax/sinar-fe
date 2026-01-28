@@ -169,7 +169,7 @@ const UserNav: React.FC<React.PropsWithChildren<ISurveyorNav>> = ({ isMobile, me
         <div className="px-3">
           <Image src="/logo.png" width={50} height={50} alt="logo" />
         </div>
-        <h1 className="text-lg font-bold uppercase">
+        <h1 className="text-lg font-bold uppercase hidden sm:block">
           Sistem Informasi Nama Rupabumi
         </h1>
       </Link>

@@ -10,7 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
-import { API_URL } from "@/lib/config"
+import { useAuth } from "@/contexts/AuthContext"
+import {
+    createVerificationTransaction,
+    getVerificationCandidates
+} from "@/api/verification"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -55,6 +59,7 @@ const Page = () => {
     const [wilayahAdministrasi, setWilayahAdministrasi] = useState('')
     const [verifikator, setVerifikator] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const { token } = useAuth()
 
     // Statistics data (candidates) from API
     const [statisticsData, setStatisticsData] = useState<StatisticsData[]>([])
@@ -72,13 +77,7 @@ const Page = () => {
     useEffect(() => {
         const fetchStatistics = async () => {
             try {
-                const token = localStorage.getItem('token')
-                const res = await fetch(`${API_URL}/verifications/transaction/candidates`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                })
-                const result = await res.json()
+                const result = await getVerificationCandidates(token);
                 if (!result.error && result.data) {
                     setStatisticsData(result.data)
                 }
@@ -89,7 +88,7 @@ const Page = () => {
             }
         }
         fetchStatistics()
-    }, [])
+    }, [token])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -107,19 +106,9 @@ const Page = () => {
                 due_at: due_at
             }
 
-            const token = localStorage.getItem('token')
-            const response = await fetch(`${API_URL}/verifications/transaction`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(requestBody)
-            })
+            const result = await createVerificationTransaction(token, requestBody)
 
-            const result = await response.json()
-
-            if (!response.ok || result.error) {
+            if (result.error) {
                 throw new Error(result.message || 'Gagal membuat penelaahan')
             }
 
@@ -176,13 +165,11 @@ const Page = () => {
     return (
         <ReviewerLayout>
             <div className="pt-20 p-6 mt-6 h-screen">
-                <div className="flex items-center gap-3 mb-6">
-                    <button onClick={() => router.back()} className="flex items-center gap-3 mb-5 hover:opacity-70 transition-opacity">
-                        <Button size="icon-sm">
-                            <ChevronLeft />
-                        </Button>
-                        <span className="font-medium">Kembali</span>
-                    </button>
+                <div onClick={() => router.back()} className="flex items-center gap-3 mb-5 hover:opacity-70 transition-opacity cursor-pointer">
+                    <Button size="icon-sm">
+                        <ChevronLeft />
+                    </Button>
+                    <span className="font-medium">Kembali</span>
                 </div>
 
                 <Card className="max-w-1/3">

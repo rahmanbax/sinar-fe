@@ -12,7 +12,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import { API_URL } from "@/lib/config";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+    getVerificationTransactions,
+    finishVerificationTransaction,
+    getAllVerificationToponyms,
+    getVerificationTransactionToponyms,
+    VerificationTransaction
+} from "@/api/verification";
 
 import { Chart as ChartJS, ChartData, ArcElement, Tooltip, Legend, Plugin } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
@@ -21,22 +28,7 @@ import dayjs from "dayjs";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// API Response Type
-interface VerificationTransaction {
-    id: string;
-    title: string;
-    due_at: string;
-    status: string;
-    total_data: number;
-    handled_data: number;
-    accepted_data: number;
-    rejected_data: number;
-    accepted_rate: number;
-    rejected_rate: number;
-    element_count: number;
-    district_count: number;
-    verificator_count: number;
-}
+
 
 // Toponym API Response Type
 interface ToponymData {
@@ -132,6 +124,7 @@ interface IReviewCard {
     totalData?: number;
     handledData?: number;
     status?: string;
+    token: string | null;
     onRefresh?: () => void;
     onClick?: () => void;
 }
@@ -151,6 +144,7 @@ const ReviewCard: React.FC<IReviewCard> = ({
     totalData = 0,
     handledData = 0,
     status,
+    token,
     onRefresh,
     onClick,
 }) => {
@@ -162,15 +156,7 @@ const ReviewCard: React.FC<IReviewCard> = ({
 
     const handleFinishTransaction = async () => {
         try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(`${API_URL}/verifications/transaction/${id}/finish`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            });
-            const result = await response.json();
+            const result = await finishVerificationTransaction(token, id);
             if (!result.error) {
                 setShowConfirmModal(false);
                 if (onRefresh) onRefresh();
@@ -325,6 +311,7 @@ const ReviewDataTab: React.FC = () => {
     // Get view mode and transaction from URL params
     const viewFromUrl = searchParams.get("view") as "card" | "table" | "all-koordinat" | null;
     const transactionFromUrl = searchParams.get("transactionId");
+    const { token } = useAuth();
 
     const validViews = ["card", "table", "all-koordinat"];
     const viewMode = viewFromUrl && validViews.includes(viewFromUrl) ? viewFromUrl : "card";
@@ -384,14 +371,7 @@ const ReviewDataTab: React.FC = () => {
     // Fetch data from API
     const fetchReviewData = useCallback(async () => {
         try {
-            const token = localStorage.getItem("token");
-            const response = await fetch(`${API_URL}/verifications/transaction`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const result = await response.json();
-
+            const result = await getVerificationTransactions(token);
             if (!result.error && result.data) {
                 // Transform API data to match component structure
                 const transformedData = result.data.map((item: VerificationTransaction) => ({
@@ -418,7 +398,7 @@ const ReviewDataTab: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [token]);
 
     useEffect(() => {
         fetchReviewData();
@@ -431,13 +411,10 @@ const ReviewDataTab: React.FC = () => {
         const fetchAllToponyms = async () => {
             setLoadingAllToponyms(true);
             try {
-                const token = localStorage.getItem("token");
-                const response = await fetch(`${API_URL}/verifications/transaction/toponyms?page=${allToponymsPage}&per_page=${allToponymsLimit}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                const result = await getAllVerificationToponyms(token, {
+                    page: allToponymsPage,
+                    per_page: allToponymsLimit
                 });
-                const result = await response.json();
 
                 if (!result.error && result.data) {
                     // Transform API data to match table structure
@@ -480,7 +457,7 @@ const ReviewDataTab: React.FC = () => {
         };
 
         fetchAllToponyms();
-    }, [viewMode, allToponymsPage, allToponymsLimit]);
+    }, [viewMode, allToponymsPage, allToponymsLimit, token]);
 
     const getStatusBadge = (status: string) => {
         const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
@@ -503,13 +480,10 @@ const ReviewDataTab: React.FC = () => {
         const fetchToponymData = async () => {
             setLoadingToponyms(true);
             try {
-                const token = localStorage.getItem("token");
-                const response = await fetch(`${API_URL}/verifications/transaction/${selectedTransactionId}/toponyms?page=${toponymPage}&per_page=${toponymLimit}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                const result = await getVerificationTransactionToponyms(token, selectedTransactionId, {
+                    page: toponymPage,
+                    per_page: toponymLimit
                 });
-                const result = await response.json();
 
                 if (!result.error && result.data) {
                     // Transform API data to match table structure
@@ -551,7 +525,7 @@ const ReviewDataTab: React.FC = () => {
         };
 
         fetchToponymData();
-    }, [selectedTransactionId, toponymPage, toponymLimit]);
+    }, [selectedTransactionId, toponymPage, toponymLimit, token]);
 
     const columns: ColumnConfig = {
         no: { label: "No." },
@@ -811,24 +785,8 @@ const ReviewDataTab: React.FC = () => {
                 </Card>
             ) : viewMode === "card" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mt-4 gap-5">
-                    {reviewData.map((item) => (
-                        <ReviewCard
-                            key={item.id}
-                            id={item.id}
-                            title={item.title}
-                            reviewerCnt={item.reviewerCnt}
-                            elementTypeCnt={item.elementTypeCnt}
-                            districtCnt={item.districtCnt}
-                            acceptedCnt={item.acceptedCnt}
-                            rejectedCnt={item.rejectedCnt}
-                            acceptedRate={item.acceptedRate}
-                            rejectedRate={item.rejectedRate}
-                            totalData={item.totalData}
-                            handledData={item.handledData}
-                            status={item.status}
-                            onRefresh={fetchReviewData}
-                            onClick={() => handleSelectTransaction(item.id)}
-                        />
+                    {reviewData.map((review, i) => (
+                        <ReviewCard key={i} {...review} token={token} onRefresh={fetchReviewData} onClick={() => handleSelectTransaction(review.id)} />
                     ))}
                 </div>
             ) : (

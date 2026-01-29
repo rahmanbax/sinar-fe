@@ -13,7 +13,12 @@ import { getElements } from "@/api/classification";
 import { getRegions } from "@/api/region";
 
 import { Button } from "@/components/ui/button";
-import { Check, ChevronDown, ChevronLeft, ChevronsUpDown, X, Trash2, RotateCcw, Save, CircleDot } from "lucide-react";
+import { 
+    Check, ChevronDown, ChevronLeft, ChevronsUpDown, X, Trash2, RotateCcw, Save, 
+    CircleDot, ExternalLink, FileText, Mic, Video, FileImage, Maximize2,
+    Layers, Minus, Plus, Loader2 
+} from "lucide-react";
+import { uploadImage, uploadAudio, uploadVideo, uploadDocs } from "@/api/media";
 import ReviewerLayout from "@/layouts/ReviewerLayout";
 import { Label } from "@/components/ui/label";
 import { Map, type MapRef, type ViewState, Source, Layer } from "@vis.gl/react-maplibre";
@@ -23,7 +28,6 @@ import Image from "next/image";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Layers, Minus, Plus, Loader2 } from "lucide-react";
 import { Marker } from "@vis.gl/react-maplibre";
 import { IoLocationSharp } from "react-icons/io5";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -436,6 +440,9 @@ interface ToponymDetail {
     source: string;
     notes: string | null;
     sketch: string | null;
+    pronounciation_audio: string | null;
+    video: string | null;
+    support_document: string | null;
     photos: Array<{
         url: string;
         size: number;
@@ -491,6 +498,16 @@ const DetailToponimContent = () => {
     // Photo modal state
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
     const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+    
+    // Sketsa preview state
+    const [previewSketch, setPreviewSketch] = useState<{ url: string; name: string } | null>(null);
+
+    // Supporting Info Upload States
+    const [sketsaLokasi, setSketsaLokasi] = useState<{ file: File; previewUrl: string } | null>(null);
+    const [rekamanSuara, setRekamanSuara] = useState<{ file: File; previewUrl: string } | null>(null);
+    const [rekamanAudioVisual, setRekamanAudioVisual] = useState<{ file: File; previewUrl: string } | null>(null);
+    const [dokumenPendukung, setDokumenPendukung] = useState<{ file: File; previewUrl: string }[]>([]);
+    const [selectedPhotoFiles, setSelectedPhotoFiles] = useState<{ file: File; previewUrl: string }[]>([]);
 
     const [openSpasial, setOpenSpasial] = useState(true);
     const [openAtribut, setOpenAtribut] = useState(true);
@@ -775,8 +792,16 @@ const DetailToponimContent = () => {
         setEditedData({});
         setIsEditingDraft(false);
         setDrawnPoints([]);
+        // Reset all new upload states
+        setSelectedPhotoFiles([]);
+        setSketsaLokasi(null);
+        setRekamanSuara(null);
+        setRekamanAudioVisual(null);
+        setDokumenPendukung([]);
         // Reset geometry to initial state from server
         resetToInitialGeometry();
+        // Reload original data to restore any removed existing media
+        fetchToponymDetail();
     };
 
     // Regional Fetching
@@ -852,6 +877,167 @@ const DetailToponimContent = () => {
         }));
     };
 
+    // Supporting Info Handlers
+    const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+        const MAX_SIZE = 5 * 1024 * 1024;
+        const validFiles: { file: File; previewUrl: string }[] = [];
+        for (const file of Array.from(files)) {
+            if (file.size <= MAX_SIZE) {
+                validFiles.push({ file, previewUrl: URL.createObjectURL(file) });
+            } else {
+                alert(`File ${file.name} melebihi ukuran maksimal 5MB`);
+            }
+        }
+        if (validFiles.length > 0) {
+            setSelectedPhotoFiles((prev) => [...prev, ...validFiles]);
+        }
+        e.target.value = "";
+    };
+
+    const handleRemovePhoto = (index: number) => {
+        setSelectedPhotoFiles((prev) => {
+            URL.revokeObjectURL(prev[index].previewUrl);
+            return prev.filter((_, i) => i !== index);
+        });
+    };
+
+    const handleRemoveExistingPhoto = (index: number) => {
+        if (!toponymData) return;
+        setToponymData({
+            ...toponymData,
+            photos: toponymData.photos.filter((_, i) => i !== index)
+        });
+    };
+
+    const handleSketsaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const MAX_SIZE = 5 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            alert("File sketsa melebihi ukuran maksimal 5MB");
+            return;
+        }
+        if (sketsaLokasi) URL.revokeObjectURL(sketsaLokasi.previewUrl);
+        setSketsaLokasi({ file, previewUrl: URL.createObjectURL(file) });
+        // Set editedData.sketch to null so it doesn't show up in preview while new file is selected
+        setEditedData(prev => ({ ...prev, sketch: null }));
+        e.target.value = "";
+    };
+
+    const handleRemoveSketsa = () => {
+        if (sketsaLokasi) URL.revokeObjectURL(sketsaLokasi.previewUrl);
+        setSketsaLokasi(null);
+    };
+
+    const handleRemoveExistingSketch = () => {
+        if (!toponymData) return;
+        setToponymData({ ...toponymData, sketch: null });
+        setEditedData(prev => ({ ...prev, sketch: null }));
+    };
+
+    const handleRekamanSuaraSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const MAX_SIZE = 10 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            alert("File audio melebihi ukuran maksimal 10MB");
+            return;
+        }
+        if (rekamanSuara) URL.revokeObjectURL(rekamanSuara.previewUrl);
+        setRekamanSuara({ file, previewUrl: URL.createObjectURL(file) });
+        setEditedData(prev => ({ ...prev, pronounciation_audio: null }));
+        e.target.value = "";
+    };
+
+    const handleRemoveRekamanSuara = () => {
+        if (rekamanSuara) URL.revokeObjectURL(rekamanSuara.previewUrl);
+        setRekamanSuara(null);
+    };
+
+    const handleRemoveExistingAudio = () => {
+        if (!toponymData) return;
+        setToponymData({ ...toponymData, pronounciation_audio: null });
+        setEditedData(prev => ({ ...prev, pronounciation_audio: null }));
+    };
+
+    const handleRekamanAudioVisualSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const MAX_SIZE = 50 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            alert("File video melebihi ukuran maksimal 50MB");
+            return;
+        }
+        if (rekamanAudioVisual) URL.revokeObjectURL(rekamanAudioVisual.previewUrl);
+        setRekamanAudioVisual({ file, previewUrl: URL.createObjectURL(file) });
+        setEditedData(prev => ({ ...prev, video: null }));
+        e.target.value = "";
+    };
+
+    const handleRemoveRekamanAudioVisual = () => {
+        if (rekamanAudioVisual) URL.revokeObjectURL(rekamanAudioVisual.previewUrl);
+        setRekamanAudioVisual(null);
+    };
+
+    const handleRemoveExistingVideo = () => {
+        if (!toponymData) return;
+        setToponymData({ ...toponymData, video: null });
+        setEditedData(prev => ({ ...prev, video: null }));
+    };
+
+    const handleDokumenSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+        const MAX_SIZE = 10 * 1024 * 1024;
+        const validFiles: { file: File; previewUrl: string }[] = [];
+        for (const file of Array.from(files)) {
+            if (file.size <= MAX_SIZE) {
+                validFiles.push({ file, previewUrl: URL.createObjectURL(file) });
+            } else {
+                alert(`File ${file.name} melebihi ukuran maksimal 10MB`);
+            }
+        }
+        if (validFiles.length > 0) {
+            setDokumenPendukung((prev) => [...prev, ...validFiles]);
+            setEditedData(prev => ({ ...prev, support_document: null }));
+        }
+        e.target.value = "";
+    };
+
+    const handleRemoveDokumen = (index: number) => {
+        setDokumenPendukung((prev) => {
+            URL.revokeObjectURL(prev[index].previewUrl);
+            return prev.filter((_, i) => i !== index);
+        });
+    };
+
+    const handleRemoveExistingDocs = () => {
+        if (!toponymData) return;
+        setToponymData({ ...toponymData, support_document: null });
+        setEditedData(prev => ({ ...prev, support_document: null }));
+    };
+
+    const uploadPhotos = async (): Promise<{ url: string; filename: string }[]> => {
+        const uploaded: { url: string; filename: string }[] = [];
+        for (const fileData of selectedPhotoFiles) {
+            try {
+                const result = await uploadImage(fileData.file, token!);
+                if (!result.error && result.data) {
+                    uploaded.push({
+                        url: result.data.url,
+                        filename: result.data.filename || fileData.file.name,
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to upload photo:", err);
+            }
+        }
+        return uploaded;
+    };
+
+
     const handleSaveChanges = async () => {
         if (!transactionId || !toponymId || !toponymData) return;
 
@@ -859,9 +1045,65 @@ const DetailToponimContent = () => {
         try {
             const token = localStorage.getItem("token");
 
-            // Map editedData and toponymData to the requested format
-            // FIXED: Match the working request body structure
-            const requestBody = {
+            let uploadedPhotos: { url: string; filename: string }[] = [];
+            if (selectedPhotoFiles.length > 0) uploadedPhotos = await uploadPhotos();
+            // Combine existing (which might have been removed via UI) and new uploads
+            const allPhotos = [...toponymData.photos, ...uploadedPhotos];
+
+            // Upload sketsa lokasi if any new file
+            let uploadedSketch: string | null = toponymData.sketch;
+            if (sketsaLokasi) {
+                try {
+                    const result = await uploadImage(sketsaLokasi.file, token!);
+                    if (!result.error && result.data) {
+                        uploadedSketch = result.data.url;
+                    }
+                } catch (err) {
+                    console.error("Failed to upload sketch:", err);
+                }
+            }
+
+            // Upload rekaman suara if any new file
+            let uploadedAudio: string | null = toponymData.pronounciation_audio;
+            if (rekamanSuara) {
+                try {
+                    const result = await uploadAudio(rekamanSuara.file, token!);
+                    if (!result.error && result.data) {
+                        uploadedAudio = result.data.url;
+                    }
+                } catch (err) {
+                    console.error("Failed to upload audio:", err);
+                }
+            }
+
+            // Upload rekaman audio visual (video) if any new file
+            let uploadedVideo: string | null = toponymData.video;
+            if (rekamanAudioVisual) {
+                try {
+                    const result = await uploadVideo(rekamanAudioVisual.file, token!);
+                    if (!result.error && result.data) {
+                        uploadedVideo = result.data.url;
+                    }
+                } catch (err) {
+                    console.error("Failed to upload video:", err);
+                }
+            }
+
+            // Upload dokumen pendukung if any new file
+            let uploadedDocs: string | null = toponymData.support_document;
+            if (dokumenPendukung.length > 0) {
+                try {
+                    const result = await uploadDocs(dokumenPendukung[0].file, token!);
+                    if (!result.error && result.data) {
+                        uploadedDocs = result.data.url;
+                    }
+                } catch (err) {
+                    console.error("Failed to upload docs:", err);
+                }
+            }
+
+            // Build request body
+            const requestBody: any = {
                 local_name: editedData.local_name || toponymData.local_name,
                 map_name: editedData.map_name || toponymData.map_name,
                 other_name: editedData.other_name || toponymData.other_name,
@@ -873,14 +1115,17 @@ const DetailToponimContent = () => {
                 element: editedData.element?.code || toponymData.element.code,
                 generic_element: editedData.generic_element || toponymData.generic_element,
                 specific_element: editedData.specific_element || toponymData.specific_element,
-                province_code: toponymData.province_id,
-                regency_code: toponymData.regency_id,
-                district_code: toponymData.district_id,
-                village_code: toponymData.village_id,
+                province_code: editedData.province_id || toponymData.province_id,
+                regency_code: editedData.regency_id || toponymData.regency_id,
+                district_code: editedData.district_id || toponymData.district_id,
+                village_code: editedData.village_id || toponymData.village_id,
                 survey_at: editedData.survey_at || toponymData.survey_at,
                 notes: editedData.notes || toponymData.notes,
-                sketch: editedData.sketch || toponymData.sketch,
-                photos: toponymData.photos || [],
+                sketch: uploadedSketch,
+                photos: allPhotos,
+                pronounciation_audio_url: uploadedAudio,
+                video_url: uploadedVideo,
+                support_document_url: uploadedDocs,
                 geometry: getGeometry() || (toponymData.location_point
                     ? {
                         type: toponymData.geometry_type || toponymData.location_point.type,
@@ -898,6 +1143,12 @@ const DetailToponimContent = () => {
                 setIsEditMode(false);
                 setEditedData({});
                 setIsEditingDraft(false);
+                // Clear new file upload states
+                setSelectedPhotoFiles([]);
+                setSketsaLokasi(null);
+                setRekamanSuara(null);
+                setRekamanAudioVisual(null);
+                setDokumenPendukung([]);
                 alert("Perubahan berhasil disimpan!");
             } else {
                 alert("Gagal menyimpan perubahan: " + result.message);
@@ -1499,18 +1750,346 @@ const DetailToponimContent = () => {
                                                 </Button>
                                             </CollapsibleTrigger>
                                         </div>
-                                        <CollapsibleContent className="grid grid-cols-2 gap-x-6 gap-y-8 place-items-center px-6 mt-3">
-                                            {toponymData.photos && toponymData.photos.filter((p) => p.url).length > 0 ? (
-                                                toponymData.photos
-                                                    .filter((p) => p.url)
-                                                    .map((photo, index) => (
-                                                        <div key={index} className="w-48 h-32 relative cursor-pointer hover:scale-103 transition-all ease-in-out" onClick={() => handlePhotoClick(index)}>
-                                                            <Image src={photo.url} alt={photo.filename} fill className="object-cover rounded-lg" />
+                                        <CollapsibleContent className="mt-4 ml-6 space-y-4">
+                                            {/* 1. Foto Dokumentasi */}
+                                            <div className="space-y-4">
+                                                <Label className="font-medium">Foto Dokumentasi</Label>
+                                                {isEditMode && (
+                                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                                        <input 
+                                                            type="file" 
+                                                            accept="image/*" 
+                                                            onChange={handlePhotoSelect} 
+                                                            className="hidden" 
+                                                            id="photo-upload" 
+                                                            multiple
+                                                        />
+                                                        <label htmlFor="photo-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                                                            <FileImage className="h-8 w-8 text-gray-400 mb-2" />
+                                                            <span className="text-sm text-gray-500">Klik untuk upload foto</span>
+                                                            <span className="text-xs text-gray-400 mt-1">Maksimal 5MB per file</span>
+                                                        </label>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex flex-wrap gap-3">
+                                                    {/* Existing Photos */}
+                                                    {toponymData.photos && toponymData.photos.map((photo, index) => (
+                                                        <div key={`existing-${index}`} className="w-24 h-24 relative group rounded-lg overflow-hidden border">
+                                                            <Image src={photo.url} alt={photo.filename} fill className="object-cover" />
+                                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                                <button 
+                                                                    type="button"
+                                                                    onClick={() => handlePhotoClick(index)}
+                                                                    className="p-1 hover:scale-110 transition-transform text-white"
+                                                                >
+                                                                    <Maximize2 size={18} />
+                                                                </button>
+                                                            </div>
+                                                            {isEditMode && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleRemoveExistingPhoto(index)}
+                                                                    className="absolute top-1 right-1 bg-red-50 text-red-500 rounded-full p-1 hover:bg-red-500 hover:text-white transition-all z-10 shadow-sm border border-red-100"
+                                                                >
+                                                                    <X size={12} />
+                                                                </button>
+                                                            )}
                                                         </div>
-                                                    ))
-                                            ) : (
-                                                <p className="col-span-2 text-gray-500">Tidak ada foto</p>
-                                            )}
+                                                    ))}
+
+                                                    {/* New Photo Files */}
+                                                    {selectedPhotoFiles.map((photo, index) => (
+                                                        <div key={`new-${index}`} className="w-24 h-24 relative group rounded-lg overflow-hidden border">
+                                                            <Image src={photo.previewUrl} alt={photo.file.name} fill className="object-cover" />
+                                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                                <button 
+                                                                    type="button"
+                                                                    onClick={() => setPreviewSketch({ url: photo.previewUrl, name: photo.file.name })}
+                                                                    className="p-1 hover:scale-110 transition-transform text-white"
+                                                                >
+                                                                    <Maximize2 size={18} />
+                                                                </button>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemovePhoto(index)}
+                                                                className="absolute top-1 right-1 bg-red-50 text-red-500 rounded-full p-1 hover:bg-red-500 hover:text-white transition-all z-10 shadow-sm border border-red-100"
+                                                            >
+                                                                <X size={12} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+
+                                                    {!isEditMode && (!toponymData.photos || toponymData.photos.length === 0) && (
+                                                        <p className="text-sm text-gray-500 italic">Tidak ada foto dokumentasi</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* 2. Sketsa Lokasi */}
+                                            <div className="space-y-4">
+                                                <Label className="font-medium">Sketsa Lokasi</Label>
+                                                {isEditMode && (
+                                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                                        <input 
+                                                            type="file" 
+                                                            accept="image/*" 
+                                                            onChange={handleSketsaSelect} 
+                                                            className="hidden" 
+                                                            id="sketch-upload" 
+                                                        />
+                                                        <label htmlFor="sketch-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                                                            <FileImage className="h-8 w-8 text-gray-400 mb-2" />
+                                                            <span className="text-sm text-gray-500">Klik untuk upload sketsa</span>
+                                                            <span className="text-xs text-gray-400 mt-1">Maksimal 5MB. Hanya 1 file.</span>
+                                                        </label>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex flex-wrap gap-3">
+                                                    {toponymData.sketch && (
+                                                        <div className="w-24 h-24 relative group rounded-lg overflow-hidden border">
+                                                            <img src={toponymData.sketch} alt="Sketsa Lokasi" className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                                <button 
+                                                                    type="button"
+                                                                    onClick={() => setPreviewSketch({ url: toponymData.sketch!, name: "Sketsa Lokasi" })}
+                                                                    className="p-1 hover:scale-110 transition-transform text-white"
+                                                                >
+                                                                    <Maximize2 size={18} />
+                                                                </button>
+                                                            </div>
+                                                            {isEditMode && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleRemoveExistingSketch}
+                                                                    className="absolute top-1 right-1 bg-red-50 text-red-500 rounded-full p-1 hover:bg-red-500 hover:text-white transition-all z-10 shadow-sm border border-red-100"
+                                                                >
+                                                                    <X size={12} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {sketsaLokasi && (
+                                                        <div className="w-24 h-24 relative group rounded-lg overflow-hidden border">
+                                                            <img src={sketsaLokasi.previewUrl} alt={sketsaLokasi.file.name} className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                                <button 
+                                                                    type="button"
+                                                                    onClick={() => setPreviewSketch({ url: sketsaLokasi.previewUrl, name: sketsaLokasi.file.name })}
+                                                                    className="p-1 hover:scale-110 transition-transform text-white"
+                                                                >
+                                                                    <Maximize2 size={18} />
+                                                                </button>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleRemoveSketsa}
+                                                                className="absolute top-1 right-1 bg-red-50 text-red-500 rounded-full p-1 hover:bg-red-500 hover:text-white transition-all z-10 shadow-sm border border-red-100"
+                                                            >
+                                                                <X size={12} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {!isEditMode && !toponymData.sketch && !sketsaLokasi && (
+                                                        <p className="text-sm text-gray-500 italic">Tidak ada sketsa lokasi</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* 3. Rekaman Suara Pengucapan */}
+                                            <div className="space-y-4">
+                                                <Label className="font-medium">Rekaman Suara Pengucapan</Label>
+                                                {isEditMode && (
+                                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                                        <input 
+                                                            type="file" 
+                                                            accept="audio/*" 
+                                                            onChange={handleRekamanSuaraSelect} 
+                                                            className="hidden" 
+                                                            id="audio-upload" 
+                                                        />
+                                                        <label htmlFor="audio-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                                                            <Mic className="h-8 w-8 text-gray-400 mb-2" />
+                                                            <span className="text-sm text-gray-500">Klik untuk upload rekaman suara</span>
+                                                            <span className="text-xs text-gray-400 mt-1">Maksimal 10MB</span>
+                                                        </label>
+                                                    </div>
+                                                )}
+
+                                                {toponymData.pronounciation_audio && (
+                                                    <div className="relative group p-3 bg-gray-50 rounded-lg border border-gray-200 w-full">
+                                                        <audio controls className="w-full h-10">
+                                                            <source src={toponymData.pronounciation_audio} />
+                                                            Browser Anda tidak mendukung audio player.
+                                                        </audio>
+                                                        {isEditMode && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleRemoveExistingAudio}
+                                                                className="absolute -top-2 -right-2 bg-red-50 text-red-500 rounded-full p-1 hover:bg-red-500 hover:text-white transition-all z-10 border border-red-100 shadow-sm"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {rekamanSuara && (
+                                                    <div className="relative group p-3 bg-gray-50 rounded-lg border border-gray-200 w-full">
+                                                        <p className="text-xs text-gray-500 mb-2 truncate">{rekamanSuara.file.name}</p>
+                                                        <audio controls className="w-full h-10">
+                                                            <source src={rekamanSuara.previewUrl} />
+                                                        </audio>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleRemoveRekamanSuara}
+                                                            className="absolute -top-2 -right-2 bg-red-50 text-red-500 rounded-full p-1 hover:bg-red-500 hover:text-white transition-all z-10 border border-red-100 shadow-sm"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {!isEditMode && !toponymData.pronounciation_audio && !rekamanSuara && (
+                                                    <p className="text-sm text-gray-500 italic">Tidak ada rekaman suara</p>
+                                                )}
+                                            </div>
+
+                                            {/* 4. Rekaman Audio Visual */}
+                                            <div className="space-y-4">
+                                                <Label className="font-medium">Rekaman Audio Visual</Label>
+                                                {isEditMode && (
+                                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                                        <input 
+                                                            type="file" 
+                                                            accept="video/*" 
+                                                            onChange={handleRekamanAudioVisualSelect} 
+                                                            className="hidden" 
+                                                            id="video-upload" 
+                                                        />
+                                                        <label htmlFor="video-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                                                            <Video className="h-8 w-8 text-gray-400 mb-2" />
+                                                            <span className="text-sm text-gray-500">Klik untuk upload rekaman video</span>
+                                                            <span className="text-xs text-gray-400 mt-1">Maksimal 50MB</span>
+                                                        </label>
+                                                    </div>
+                                                )}
+
+                                                {toponymData.video && (
+                                                    <div className="relative group rounded-lg overflow-hidden border bg-black">
+                                                        <video controls className="w-full max-h-64">
+                                                            <source src={toponymData.video} />
+                                                            Browser Anda tidak mendukung video player.
+                                                        </video>
+                                                        {isEditMode && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleRemoveExistingVideo}
+                                                                className="absolute top-2 right-2 bg-red-50 text-red-500 rounded-full p-1 hover:bg-red-500 hover:text-white transition-all z-10 border border-red-100 shadow-sm"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {rekamanAudioVisual && (
+                                                    <div className="relative group rounded-lg overflow-hidden border bg-black">
+                                                        <video controls className="w-full max-h-64">
+                                                            <source src={rekamanAudioVisual.previewUrl} />
+                                                        </video>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleRemoveRekamanAudioVisual}
+                                                            className="absolute top-2 right-2 bg-red-50 text-red-500 rounded-full p-1 hover:bg-red-500 hover:text-white transition-all z-10 border border-red-100 shadow-sm"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {!isEditMode && !toponymData.video && !rekamanAudioVisual && (
+                                                    <p className="text-sm text-gray-500 italic">Tidak ada rekaman video</p>
+                                                )}
+                                            </div>
+
+                                            {/* 5. Dokumen Pendukung */}
+                                            <div className="space-y-4">
+                                                <Label className="font-medium">Dokumen Pendukung</Label>
+                                                {isEditMode && (
+                                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                                        <input 
+                                                            type="file" 
+                                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" 
+                                                            onChange={handleDokumenSelect} 
+                                                            className="hidden" 
+                                                            id="doc-upload"
+                                                        />
+                                                        <label htmlFor="doc-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                                                            <FileText className="h-8 w-8 text-gray-400 mb-2" />
+                                                            <span className="text-sm text-gray-500">Klik untuk upload dokumen</span>
+                                                            <span className="text-xs text-gray-400 mt-1">Maksimal 10MB</span>
+                                                        </label>
+                                                    </div>
+                                                )}
+
+                                                {toponymData.support_document && (
+                                                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                                                        <div className="flex items-center gap-3">
+                                                            <FileText className="h-8 w-8 text-orange-500" />
+                                                            <p className="text-sm font-medium">Dokumen Tersedia</p>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="text-blue-500 hover:text-blue-700"
+                                                                onClick={() => window.open(toponymData.support_document!, '_blank')}
+                                                            >
+                                                                <ExternalLink size={20} />
+                                                            </Button>
+                                                            {isEditMode && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                                                                    onClick={handleRemoveExistingDocs}
+                                                                >
+                                                                    <X size={20} />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {dokumenPendukung.map((doc, index) => (
+                                                    <div key={`new-doc-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-blue-200">
+                                                        <div className="flex items-center gap-3">
+                                                            <FileText className="h-8 w-8 text-blue-500" />
+                                                            <div className="min-w-0">
+                                                                <p className="text-sm font-medium truncate max-w-[200px]">{doc.file.name}</p>
+                                                                <p className="text-xs text-gray-400">File baru akan diunggah</p>
+                                                            </div>
+                                                        </div>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                                                            onClick={() => handleRemoveDokumen(index)}
+                                                        >
+                                                            <X size={20} />
+                                                        </Button>
+                                                    </div>
+                                                ))}
+
+                                                {!isEditMode && !toponymData.support_document && dokumenPendukung.length === 0 && (
+                                                    <p className="text-sm text-gray-500 italic">Tidak ada dokumen pendukung</p>
+                                                )}
+                                            </div>
                                         </CollapsibleContent>
                                     </Collapsible>
                                 </div>
@@ -1562,6 +2141,31 @@ const DetailToponimContent = () => {
                                                     variant="ghost"
                                                     className="absolute top-6 right-6 bg-white/10 hover:bg-white/20 text-white rounded-full h-12 w-12 transition-all border border-white/20 backdrop-blur-md z-50"
                                                     onClick={() => setIsPhotoModalOpen(false)}
+                                                >
+                                                    <X size={28} />
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </DialogContent>
+                                </Dialog>
+
+                                {/* Sketsa Modal */}
+                                <Dialog open={!!previewSketch} onOpenChange={() => setPreviewSketch(null)}>
+                                    <DialogContent className="max-w-none sm:max-w-none w-screen h-screen p-0 m-0 bg-black/60 border-none shadow-none rounded-none overflow-hidden flex items-center justify-center">
+                                        <DialogTitle className="sr-only">Sketsa</DialogTitle>
+                                        {previewSketch && (
+                                            <div className="w-screen h-screen flex items-center justify-center bg-transparent py-1 px-4 relative">
+                                                <img src={previewSketch.url} alt={previewSketch.name} className="max-w-full max-h-full object-contain" />
+
+                                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 text-white text-center z-50">
+                                                    <p className="text-sm font-medium">{previewSketch.name}</p>
+                                                </div>
+
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="absolute top-6 right-6 bg-white/10 hover:bg-white/20 text-white rounded-full h-12 w-12 transition-all border border-white/20 backdrop-blur-md z-50"
+                                                    onClick={() => setPreviewSketch(null)}
                                                 >
                                                     <X size={28} />
                                                 </Button>

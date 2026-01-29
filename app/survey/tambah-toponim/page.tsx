@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { ChevronDown, ChevronLeft, ChevronRight, Layers, Minus, Plus, RotateCcw, Save, CircleDot, Trash2, Loader2, Check, ChevronsUpDown, Camera, X, Maximize2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Layers, Minus, Plus, RotateCcw, Save, CircleDot, Trash2, Loader2, Check, ChevronsUpDown, Camera, X, Maximize2, FileImage, Mic, Video, FileText, ExternalLink } from "lucide-react";
 import SurveyorLayout from "@/layouts/SurveryorLayout";
 import Link from "next/link";
 import { Map, Source, Layer, Marker, type MapRef, type ViewState, type MapLayerMouseEvent } from "@vis.gl/react-maplibre";
@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { getRegions } from "@/api/region";
 import { getElements } from "@/api/classification";
-import { uploadImage } from "@/api/media";
+import { uploadImage, uploadAudio, uploadVideo, uploadDocs } from "@/api/media";
 import { createToponym } from "@/api/toponym";
 import PhotoPreviewModal from "@/components/PhotoPreviewModal";
 
@@ -390,6 +390,7 @@ const Page = () => {
     const { token } = useAuth();
     const [openSpasial, setOpenSpasial] = useState(true);
     const [openAtribut, setOpenAtribut] = useState(true);
+    const [openInformasiPendukung, setOpenInformasiPendukung] = useState(true);
 
     // Spasial/Geometri
     const [isEditingDraft, setIsEditingDraft] = useState(false);
@@ -483,6 +484,12 @@ const Page = () => {
     // Selected files for upload (stored locally until submit)
     const [selectedFiles, setSelectedFiles] = useState<{ file: File; previewUrl: string }[]>([]);
 
+    // Informasi Pendukung files
+    const [sketsaLokasi, setSketsaLokasi] = useState<{ file: File; previewUrl: string } | null>(null);
+    const [rekamanSuara, setRekamanSuara] = useState<{ file: File; previewUrl: string } | null>(null);
+    const [rekamanAudioVisual, setRekamanAudioVisual] = useState<{ file: File; previewUrl: string } | null>(null);
+    const [dokumenPendukung, setDokumenPendukung] = useState<{ file: File; name: string; previewUrl: string }[]>([]);
+
     // Photo select handler (store locally, don't upload yet)
     const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -542,6 +549,125 @@ const Page = () => {
             }
         }
         return uploaded;
+    };
+
+    // Handlers for Informasi Pendukung
+    const handleSketsaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        const sizeInMB = 5;
+        const MAX_SIZE = sizeInMB * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            alert(`File melebihi ukuran maksimal ${sizeInMB}MB`);
+            return;
+        }
+        
+        if (sketsaLokasi) {
+            URL.revokeObjectURL(sketsaLokasi.previewUrl);
+        }
+        setSketsaLokasi({ file, previewUrl: URL.createObjectURL(file) });
+        e.target.value = "";
+    };
+
+    const handleRemoveSketsa = () => {
+        if (sketsaLokasi) {
+            URL.revokeObjectURL(sketsaLokasi.previewUrl);
+            setSketsaLokasi(null);
+        }
+    };
+
+    const handleRekamanSuaraSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        const sizeInMB = 10;
+        const MAX_SIZE = sizeInMB * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            alert(`File melebihi ukuran maksimal ${sizeInMB}MB`);
+            return;
+        }
+        
+        if (rekamanSuara) {
+            URL.revokeObjectURL(rekamanSuara.previewUrl);
+        }
+        setRekamanSuara({ file, previewUrl: URL.createObjectURL(file) });
+        e.target.value = "";
+    };
+
+    const handleRemoveRekamanSuara = () => {
+        if (rekamanSuara) {
+            URL.revokeObjectURL(rekamanSuara.previewUrl);
+            setRekamanSuara(null);
+        }
+    };
+
+    const handleRekamanAudioVisualSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        const sizeInMB = 50;
+        const MAX_SIZE = sizeInMB * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            alert(`File melebihi ukuran maksimal ${sizeInMB}MB`);
+            return;
+        }
+        
+        if (rekamanAudioVisual) {
+            URL.revokeObjectURL(rekamanAudioVisual.previewUrl);
+        }
+        setRekamanAudioVisual({ file, previewUrl: URL.createObjectURL(file) });
+        e.target.value = "";
+    };
+
+    const handleRemoveRekamanAudioVisual = () => {
+        if (rekamanAudioVisual) {
+            URL.revokeObjectURL(rekamanAudioVisual.previewUrl);
+            setRekamanAudioVisual(null);
+        }
+    };
+
+    const handleDokumenSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        
+        const sizeInMB = 10;
+        const MAX_SIZE = sizeInMB * 1024 * 1024;
+        const validFiles: { file: File; name: string; previewUrl: string }[] = [];
+        const rejectedFiles: string[] = [];
+
+        for (const file of Array.from(files)) {
+            if (file.size > MAX_SIZE) {
+                rejectedFiles.push(file.name);
+            } else {
+                validFiles.push({ 
+                    file, 
+                    name: file.name,
+                    previewUrl: URL.createObjectURL(file)
+                });
+            }
+        }
+
+        if (rejectedFiles.length > 0) {
+            alert(`File berikut melebihi ukuran maksimal ${sizeInMB}MB:\n${rejectedFiles.join("\n")}`);
+        }
+
+        if (validFiles.length > 0) {
+            setDokumenPendukung((prev) => [...prev, ...validFiles]);
+        }
+        e.target.value = "";
+    };
+
+    const handleRemoveDokumen = (index: number) => {
+        setDokumenPendukung((prev) => {
+            // Revoke object URL to free memory
+            URL.revokeObjectURL(prev[index].previewUrl);
+            return prev.filter((_, i) => i !== index);
+        });
+    };
+
+    const handlePreviewDokumen = (previewUrl: string) => {
+        window.open(previewUrl, '_blank');
     };
 
     // Elements data
@@ -808,6 +934,58 @@ const Page = () => {
                 uploadedPhotos = await uploadPhotos();
             }
 
+            // Upload sketsa lokasi if any
+            let uploadedSketch: string | null = null;
+            if (sketsaLokasi) {
+                try {
+                    const result = await uploadImage(sketsaLokasi.file, token!);
+                    if (!result.error && result.data) {
+                        uploadedSketch = result.data.url;
+                    }
+                } catch (err) {
+                    console.error("Failed to upload sketch:", err);
+                }
+            }
+
+            // Upload rekaman suara if any
+            let uploadedAudio: string | null = null;
+            if (rekamanSuara) {
+                try {
+                    const result = await uploadAudio(rekamanSuara.file, token!);
+                    if (!result.error && result.data) {
+                        uploadedAudio = result.data.url;
+                    }
+                } catch (err) {
+                    console.error("Failed to upload audio:", err);
+                }
+            }
+
+            // Upload rekaman audio visual (video) if any
+            let uploadedVideo: string | null = null;
+            if (rekamanAudioVisual) {
+                try {
+                    const result = await uploadVideo(rekamanAudioVisual.file, token!);
+                    if (!result.error && result.data) {
+                        uploadedVideo = result.data.url;
+                    }
+                } catch (err) {
+                    console.error("Failed to upload video:", err);
+                }
+            }
+
+            // Upload dokumen pendukung if any (upload first document only for now)
+            let uploadedDocs: string | null = null;
+            if (dokumenPendukung.length > 0) {
+                try {
+                    const result = await uploadDocs(dokumenPendukung[0].file, token!);
+                    if (!result.error && result.data) {
+                        uploadedDocs = result.data.url;
+                    }
+                } catch (err) {
+                    console.error("Failed to upload docs:", err);
+                }
+            }
+
             const payload: Record<string, unknown> = {
                 local_name: localName,
                 generic_element: genericElement,
@@ -839,6 +1017,10 @@ const Page = () => {
             if (villageCode) payload.village_code = villageCode;
             if (surveyAt) payload.survey_at = surveyAt;
             if (uploadedPhotos.length > 0) payload.photos = uploadedPhotos;
+            if (uploadedSketch) payload.sketch = uploadedSketch;
+            if (uploadedAudio) payload.pronounciation_audio_url = uploadedAudio;
+            if (uploadedVideo) payload.video_url = uploadedVideo;
+            if (uploadedDocs) payload.support_document_url = uploadedDocs;
 
             const result = await createToponym(payload, token!);
 
@@ -1429,27 +1611,231 @@ const Page = () => {
                                             onNext={handleNextImage}
                                         />
 
-                                        {/* Submit Buttons */}
-                                        <div className="flex gap-4 pt-4">
-                                            <Link href="/survey" className="flex-1">
-                                                <Button type="button" variant="outline" className="w-full">
-                                                    Batal
-                                                </Button>
-                                            </Link>
-                                            <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700" disabled={isSubmitting}>
-                                                {isSubmitting ? (
-                                                    <>
-                                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                                        Menyimpan...
-                                                    </>
-                                                ) : (
-                                                    "Simpan Toponim"
-                                                )}
-                                            </Button>
-                                        </div>
                                     </form>
                                 </CollapsibleContent>
                             </Collapsible>
+
+                            {/* Informasi Pendukung */}
+                            <Collapsible open={openInformasiPendukung} onOpenChange={setOpenInformasiPendukung}>
+                                <CollapsibleTrigger className="flex items-center gap-2 w-full text-left font-semibold text-lg">
+                                    <ChevronDown className={`transition-transform ${openInformasiPendukung ? "" : "-rotate-90"}`} size={20} />
+                                    Informasi Pendukung
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="mt-4 ml-6 space-y-4">
+                                    {/* Sketsa Lokasi */}
+                                    <div className="space-y-2">
+                                        <Label>Sketsa Lokasi (Maksimal 3MB)</Label>
+                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                            <input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                onChange={handleSketsaSelect} 
+                                                className="hidden" 
+                                                id="sketsa-upload" 
+                                            />
+                                            <label htmlFor="sketsa-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                                                <FileImage className="h-8 w-8 text-gray-400 mb-2" />
+                                                <span className="text-sm text-gray-500">Klik untuk pilih sketsa</span>
+                                                <span className="text-xs text-gray-400 mt-1">Hanya 1 file sketsa</span>
+                                            </label>
+                                        </div>
+
+                                        {/* Selected sketch thumbnail */}
+                                        {sketsaLokasi && (
+                                            <div className="mt-3">
+                                                <div 
+                                                    className="relative group cursor-pointer inline-block" 
+                                                    onClick={() => setPreviewImage({ url: sketsaLokasi.previewUrl, name: sketsaLokasi.file.name })}
+                                                >
+                                                    <img 
+                                                        src={sketsaLokasi.previewUrl} 
+                                                        alt={sketsaLokasi.file.name} 
+                                                        className="w-24 h-24 object-cover rounded-lg border border-gray-200" 
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
+                                                        <Maximize2 className="text-white h-6 w-6" />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRemoveSketsa();
+                                                        }}
+                                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all z-10"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                                <p className="text-xs text-gray-500 truncate mt-1 max-w-24">{sketsaLokasi.file.name}</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Rekaman Suara Pengucapan */}
+                                    <div className="space-y-2">
+                                        <Label>Rekaman Suara Pengucapan (Maksimal 10MB)</Label>
+                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                            <input 
+                                                type="file" 
+                                                accept="audio/*" 
+                                                onChange={handleRekamanSuaraSelect} 
+                                                className="hidden" 
+                                                id="rekaman-suara-upload" 
+                                            />
+                                            <label htmlFor="rekaman-suara-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                                                <Mic className="h-8 w-8 text-gray-400 mb-2" />
+                                                <span className="text-sm text-gray-500">Klik untuk pilih rekaman suara</span>
+                                                <span className="text-xs text-gray-400 mt-1">Format: MP3, WAV, dll</span>
+                                            </label>
+                                        </div>
+
+                                        {/* Audio player displayed outside the field */}
+                                        {rekamanSuara && (
+                                            <div className="mt-3">
+                                                <div className="relative group flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 w-full">
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium truncate mb-2">{rekamanSuara.file.name}</p>
+                                                        <audio 
+                                                            controls 
+                                                            src={rekamanSuara.previewUrl} 
+                                                            className="w-full h-8"
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRemoveRekamanSuara}
+                                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all z-10"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Rekaman Audio Visual */}
+                                    <div className="space-y-2">
+                                        <Label>Rekaman Audio Visual (Maksimal 50MB)</Label>
+                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                                            <input 
+                                                type="file" 
+                                                accept="video/*,audio/*" 
+                                                onChange={handleRekamanAudioVisualSelect} 
+                                                className="hidden" 
+                                                id="rekaman-av-upload" 
+                                            />
+                                            <label htmlFor="rekaman-av-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                                                <Video className="h-8 w-8 text-gray-400 mb-2" />
+                                                <span className="text-sm text-gray-500">Klik untuk pilih rekaman audio visual</span>
+                                                <span className="text-xs text-gray-400 mt-1">Format: MP4, AVI, MOV, dll</span>
+                                            </label>
+                                        </div>
+
+                                        {/* Video player displayed outside the field */}
+                                        {rekamanAudioVisual && (
+                                            <div className="mt-3">
+                                                <div className="relative group w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                                                    <video 
+                                                        controls 
+                                                        src={rekamanAudioVisual.previewUrl} 
+                                                        className="w-full h-48 bg-black"
+                                                    />
+                                                    <div className="flex items-center justify-between p-2">
+                                                        <span className="text-sm text-gray-600 truncate">{rekamanAudioVisual.file.name}</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRemoveRekamanAudioVisual}
+                                                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all z-10"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Dokumen Pendukung */}
+                                    <div className="space-y-2">
+                                        <Label>Dokumen Pendukung</Label>
+                                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <input 
+                                                type="file" 
+                                                accept=".pdf,.doc,.docx,.shp,.zip,.rar,.kml,.kmz,.geojson" 
+                                                multiple
+                                                onChange={handleDokumenSelect} 
+                                                className="hidden" 
+                                                id="dokumen-upload" 
+                                            />
+                                            <label htmlFor="dokumen-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                                                <FileText className="h-10 w-10 text-gray-400 mb-2" />
+                                                <span className="text-sm text-gray-600 font-medium">Klik untuk upload dokumen</span>
+                                                <span className="text-xs text-gray-400 mt-1">Format: PDF, DOC, SHP, ZIP, KML, dll (Maks. 10MB)</span>
+                                            </label>
+                                        </div>
+                                        
+                                        {/* List of uploaded documents */}
+                                        {dokumenPendukung.length > 0 && (
+                                            <div className="space-y-2 mt-3">
+                                                {dokumenPendukung.map((doc, index) => (
+                                                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                                                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                            <FileText className="h-5 w-5 text-blue-500 shrink-0" />
+                                                            <span className="text-sm truncate">{doc.name}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1 shrink-0">
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                                                                onClick={() => handlePreviewDokumen(doc.previewUrl)}
+                                                                title="Preview dokumen"
+                                                            >
+                                                                <ExternalLink size={16} />
+                                                            </Button>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                                onClick={() => handleRemoveDokumen(index)}
+                                                                title="Hapus dokumen"
+                                                            >
+                                                                <X size={16} />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </CollapsibleContent>
+                            </Collapsible>
+
+                            {/* Submit Buttons */}
+                            <div className="flex gap-4 pt-6">
+                                <Link href="/survey" className="flex-1">
+                                    <Button type="button" variant="outline" className="w-full">
+                                        Batal
+                                    </Button>
+                                </Link>
+                                <Button 
+                                    type="button" 
+                                    className="flex-1 bg-green-600 hover:bg-green-700" 
+                                    disabled={isSubmitting}
+                                    onClick={handleSubmit}
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                            Menyimpan...
+                                        </>
+                                    ) : (
+                                        "Simpan Toponim"
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>

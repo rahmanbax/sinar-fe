@@ -306,7 +306,11 @@ const PreviewMap: React.FC<PreviewMapProps> = ({ isEditing, geometriType, snappi
             >
                 {/* Show location_point marker when NOT in edit mode */}
                 {!isEditMode && locationPointMarker && (
-                    <Marker longitude={locationPointMarker[0]} latitude={locationPointMarker[1]} anchor="bottom">
+                    <Marker
+                        longitude={getSafeCoords(locationPointMarker)[0]}
+                        latitude={getSafeCoords(locationPointMarker)[1]}
+                        anchor="bottom"
+                    >
                         <IoLocationSharp className="text-3xl text-blue-600 drop-shadow-lg" />
                     </Marker>
                 )}

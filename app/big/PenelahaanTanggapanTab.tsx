@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils"
 import { useApiHandlerWithPagination } from "@/utils/apiHandler"
 import { ToponymAnnouncementTabular } from "@/types/Toponim"
 import { ChevronLeft, ChevronRight, Download, Search, SlidersVertical } from "lucide-react"
+import { useRouter } from "next/navigation"
 import React, { useCallback, useEffect, useState } from 'react'
 
 const PenelahaanTanggapanTab: React.FC = () => {
+    const router = useRouter()
     const columnsTanggapan: ColumnConfig = {
         id: { label: 'ID Toponim' },
         local_name: { label: 'Nama Lokal' },
@@ -45,6 +47,11 @@ const PenelahaanTanggapanTab: React.FC = () => {
 
     const onPageChange = (num: number) => {
         setPage(num)
+    }
+
+    const onAct = (data: ToponymAnnouncementTabular) => {
+        if (!data.location_point?.coordinates) return
+        router.push(`/?marker_id=${data.id}&lng=${data.location_point.coordinates[0]}&lat=${data.location_point.coordinates[1]}&zoom=15&limit=10`)
     }
 
     const refresh = useCallback(() => {
@@ -149,7 +156,7 @@ const PenelahaanTanggapanTab: React.FC = () => {
                     columns={columnsTanggapan}
                     showCols={showCols}
                     loading={loading}
-                    actHandler={(item) => console.log('Aksi:', item)}
+                    actHandler={onAct}
                 />
             </CardContent>
         </Card>

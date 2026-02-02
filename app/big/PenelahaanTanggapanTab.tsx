@@ -1,5 +1,3 @@
-"use client"
-
 import { MultiSelect, Option } from "@/components/MultiSelect"
 import SinarParameterizedTable, { ColumnConfig } from "@/components/SinarParameterizedTable"
 import { Button } from "@/components/ui/button"
@@ -7,25 +5,25 @@ import { Card, CardContent } from "@/components/ui/card"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { useApiHandlerWithPagination } from "@/utils/apiHandler"
+import { ToponymAnnouncementTabular } from "@/types/Toponim"
 import { ChevronLeft, ChevronRight, Download, Search, SlidersVertical } from "lucide-react"
-import React, { useState } from 'react'
-
-// Data dummy untuk Tanggapan
-const dataTanggapan = [
-    { id_toponim: 'TOP-001', nama_lokal: 'Gunung Semeru', kabupaten: 'Lumajang', provinsi: 'Jawa Timur', status_pembakuan: 'Dibakukan', status_data: 'Terverifikasi' },
-    { id_toponim: 'TOP-002', nama_lokal: 'Sungai Citarum', kabupaten: 'Bandung', provinsi: 'Jawa Barat', status_pembakuan: 'Belum Dibakukan', status_data: 'Menunggu' },
-    { id_toponim: 'TOP-003', nama_lokal: 'Danau Toba', kabupaten: 'Samosir', provinsi: 'Sumatera Utara', status_pembakuan: 'Dibakukan', status_data: 'Terverifikasi' },
-]
+import React, { useCallback, useEffect, useState } from 'react'
 
 const PenelahaanTanggapanTab: React.FC = () => {
-    // Columns untuk Tanggapan
     const columnsTanggapan: ColumnConfig = {
-        id_toponim: { label: 'ID Toponim' },
-        nama_lokal: { label: 'Nama Lokal' },
-        kabupaten: { label: 'Kabupaten' },
-        provinsi: { label: 'Provinsi' },
-        status_pembakuan: { label: 'Status Pembakuan' },
-        status_data: { label: 'Status Data' },
+        id: { label: 'ID Toponim' },
+        local_name: { label: 'Nama Lokal' },
+        regency: { label: 'Kabupaten', render: (v) => v?.name || '-' },
+        province: { label: 'Provinsi', render: (v) => v?.name || '-' },
+        status_pembakuan: { 
+            label: 'Status Pembakuan', 
+            render: (v) => v || 'Belum Dibakukan'
+        },
+        status_data: { 
+            label: 'Status Data', 
+            render: (v) => v || 'Menunggu'
+        },
     }
 
     const options: Option[] = Object.keys(columnsTanggapan).map((c) => ({
@@ -33,21 +31,43 @@ const PenelahaanTanggapanTab: React.FC = () => {
         label: columnsTanggapan[c].label
     }))
 
+    const [loading, setLoading] = useState(false)
+    const [data, setData] = useState<ToponymAnnouncementTabular[]>([])
+    const apiHandler = useApiHandlerWithPagination<ToponymAnnouncementTabular>({ setLoading, shouldHandleError: true })
+
     const [searchString, setSearchString] = useState<string>()
     const [limit, setLimit] = useState(5)
     const [showCols, setShowCols] = useState<{ label: string, value: string }[]>(options)
     const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
 
-    const totalPages = 2
     const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
 
     const onPageChange = (num: number) => {
         setPage(num)
     }
 
+    const refresh = useCallback(() => {
+        let url = `/toponyms?page=${page}&per_page=${limit}`
+        if (searchString) {
+            url += `&search=${searchString}`
+        }
+
+        apiHandler('GET', url)
+            .then(r => {
+                if (!r?.data || !Array.isArray(r.data)) return
+                setData(r.data)
+                if (r.pagination) {
+                    setTotalPages(r.pagination.last_page)
+                }
+            })
+    }, [apiHandler, page, limit, searchString])
+
+    useEffect(refresh, [refresh])
+
     return (
         <Card>
-            <CardContent className="px-8">
+            <CardContent className="px-8 pt-6">
                 <div className="flex flex-col lg:flex-row lg:justify-between mb-5 gap-y-3">
                     <div className="flex gap-2">
                         <InputGroup className='hidden sm:flex bg-neutral-50'>
@@ -125,9 +145,10 @@ const PenelahaanTanggapanTab: React.FC = () => {
                     </div>
                 </div>
                 <SinarParameterizedTable
-                    data={dataTanggapan}
+                    data={data}
                     columns={columnsTanggapan}
                     showCols={showCols}
+                    loading={loading}
                     actHandler={(item) => console.log('Aksi:', item)}
                 />
             </CardContent>

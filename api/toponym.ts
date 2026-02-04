@@ -47,3 +47,12 @@ export const updateToponym = async (id: string, payload: any, token: string | nu
     });
     return res.json();
 };
+
+export const getToponymsByBoundingBox = async (token: string | null, params: Record<string, string | number>) => {
+    if (!token) return { error: true, message: "No token provided", data: { count: 0, results: [] } };
+    const query = new URLSearchParams(params as any).toString();
+    const res = await fetch(`${API_URL}/survey/bounding-box?${query}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.json();
+};

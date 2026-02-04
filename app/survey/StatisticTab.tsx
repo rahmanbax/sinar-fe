@@ -7,11 +7,14 @@ import { Bar } from 'react-chartjs-2';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { Map, type MapRef, type ViewState } from '@vis.gl/react-maplibre'
 import { big_office_coord, MapStyles } from "@/components/map/Map";
-import { IoLocationOutline } from "react-icons/io5";
+import { IoLocationSharp, IoLocationOutline } from "react-icons/io5";
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import Image from "next/image";
 import { getPersonalPerformance } from "@/api/personal";
+import { getToponymsByBoundingBox } from "@/api/toponym";
+import { Marker } from '@vis.gl/react-maplibre'
+import { motion, AnimatePresence } from "framer-motion";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -108,6 +111,37 @@ const StatMap = () => {
     const [viewState, setViewState] = useState(initialViewState);
     const [mapStyle, setMapStyle] = useState(MapStyles[0])
     const [onHover, setOnHover] = useState<string | undefined>()
+    const [toponyms, setToponyms] = useState<any[]>([])
+
+    const fetchToponyms = async () => {
+        const token = localStorage.getItem("token");
+        if (!token || !mapRef.current) return;
+
+        const bounds = mapRef.current.getMap().getBounds();
+        const params = {
+            min_lat: bounds.getSouth(),
+            max_lat: bounds.getNorth(),
+            min_lng: bounds.getWest(),
+            max_lng: bounds.getEast(),
+        };
+
+        try {
+            const res = await getToponymsByBoundingBox(token, params);
+            if (!res.error && res.data) {
+                setToponyms(res.data.results || []);
+            }
+        } catch (error) {
+            console.error("Error fetching toponyms:", error);
+        }
+    };
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            fetchToponyms();
+        }, 500); // Debounce API calls
+
+        return () => clearTimeout(timeoutId);
+    }, [viewState]);
 
     return (
         <div className="w-full h-full border-2 border-black">
@@ -124,7 +158,41 @@ const StatMap = () => {
                     [91, -12],
                     [142, 12]
                 ]}
-            ></Map>
+            >
+                {toponyms.map((toponym) => (
+                    <Marker
+                        key={toponym.id}
+                        longitude={toponym.lng}
+                        latitude={toponym.lat}
+                        anchor="bottom"
+                    >
+                        <motion.div
+                            className="relative flex flex-col items-center cursor-pointer"
+                            onMouseEnter={() => setOnHover(toponym.id)}
+                            onMouseLeave={() => setOnHover(undefined)}
+                            whileHover={{ scale: 1.2 }}
+                        >
+                            <IoLocationSharp
+                                className={`text-3xl drop-shadow-md transition-colors ${toponym.status === 'baku' ? 'text-blue-500' : 'text-yellow-500'
+                                    }`}
+                            />
+
+                            <AnimatePresence>
+                                {onHover === toponym.id && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute bottom-full mb-1 bg-white py-1 px-2 rounded-sm border whitespace-nowrap shadow text-[10px] font-bold z-10"
+                                    >
+                                        {toponym.local_name}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    </Marker>
+                ))}
+            </Map>
         </div>
     )
 }

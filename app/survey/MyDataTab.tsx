@@ -43,10 +43,8 @@ const getStatusBadge = (status: string) => {
     // fecting data dari endpoint
     const s = status?.toLowerCase() || "";
     const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
-        pengajuan: { bg: "bg-gray-100", text: "text-gray-800", label: "Pengajuan" },
-        penelaahan: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Penelaahan" },
-        penetapan: { bg: "bg-green-100", text: "text-green-800", label: "Penetapan" },
-        ditolak: { bg: "bg-red-100", text: "text-red-800", label: "Ditolak" },
+        pengajuan: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Pengajuan" },
+        baku: { bg: "bg-blue-100", text: "text-blue-800", label: "Baku" },
     };
     const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800", label: status };
     return <span className={`px-3 py-1 rounded-full text-sm font-medium ${style.bg} ${style.text}`}> {style.label}</span>;

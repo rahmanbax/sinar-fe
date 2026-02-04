@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import type { ChartData, ChartOptions } from 'chart.js';
-import { Map, type MapRef, type ViewState,  } from '@vis.gl/react-maplibre'
+import { Map, type MapRef, type ViewState, } from '@vis.gl/react-maplibre'
 import { big_office_coord, MapStyles } from "@/components/map/Map";
 import { IoLocationOutline } from "react-icons/io5";
 import CalendarHeatmap from 'react-calendar-heatmap';

@@ -81,8 +81,6 @@ const MyDataTab: React.FC = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-
     const onPageChange = (num: number) => {
         setPage(num);
     };

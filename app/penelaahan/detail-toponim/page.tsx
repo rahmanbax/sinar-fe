@@ -13,10 +13,10 @@ import { getElements } from "@/api/classification";
 import { getRegions } from "@/api/region";
 
 import { Button } from "@/components/ui/button";
-import { 
-    Check, ChevronDown, ChevronLeft, ChevronsUpDown, X, Trash2, RotateCcw, Save, 
+import {
+    Check, ChevronDown, ChevronLeft, ChevronsUpDown, X, Trash2, RotateCcw, Save,
     CircleDot, ExternalLink, FileText, Mic, Video, FileImage, Maximize2,
-    Layers, Minus, Plus, Loader2 
+    Layers, Minus, Plus, Loader2
 } from "lucide-react";
 import { uploadImage, uploadAudio, uploadVideo, uploadDocs } from "@/api/media";
 import ReviewerLayout from "@/layouts/ReviewerLayout";
@@ -498,7 +498,7 @@ const DetailToponimContent = () => {
     // Photo modal state
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
     const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
-    
+
     // Sketsa preview state
     const [previewSketch, setPreviewSketch] = useState<{ url: string; name: string } | null>(null);
 
@@ -1173,7 +1173,7 @@ const DetailToponimContent = () => {
             if (!result.error) {
                 alert("Toponim berhasil diterima!");
                 // redirect back to list
-                router.push("/penelaahan?tab=review-data&view=table");
+                router.back();
             } else {
                 alert("Gagal menerima toponim: " + result.message);
             }
@@ -1197,7 +1197,7 @@ const DetailToponimContent = () => {
             if (!result.error) {
                 alert("Toponim berhasil ditolak!");
                 // router push to penelaahan
-                router.push("/penelaahan?tab=review-data&view=table");
+                router.back();
             } else {
                 alert("Gagal menolak toponim: " + result.message);
             }
@@ -1457,7 +1457,7 @@ const DetailToponimContent = () => {
                                                     <Input value={isEditMode ? editedData.local_name || "" : toponymData.local_name || ""} onChange={(e) => handleInputChange("local_name", e.target.value)} readOnly={!isEditMode} />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label>Nama Peta</Label>
+                                                    <Label>Nama Spesifik</Label>
                                                     <Input value={isEditMode ? editedData.map_name || "" : toponymData.map_name || ""} onChange={(e) => handleInputChange("map_name", e.target.value)} readOnly={!isEditMode} />
                                                 </div>
                                                 <div className="space-y-2">
@@ -1493,7 +1493,7 @@ const DetailToponimContent = () => {
                                                     <Input value={isEditMode ? editedData.spelling || "" : toponymData.spelling || ""} onChange={(e) => handleInputChange("spelling", e.target.value)} readOnly={!isEditMode} />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label>Elemen</Label>
+                                                    <Label>Jenis Unsur</Label>
                                                     {isEditMode ? (
                                                         <Popover open={openElementCombobox} onOpenChange={setOpenElementCombobox}>
                                                             <PopoverTrigger asChild>
@@ -1756,12 +1756,12 @@ const DetailToponimContent = () => {
                                                 <Label className="font-medium">Foto Dokumentasi</Label>
                                                 {isEditMode && (
                                                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                                        <input 
-                                                            type="file" 
-                                                            accept="image/*" 
-                                                            onChange={handlePhotoSelect} 
-                                                            className="hidden" 
-                                                            id="photo-upload" 
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={handlePhotoSelect}
+                                                            className="hidden"
+                                                            id="photo-upload"
                                                             multiple
                                                         />
                                                         <label htmlFor="photo-upload" className="flex flex-col items-center justify-center cursor-pointer">
@@ -1778,7 +1778,7 @@ const DetailToponimContent = () => {
                                                         <div key={`existing-${index}`} className="w-24 h-24 relative group rounded-lg overflow-hidden border">
                                                             <Image src={photo.url} alt={photo.filename} fill className="object-cover" />
                                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                                <button 
+                                                                <button
                                                                     type="button"
                                                                     onClick={() => handlePhotoClick(index)}
                                                                     className="p-1 hover:scale-110 transition-transform text-white"
@@ -1803,7 +1803,7 @@ const DetailToponimContent = () => {
                                                         <div key={`new-${index}`} className="w-24 h-24 relative group rounded-lg overflow-hidden border">
                                                             <Image src={photo.previewUrl} alt={photo.file.name} fill className="object-cover" />
                                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                                <button 
+                                                                <button
                                                                     type="button"
                                                                     onClick={() => setPreviewSketch({ url: photo.previewUrl, name: photo.file.name })}
                                                                     className="p-1 hover:scale-110 transition-transform text-white"
@@ -1832,12 +1832,12 @@ const DetailToponimContent = () => {
                                                 <Label className="font-medium">Sketsa Lokasi</Label>
                                                 {isEditMode && (
                                                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                                        <input 
-                                                            type="file" 
-                                                            accept="image/*" 
-                                                            onChange={handleSketsaSelect} 
-                                                            className="hidden" 
-                                                            id="sketch-upload" 
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={handleSketsaSelect}
+                                                            className="hidden"
+                                                            id="sketch-upload"
                                                         />
                                                         <label htmlFor="sketch-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                             <FileImage className="h-8 w-8 text-gray-400 mb-2" />
@@ -1852,7 +1852,7 @@ const DetailToponimContent = () => {
                                                         <div className="w-24 h-24 relative group rounded-lg overflow-hidden border">
                                                             <img src={toponymData.sketch} alt="Sketsa Lokasi" className="w-full h-full object-cover" />
                                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                                <button 
+                                                                <button
                                                                     type="button"
                                                                     onClick={() => setPreviewSketch({ url: toponymData.sketch!, name: "Sketsa Lokasi" })}
                                                                     className="p-1 hover:scale-110 transition-transform text-white"
@@ -1876,7 +1876,7 @@ const DetailToponimContent = () => {
                                                         <div className="w-24 h-24 relative group rounded-lg overflow-hidden border">
                                                             <img src={sketsaLokasi.previewUrl} alt={sketsaLokasi.file.name} className="w-full h-full object-cover" />
                                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                                <button 
+                                                                <button
                                                                     type="button"
                                                                     onClick={() => setPreviewSketch({ url: sketsaLokasi.previewUrl, name: sketsaLokasi.file.name })}
                                                                     className="p-1 hover:scale-110 transition-transform text-white"
@@ -1905,12 +1905,12 @@ const DetailToponimContent = () => {
                                                 <Label className="font-medium">Rekaman Suara Pengucapan</Label>
                                                 {isEditMode && (
                                                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                                        <input 
-                                                            type="file" 
-                                                            accept="audio/*" 
-                                                            onChange={handleRekamanSuaraSelect} 
-                                                            className="hidden" 
-                                                            id="audio-upload" 
+                                                        <input
+                                                            type="file"
+                                                            accept="audio/*"
+                                                            onChange={handleRekamanSuaraSelect}
+                                                            className="hidden"
+                                                            id="audio-upload"
                                                         />
                                                         <label htmlFor="audio-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                             <Mic className="h-8 w-8 text-gray-400 mb-2" />
@@ -1964,12 +1964,12 @@ const DetailToponimContent = () => {
                                                 <Label className="font-medium">Rekaman Audio Visual</Label>
                                                 {isEditMode && (
                                                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                                        <input 
-                                                            type="file" 
-                                                            accept="video/*" 
-                                                            onChange={handleRekamanAudioVisualSelect} 
-                                                            className="hidden" 
-                                                            id="video-upload" 
+                                                        <input
+                                                            type="file"
+                                                            accept="video/*"
+                                                            onChange={handleRekamanAudioVisualSelect}
+                                                            className="hidden"
+                                                            id="video-upload"
                                                         />
                                                         <label htmlFor="video-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                             <Video className="h-8 w-8 text-gray-400 mb-2" />
@@ -2022,11 +2022,11 @@ const DetailToponimContent = () => {
                                                 <Label className="font-medium">Dokumen Pendukung</Label>
                                                 {isEditMode && (
                                                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                                        <input 
-                                                            type="file" 
-                                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" 
-                                                            onChange={handleDokumenSelect} 
-                                                            className="hidden" 
+                                                        <input
+                                                            type="file"
+                                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                                                            onChange={handleDokumenSelect}
+                                                            className="hidden"
                                                             id="doc-upload"
                                                         />
                                                         <label htmlFor="doc-upload" className="flex flex-col items-center justify-center cursor-pointer">

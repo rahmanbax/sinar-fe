@@ -555,14 +555,14 @@ const Page = () => {
     const handleSketsaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        
+
         const sizeInMB = 5;
         const MAX_SIZE = sizeInMB * 1024 * 1024;
         if (file.size > MAX_SIZE) {
             alert(`File melebihi ukuran maksimal ${sizeInMB}MB`);
             return;
         }
-        
+
         if (sketsaLokasi) {
             URL.revokeObjectURL(sketsaLokasi.previewUrl);
         }
@@ -580,14 +580,14 @@ const Page = () => {
     const handleRekamanSuaraSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        
+
         const sizeInMB = 10;
         const MAX_SIZE = sizeInMB * 1024 * 1024;
         if (file.size > MAX_SIZE) {
             alert(`File melebihi ukuran maksimal ${sizeInMB}MB`);
             return;
         }
-        
+
         if (rekamanSuara) {
             URL.revokeObjectURL(rekamanSuara.previewUrl);
         }
@@ -605,14 +605,14 @@ const Page = () => {
     const handleRekamanAudioVisualSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        
+
         const sizeInMB = 50;
         const MAX_SIZE = sizeInMB * 1024 * 1024;
         if (file.size > MAX_SIZE) {
             alert(`File melebihi ukuran maksimal ${sizeInMB}MB`);
             return;
         }
-        
+
         if (rekamanAudioVisual) {
             URL.revokeObjectURL(rekamanAudioVisual.previewUrl);
         }
@@ -630,7 +630,7 @@ const Page = () => {
     const handleDokumenSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
-        
+
         const sizeInMB = 10;
         const MAX_SIZE = sizeInMB * 1024 * 1024;
         const validFiles: { file: File; name: string; previewUrl: string }[] = [];
@@ -640,8 +640,8 @@ const Page = () => {
             if (file.size > MAX_SIZE) {
                 rejectedFiles.push(file.name);
             } else {
-                validFiles.push({ 
-                    file, 
+                validFiles.push({
+                    file,
                     name: file.name,
                     previewUrl: URL.createObjectURL(file)
                 });
@@ -1271,7 +1271,7 @@ const Page = () => {
 
                                         <div className="space-y-2">
                                             <Label htmlFor="map-name">
-                                                Nama Peta <span className="text-red-500">*</span>
+                                                Nama Spesifik <span className="text-red-500">*</span>
                                             </Label>
                                             <Input id="map-name" placeholder="Contoh: Gunung Merapi" value={mapName} onChange={(e) => setMapName(e.target.value)} required />
                                         </div>
@@ -1320,7 +1320,7 @@ const Page = () => {
 
                                         <div className="space-y-2">
                                             <Label>
-                                                Elemen <span className="text-red-500">*</span>
+                                                Jenis Unsur <span className="text-red-500">*</span>
                                             </Label>
                                             <input type="hidden" value={elementCode} required />
                                             <Popover open={openElementCombobox} onOpenChange={setOpenElementCombobox}>
@@ -1626,12 +1626,12 @@ const Page = () => {
                                     <div className="space-y-2">
                                         <Label>Sketsa Lokasi (Maksimal 3MB)</Label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                            <input 
-                                                type="file" 
-                                                accept="image/*" 
-                                                onChange={handleSketsaSelect} 
-                                                className="hidden" 
-                                                id="sketsa-upload" 
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleSketsaSelect}
+                                                className="hidden"
+                                                id="sketsa-upload"
                                             />
                                             <label htmlFor="sketsa-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                 <FileImage className="h-8 w-8 text-gray-400 mb-2" />
@@ -1643,14 +1643,14 @@ const Page = () => {
                                         {/* Selected sketch thumbnail */}
                                         {sketsaLokasi && (
                                             <div className="mt-3">
-                                                <div 
-                                                    className="relative group cursor-pointer inline-block" 
+                                                <div
+                                                    className="relative group cursor-pointer inline-block"
                                                     onClick={() => setPreviewImage({ url: sketsaLokasi.previewUrl, name: sketsaLokasi.file.name })}
                                                 >
-                                                    <img 
-                                                        src={sketsaLokasi.previewUrl} 
-                                                        alt={sketsaLokasi.file.name} 
-                                                        className="w-24 h-24 object-cover rounded-lg border border-gray-200" 
+                                                    <img
+                                                        src={sketsaLokasi.previewUrl}
+                                                        alt={sketsaLokasi.file.name}
+                                                        className="w-24 h-24 object-cover rounded-lg border border-gray-200"
                                                     />
                                                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
                                                         <Maximize2 className="text-white h-6 w-6" />
@@ -1675,12 +1675,12 @@ const Page = () => {
                                     <div className="space-y-2">
                                         <Label>Rekaman Suara Pengucapan (Maksimal 10MB)</Label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                            <input 
-                                                type="file" 
-                                                accept="audio/*" 
-                                                onChange={handleRekamanSuaraSelect} 
-                                                className="hidden" 
-                                                id="rekaman-suara-upload" 
+                                            <input
+                                                type="file"
+                                                accept="audio/*"
+                                                onChange={handleRekamanSuaraSelect}
+                                                className="hidden"
+                                                id="rekaman-suara-upload"
                                             />
                                             <label htmlFor="rekaman-suara-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                 <Mic className="h-8 w-8 text-gray-400 mb-2" />
@@ -1695,9 +1695,9 @@ const Page = () => {
                                                 <div className="relative group flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 w-full">
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm font-medium truncate mb-2">{rekamanSuara.file.name}</p>
-                                                        <audio 
-                                                            controls 
-                                                            src={rekamanSuara.previewUrl} 
+                                                        <audio
+                                                            controls
+                                                            src={rekamanSuara.previewUrl}
                                                             className="w-full h-8"
                                                         />
                                                     </div>
@@ -1717,12 +1717,12 @@ const Page = () => {
                                     <div className="space-y-2">
                                         <Label>Rekaman Audio Visual (Maksimal 50MB)</Label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                            <input 
-                                                type="file" 
-                                                accept="video/*,audio/*" 
-                                                onChange={handleRekamanAudioVisualSelect} 
-                                                className="hidden" 
-                                                id="rekaman-av-upload" 
+                                            <input
+                                                type="file"
+                                                accept="video/*,audio/*"
+                                                onChange={handleRekamanAudioVisualSelect}
+                                                className="hidden"
+                                                id="rekaman-av-upload"
                                             />
                                             <label htmlFor="rekaman-av-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                 <Video className="h-8 w-8 text-gray-400 mb-2" />
@@ -1735,9 +1735,9 @@ const Page = () => {
                                         {rekamanAudioVisual && (
                                             <div className="mt-3">
                                                 <div className="relative group w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                                                    <video 
-                                                        controls 
-                                                        src={rekamanAudioVisual.previewUrl} 
+                                                    <video
+                                                        controls
+                                                        src={rekamanAudioVisual.previewUrl}
                                                         className="w-full h-48 bg-black"
                                                     />
                                                     <div className="flex items-center justify-between p-2">
@@ -1759,13 +1759,13 @@ const Page = () => {
                                     <div className="space-y-2">
                                         <Label>Dokumen Pendukung</Label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            <input 
-                                                type="file" 
-                                                accept=".pdf,.doc,.docx,.shp,.zip,.rar,.kml,.kmz,.geojson" 
+                                            <input
+                                                type="file"
+                                                accept=".pdf,.doc,.docx,.shp,.zip,.rar,.kml,.kmz,.geojson"
                                                 multiple
-                                                onChange={handleDokumenSelect} 
-                                                className="hidden" 
-                                                id="dokumen-upload" 
+                                                onChange={handleDokumenSelect}
+                                                className="hidden"
+                                                id="dokumen-upload"
                                             />
                                             <label htmlFor="dokumen-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                 <FileText className="h-10 w-10 text-gray-400 mb-2" />
@@ -1773,7 +1773,7 @@ const Page = () => {
                                                 <span className="text-xs text-gray-400 mt-1">Format: PDF, DOC, SHP, ZIP, KML, dll (Maks. 10MB)</span>
                                             </label>
                                         </div>
-                                        
+
                                         {/* List of uploaded documents */}
                                         {dokumenPendukung.length > 0 && (
                                             <div className="space-y-2 mt-3">
@@ -1820,9 +1820,9 @@ const Page = () => {
                                         Batal
                                     </Button>
                                 </Link>
-                                <Button 
-                                    type="button" 
-                                    className="flex-1 bg-green-600 hover:bg-green-700" 
+                                <Button
+                                    type="button"
+                                    className="flex-1 bg-green-600 hover:bg-green-700"
                                     disabled={isSubmitting}
                                     onClick={handleSubmit}
                                 >

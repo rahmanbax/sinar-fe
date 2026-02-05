@@ -320,6 +320,7 @@ const StatisticTab: React.FC = () => {
                     <div className="w-full h-[350px] sm:h-[500px]">
                         <StatMap />
                     </div>
+                    Tes
                 </div>
             </div>
             <h4 className="text-2xl mt-10 mb-2">Linimasa</h4>

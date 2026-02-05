@@ -59,6 +59,9 @@ interface ToponymData {
         subcategory_id: string;
         type: string | null;
     };
+    creator?: {
+        name: string;
+    };
 }
 
 const CenterTextPlugin: Plugin = {
@@ -223,6 +226,7 @@ const ReviewCard: React.FC<IReviewCard> = ({
                 </div>
                 <div className="text-center">
                     <Progress value={(handledData / totalData) * 100} className="[&>*]:bg-[#0088FF]" />
+                    <p className="mt-2 text-sm text-black/60">{handledData} dari {totalData} data sudah ditelaah</p>
                     {/* <p>Penelaahan akan berakhir dalam 20 hari lagi</p> */}
                 </div>
 
@@ -437,6 +441,7 @@ const ReviewDataTab: React.FC = () => {
                             namaLain: item.other_name || "-",
                             artiNama: item.name_meaning || "-",
                             asalBahasa: item.language_origin || "-",
+                            namaSurveyor: item.creator?.name || "-",
                             reviewTransaction: item.review_transaction_data?.[0],
                             koordinat: item.location_point ? `${item.location_point.coordinates[0].toFixed(3)}, ${item.location_point.coordinates[1].toFixed(3)}` : "-",
                             status: status,
@@ -461,8 +466,8 @@ const ReviewDataTab: React.FC = () => {
 
     const getStatusBadge = (status: string) => {
         const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
-            issued: { bg: "bg-blue-100", text: "text-blue-800", label: "issued" },
-            completed: { bg: "bg-green-100", text: "text-green-800", label: "completed" },
+            issued: { bg: "bg-blue-100", text: "text-blue-800", label: "Proses Penelaahan" },
+            completed: { bg: "bg-green-100", text: "text-green-800", label: "Selesai" },
             Disetujui: { bg: "bg-green-100", text: "text-green-800", label: "Disetujui" },
             Ditolak: { bg: "bg-red-100", text: "text-red-800", label: "Ditolak" },
             "Belum Ditelaah": { bg: "bg-gray-100", text: "text-gray-800", label: "Belum Ditelaah" },
@@ -506,6 +511,7 @@ const ReviewDataTab: React.FC = () => {
                             namaLain: item.other_name || "-",
                             artiNama: item.name_meaning || "-",
                             asalBahasa: item.language_origin || "-",
+                            namaSurveyor: item.creator?.name || "-",
                             koordinat: item.location_point ? `${item.location_point.coordinates[0].toFixed(3)}, ${item.location_point.coordinates[1].toFixed(3)}` : "-",
                             status: status,
                         };
@@ -546,6 +552,7 @@ const ReviewDataTab: React.FC = () => {
         namaLain: { label: "Nama Lain" },
         artiNama: { label: "Arti Nama" },
         asalBahasa: { label: "Asal Bahasa" },
+        namaSurveyor: { label: "Surveyor" },
         koordinat: { label: "Koordinat" },
         status: { label: "Status", render: (value: string) => getStatusBadge(value) },
     };

@@ -1299,7 +1299,7 @@ const EditToponimContent = () => {
                                         </div>
                                         <div className="space-y-2">
                                             <Label>
-                                                Nama Peta <span className="text-red-500">*</span>
+                                                Nama Spesifik <span className="text-red-500">*</span>
                                             </Label>
                                             <Input value={mapName} onChange={(e) => setMapName(e.target.value)} required />
                                         </div>
@@ -1341,7 +1341,7 @@ const EditToponimContent = () => {
                                         </div>
                                         <div className="space-y-2">
                                             <Label>
-                                                Elemen <span className="text-red-500">*</span>
+                                                Jenis Unsur <span className="text-red-500">*</span>
                                             </Label>
                                             <Popover open={openElementCombobox} onOpenChange={setOpenElementCombobox}>
                                                 <PopoverTrigger asChild>
@@ -1608,12 +1608,12 @@ const EditToponimContent = () => {
                                     <div className="space-y-2">
                                         <Label>Sketsa Lokasi (Maksimal 5MB)</Label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                            <input 
-                                                type="file" 
-                                                accept="image/*" 
-                                                onChange={handleSketsaSelect} 
-                                                className="hidden" 
-                                                id="sketsa-upload" 
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleSketsaSelect}
+                                                className="hidden"
+                                                id="sketsa-upload"
                                             />
                                             <label htmlFor="sketsa-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                 <FileImage className="h-8 w-8 text-gray-400 mb-2" />
@@ -1625,14 +1625,14 @@ const EditToponimContent = () => {
                                         {/* Existing sketch */}
                                         {existingSketch && !sketsaLokasi && (
                                             <div className="mt-3">
-                                                <div 
-                                                    className="relative group cursor-pointer inline-block" 
+                                                <div
+                                                    className="relative group cursor-pointer inline-block"
                                                     onClick={() => setPreviewImage({ url: existingSketch, name: "Sketsa Lokasi" })}
                                                 >
-                                                    <img 
-                                                        src={existingSketch} 
-                                                        alt="Sketsa Lokasi" 
-                                                        className="w-24 h-24 object-cover rounded-lg border border-gray-200" 
+                                                    <img
+                                                        src={existingSketch}
+                                                        alt="Sketsa Lokasi"
+                                                        className="w-24 h-24 object-cover rounded-lg border border-gray-200"
                                                     />
                                                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
                                                         <Maximize2 className="text-white h-6 w-6" />
@@ -1654,14 +1654,14 @@ const EditToponimContent = () => {
                                         {/* New sketch thumbnail */}
                                         {sketsaLokasi && (
                                             <div className="mt-3">
-                                                <div 
-                                                    className="relative group cursor-pointer inline-block" 
+                                                <div
+                                                    className="relative group cursor-pointer inline-block"
                                                     onClick={() => setPreviewImage({ url: sketsaLokasi.previewUrl, name: sketsaLokasi.file.name })}
                                                 >
-                                                    <img 
-                                                        src={sketsaLokasi.previewUrl} 
-                                                        alt={sketsaLokasi.file.name} 
-                                                        className="w-24 h-24 object-cover rounded-lg border border-gray-200" 
+                                                    <img
+                                                        src={sketsaLokasi.previewUrl}
+                                                        alt={sketsaLokasi.file.name}
+                                                        className="w-24 h-24 object-cover rounded-lg border border-gray-200"
                                                     />
                                                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
                                                         <Maximize2 className="text-white h-6 w-6" />
@@ -1686,12 +1686,12 @@ const EditToponimContent = () => {
                                     <div className="space-y-2">
                                         <Label>Rekaman Suara Pengucapan (Maksimal 10MB)</Label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                            <input 
-                                                type="file" 
-                                                accept="audio/*" 
-                                                onChange={handleRekamanSuaraSelect} 
-                                                className="hidden" 
-                                                id="audio-upload" 
+                                            <input
+                                                type="file"
+                                                accept="audio/*"
+                                                onChange={handleRekamanSuaraSelect}
+                                                className="hidden"
+                                                id="audio-upload"
                                             />
                                             <label htmlFor="audio-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                 <Mic className="h-8 w-8 text-gray-400 mb-2" />
@@ -1746,12 +1746,12 @@ const EditToponimContent = () => {
                                     <div className="space-y-2">
                                         <Label>Rekaman Audio Visual (Maksimal 50MB)</Label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                            <input 
-                                                type="file" 
-                                                accept="video/*,audio/*" 
-                                                onChange={handleRekamanAudioVisualSelect} 
-                                                className="hidden" 
-                                                id="video-upload" 
+                                            <input
+                                                type="file"
+                                                accept="video/*,audio/*"
+                                                onChange={handleRekamanAudioVisualSelect}
+                                                className="hidden"
+                                                id="video-upload"
                                             />
                                             <label htmlFor="video-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                 <Video className="h-8 w-8 text-gray-400 mb-2" />
@@ -1805,13 +1805,13 @@ const EditToponimContent = () => {
                                     <div className="space-y-2">
                                         <Label>Dokumen Pendukung (Maksimal 10MB)</Label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                                            <input 
-                                                type="file" 
-                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" 
-                                                onChange={handleDokumenSelect} 
-                                                className="hidden" 
+                                            <input
+                                                type="file"
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                                                onChange={handleDokumenSelect}
+                                                className="hidden"
                                                 id="doc-upload"
-                                                multiple 
+                                                multiple
                                             />
                                             <label htmlFor="doc-upload" className="flex flex-col items-center justify-center cursor-pointer">
                                                 <FileText className="h-8 w-8 text-gray-400 mb-2" />
@@ -1819,7 +1819,7 @@ const EditToponimContent = () => {
                                                 <span className="text-xs text-gray-400 mt-1">Format: PDF, DOC, XLS, dll</span>
                                             </label>
                                         </div>
-                                        
+
                                         {/* Existing docs */}
                                         {existingDocs && dokumenPendukung.length === 0 && (
                                             <div className="space-y-2 mt-3">
@@ -1852,7 +1852,7 @@ const EditToponimContent = () => {
                                                 </div>
                                             </div>
                                         )}
-                                        
+
                                         {/* New documents list */}
                                         {dokumenPendukung.length > 0 && (
                                             <div className="space-y-2 mt-3">
@@ -1899,9 +1899,9 @@ const EditToponimContent = () => {
                                         Batal
                                     </Button>
                                 </Link>
-                                <Button 
-                                    type="button" 
-                                    className="flex-1 bg-green-600 hover:bg-green-700" 
+                                <Button
+                                    type="button"
+                                    className="flex-1 bg-green-600 hover:bg-green-700"
                                     disabled={isSubmitting}
                                     onClick={handleSubmit}
                                 >

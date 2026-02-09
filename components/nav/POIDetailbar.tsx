@@ -139,6 +139,41 @@ const POIDetailSidebar: React.FC<React.PropsWithChildren<IPOIDetailSidebar>> = (
                             </div>
                             <Separator className="my-2" />
                             <div className="grid grid-cols-2">
+                                <div className="text-wrap font-semibold">Arti Nama</div>
+                                <div className="text-wrap">{item?.name_meaning ?? '-'}</div>
+                            </div>
+                            <Separator className="my-2" />
+                            <div className="grid grid-cols-2">
+                                <div className="text-wrap font-semibold">Sejarah Nama</div>
+                                <div className="text-wrap">{item?.name_history ?? '-'}</div>
+                            </div>
+                            <Separator className="my-2" />
+                            <div className="grid grid-cols-2">
+                                <div className="text-wrap font-semibold">Nama Sebelumnya</div>
+                                <div className="text-wrap">{item?.other_name ?? '-'}</div>
+                            </div>
+                            <Separator className="my-2" />
+                            <div className="grid grid-cols-2">
+                                <div className="text-wrap font-semibold">Nama Rekomendasi</div>
+                                <div className="text-wrap">-</div>
+                            </div>
+                            <Separator className="my-2" />
+                            <div className="grid grid-cols-2">
+                                <div className="text-wrap font-semibold">Ucapan</div>
+                                <div className="text-wrap">{item?.pronunciation ?? '-'}</div>
+                            </div>
+                            <Separator className="my-2" />
+                            <div className="grid grid-cols-2">
+                                <div className="text-wrap font-semibold">Bujur</div>
+                                <div className="text-wrap">{markerData?.coordinates.lng.toFixed(6) ?? '-'}</div>
+                            </div>
+                            <Separator className="my-2" />
+                            <div className="grid grid-cols-2">
+                                <div className="text-wrap font-semibold">Lintang</div>
+                                <div className="text-wrap">{markerData?.coordinates.lat.toFixed(6) ?? '-'}</div>
+                            </div>
+                            <Separator className="my-2" />
+                            <div className="grid grid-cols-2">
                                 <div className="text-wrap font-semibold">Provinsi</div>
                                 <div className="text-wrap">{item?.province?.name}</div>
                             </div>

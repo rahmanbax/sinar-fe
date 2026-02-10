@@ -518,24 +518,24 @@ const MapDefault: React.FC<IMapDefault> = (
                   <Layers />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent side="left" sideOffset={10} className="translate-y-[-5.7em] max-w-16 max-h-96 md:max-w-52 sm:max-h-fit sm:max-w-fit">
+              <PopoverContent side="left" sideOffset={10} className="translate-y-[-5.7em] max-w-40 max-h-96 md:max-w-52 sm:max-h-fit sm:max-w-fit">
                 <div className="flex flex-col gap-1 md:gap-3 items-center">
                   {MapStyles.map((item) => (
                     <div key={item.id}>
                       <div
                         onClick={() => handleChangeMapStyle(item)}
-                        className={`hover:scale-105 transition p-5 rounded-md border cursor-pointer w-full ${item.id === mapStyle.id ? 'border-blue-500' : ''}`}
+                        className={`hover:scale-105 transition rounded-md border cursor-pointer flex items-center justify-center w-28 h-16 md:w-44 md:h-24 ${item.id === mapStyle.id ? 'border-blue-500 ring-2 ring-blue-500/50 shadow-lg' : 'border-transparent'}`}
                         style={{
                           backgroundImage: `url(${item.preview})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
                         }}
                       >
-                        <div className="flex text-center justify-center items-center">
-                          <h5 className="hidden md:flex text-neutral-50 font-bold drop-shadow">{item.label}</h5>
-                        </div>
+                        <h5 className="hidden md:flex text-neutral-50 font-bold drop-shadow text-center p-2 text-sm md:text-base leading-tight">
+                          {item.label}
+                        </h5>
                       </div>
-                      <h5 className="text-sm text-center md:hidden text-black font-semibold drop-shadow">{item.abbrv}</h5>
+                      <h5 className="text-xs text-center md:hidden text-black font-semibold mt-1">{item.abbrv}</h5>
                     </div>
 
                   ))}

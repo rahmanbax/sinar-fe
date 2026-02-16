@@ -125,7 +125,7 @@ const MyDataTab: React.FC = () => {
                 <div className="flex flex-col lg:flex-row lg:justify-between mb-5 gap-y-3">
                     <div className="flex gap-2">
                         <Link href="/survey/tambah-toponim">
-                            <Button className="bg-green-500 hover:bg-green-700">Ajukan Data</Button>
+                            <Button className="bg-green-500 hover:bg-green-700">Tambah Data</Button>
                         </Link>
                         <InputGroup className="hidden sm:flex bg-neutral-50">
                             <InputGroupInput placeholder="Cari..." onChange={(e) => setSearchString(e.target.value)} />

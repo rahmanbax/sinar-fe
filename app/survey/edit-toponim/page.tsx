@@ -415,6 +415,11 @@ const EditToponimContent = () => {
     const [spelling, setSpelling] = useState("");
     const [elementCode, setElementCode] = useState("");
     const [surveyAt, setSurveyAt] = useState("");
+
+    useEffect(() => {
+        setMapName(`${genericElement} ${specificElement}`.trim());
+    }, [genericElement, specificElement]);
+
     const [provinceCode, setProvinceCode] = useState("");
     const [regencyCode, setRegencyCode] = useState("");
     const [districtCode, setDistrictCode] = useState("");
@@ -1298,9 +1303,13 @@ const EditToponimContent = () => {
 
                                         <div className="space-y-2">
                                             <Label>
-                                                Nama Spesifik <span className="text-red-500">*</span>
+                                                Nama Rupabumi <span className="text-red-500">*</span>
                                             </Label>
-                                            <Input value={mapName} onChange={(e) => setMapName(e.target.value)} required />
+                                            <Input 
+                                                value={mapName} 
+                                                readOnly 
+                                                className="bg-gray-100 cursor-not-allowed" 
+                                            />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>

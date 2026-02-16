@@ -409,6 +409,7 @@ const EditToponimContent = () => {
     const [languageOrigin, setLanguageOrigin] = useState("");
     const [nameMeaning, setNameMeaning] = useState("");
     const [nameHistory, setNameHistory] = useState("");
+    const [previousName, setPreviousName] = useState("");
     const [pronounciation, setPronounciation] = useState("");
     const [spelling, setSpelling] = useState("");
     const [elementCode, setElementCode] = useState("");
@@ -510,6 +511,7 @@ const EditToponimContent = () => {
                     setLanguageOrigin(d.language_origin || "");
                     setNameMeaning(d.name_meaning || "");
                     setNameHistory(d.name_history || "");
+                    setPreviousName(d.previous_name || "");
                     setPronounciation(d.pronounciation || "");
                     setSpelling(d.spelling || "");
                     setGenericElement(d.generic_element || "");
@@ -1037,6 +1039,7 @@ const EditToponimContent = () => {
             if (languageOrigin) payload.language_origin = languageOrigin;
             if (nameMeaning) payload.name_meaning = nameMeaning;
             if (nameHistory) payload.name_history = nameHistory;
+            if (previousName) payload.previous_name = previousName;
             if (pronounciation) payload.pronounciation = pronounciation;
             if (spelling) payload.spelling = spelling;
             if (elementCode) payload.element_id = elementCode;
@@ -1326,6 +1329,12 @@ const EditToponimContent = () => {
                                                 Sejarah Nama <span className="text-red-500">*</span>
                                             </Label>
                                             <Input value={nameHistory} onChange={(e) => setNameHistory(e.target.value)} required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>
+                                                Nama Sebelumnya <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Input value={previousName} onChange={(e) => setPreviousName(e.target.value)} required />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>

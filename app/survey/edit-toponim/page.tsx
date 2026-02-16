@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ChevronDown, ChevronLeft, ChevronRight, Layers, Minus, Plus, RotateCcw, Save, CircleDot, Trash2, Loader2, Check, ChevronsUpDown, Camera, X, Maximize2, FileImage, Mic, Video, FileText, ExternalLink } from "lucide-react";
 import SurveyorLayout from "@/layouts/SurveryorLayout";
@@ -1328,7 +1329,7 @@ const EditToponimContent = () => {
                                             <Label>
                                                 Sejarah Nama <span className="text-red-500">*</span>
                                             </Label>
-                                            <Input value={nameHistory} onChange={(e) => setNameHistory(e.target.value)} required />
+                                            <Textarea value={nameHistory} onChange={(e) => setNameHistory(e.target.value)} required />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>

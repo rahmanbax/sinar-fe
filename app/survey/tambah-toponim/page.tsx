@@ -1265,14 +1265,7 @@ const Page = () => {
                                             <Input id="specific-element" placeholder="Contoh: Merapi" value={specificElement} onChange={(e) => setSpecificElement(e.target.value)} required />
                                         </div>
 
-{/* 
-                                         <div className="space-y-2">
-                                             <Label htmlFor="local-name">
-                                                 Nama Lokal <span className="text-red-500">*</span>
-                                             </Label>
-                                             <Input id="local-name" placeholder="Contoh: Gunung Merapi" value={localName} onChange={(e) => setLocalName(e.target.value)} required />
-                                         </div>
-*/}
+
 
                                         <div className="space-y-2">
                                             <Label htmlFor="map-name">

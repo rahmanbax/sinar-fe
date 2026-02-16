@@ -1295,12 +1295,7 @@ const EditToponimContent = () => {
                                             </Label>
                                             <Input value={specificElement} onChange={(e) => setSpecificElement(e.target.value)} required />
                                         </div>
-{/* <div className="space-y-2">
-                                            <Label>
-                                                Nama Lokal <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input value={localName} onChange={(e) => setLocalName(e.target.value)} required />
-                                        </div> */}
+
                                         <div className="space-y-2">
                                             <Label>
                                                 Nama Spesifik <span className="text-red-500">*</span>

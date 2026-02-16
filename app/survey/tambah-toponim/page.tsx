@@ -418,6 +418,10 @@ const Page = () => {
     const [elementCode, setElementCode] = useState("");
     const [surveyAt, setSurveyAt] = useState("");
 
+    useEffect(() => {
+        setMapName(`${genericElement} ${specificElement}`.trim());
+    }, [genericElement, specificElement]);
+
     // Region codes
     const [provinceCode, setProvinceCode] = useState("");
     const [regencyCode, setRegencyCode] = useState("");
@@ -1269,9 +1273,15 @@ const Page = () => {
 
                                         <div className="space-y-2">
                                             <Label htmlFor="map-name">
-                                                Nama Spesifik <span className="text-red-500">*</span>
+                                                Nama Rupabumi <span className="text-red-500">*</span>
                                             </Label>
-                                            <Input id="map-name" placeholder="Contoh: Gunung Merapi" value={mapName} onChange={(e) => setMapName(e.target.value)} required />
+                                            <Input 
+                                                id="map-name" 
+                                                placeholder="Gabungan Elemen Generik & Spesifik" 
+                                                value={mapName} 
+                                                readOnly 
+                                                className="bg-gray-100 cursor-not-allowed"
+                                            />
                                         </div>
 
                                         <div className="space-y-2">

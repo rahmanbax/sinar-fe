@@ -55,19 +55,12 @@ const DataDeliveryTab: React.FC = () => {
         <Card>
             <CardHeader className="block sm:flex justify-between">
                 <CardTitle className="text-xl text-[#1378B7] mb-3 sm:mb-0">Daftar Transaksi Penyampaian Data Nama Rupabumi</CardTitle>
-                <Button size='sm' className="bg-green-500 hover:bg-green-700">
-                    <Link href='/survey/tambah-transaksi'>
-                        <div className="flex items-center gap-2">
-                            <Plus className="text-white" />
-                            Tambah Transaksi
-                        </div>
-                    </Link>
-                </Button>
+
             </CardHeader>
             <CardContent className="px-8">
                 <div className="flex flex-col lg:flex-row lg:justify-between mb-5 gap-y-3">
                     <div className="flex gap-2">
-                        <Button className="bg-green-500 hover:bg-green-700">Ajukan Data</Button>
+                        <Button className="bg-green-500 hover:bg-green-700">Unggah Data</Button>
                         <InputGroup className='hidden sm:flex bg-neutral-50'>
                             <InputGroupInput placeholder="Cari..." onChange={(e) => setSearchString(e.target.value)} />
                             <InputGroupAddon>

@@ -40,14 +40,24 @@ type ApiResponse = {
 };
 
 const getStatusBadge = (status: string) => {
-    // fecting data dari endpoint
     const s = status?.toLowerCase() || "";
     const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
-        pengajuan: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Pengajuan" },
-        baku: { bg: "bg-blue-100", text: "text-blue-800", label: "Baku" },
+        "data survei": { bg: "bg-blue-100", text: "text-blue-800", label: "Data Survei" },
+        "penelaahan kabupaten/kota": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Penelaahan Kabupaten/Kota" },
+        "penelaahan provinsi": { bg: "bg-orange-100", text: "text-orange-800", label: "Penelaahan Provinsi" },
+        "penelaahan pusat": { bg: "bg-red-100", text: "text-red-800", label: "Penelaahan Pusat" },
+        "penetapan": { bg: "bg-green-100", text: "text-green-800", label: "Penetapan" },
+        "draft pengumuman": { bg: "bg-purple-100", text: "text-purple-800", label: "Draft Pengumuman" },
+        "permohonan rekomendasi": { bg: "bg-indigo-100", text: "text-indigo-800", label: "Permohonan Rekomendasi" },
+        "rekomendasi provinsi": { bg: "bg-teal-100", text: "text-teal-800", label: "Rekomendasi Provinsi" },
+        "penelaahan tanggapan": { bg: "bg-pink-100", text: "text-pink-800", label: "Penelaahan Tanggapan" },
+        "penggantian": { bg: "bg-amber-100", text: "text-amber-800", label: "Penggantian" },
+        "penghapusan": { bg: "bg-slate-100", text: "text-slate-800", label: "Penghapusan" },
+        "pengajuan": { bg: "bg-yellow-100", text: "text-yellow-800", label: "Pengajuan" },
+        "baku": { bg: "bg-blue-100", text: "text-blue-800", label: "Baku" },
     };
-    const style = statusStyles[status] || { bg: "bg-gray-100", text: "text-gray-800", label: status };
-    return <span className={`px-3 py-1 rounded-full text-sm font-medium ${style.bg} ${style.text}`}> {style.label}</span>;
+    const style = statusStyles[s] || { bg: "bg-gray-100", text: "text-gray-800", label: status };
+    return <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${style.bg} ${style.text}`}> {style.label}</span>;
 };
 
 const MyDataTab: React.FC = () => {
@@ -125,7 +135,7 @@ const MyDataTab: React.FC = () => {
                 <div className="flex flex-col lg:flex-row lg:justify-between mb-5 gap-y-3">
                     <div className="flex gap-2">
                         <Link href="/survey/tambah-toponim">
-                            <Button className="bg-green-500 hover:bg-green-700">Ajukan Data</Button>
+                            <Button className="bg-green-500 hover:bg-green-700">Tambah Data</Button>
                         </Link>
                         <InputGroup className="hidden sm:flex bg-neutral-50">
                             <InputGroupInput placeholder="Cari..." onChange={(e) => setSearchString(e.target.value)} />

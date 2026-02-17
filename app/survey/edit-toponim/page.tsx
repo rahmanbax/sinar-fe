@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ChevronDown, ChevronLeft, ChevronRight, Layers, Minus, Plus, RotateCcw, Save, CircleDot, Trash2, Loader2, Check, ChevronsUpDown, Camera, X, Maximize2, FileImage, Mic, Video, FileText, ExternalLink } from "lucide-react";
 import SurveyorLayout from "@/layouts/SurveryorLayout";
@@ -409,10 +410,16 @@ const EditToponimContent = () => {
     const [languageOrigin, setLanguageOrigin] = useState("");
     const [nameMeaning, setNameMeaning] = useState("");
     const [nameHistory, setNameHistory] = useState("");
+    const [previousName, setPreviousName] = useState("");
     const [pronounciation, setPronounciation] = useState("");
     const [spelling, setSpelling] = useState("");
     const [elementCode, setElementCode] = useState("");
     const [surveyAt, setSurveyAt] = useState("");
+
+    useEffect(() => {
+        setMapName(`${genericElement} ${specificElement}`.trim());
+    }, [genericElement, specificElement]);
+
     const [provinceCode, setProvinceCode] = useState("");
     const [regencyCode, setRegencyCode] = useState("");
     const [districtCode, setDistrictCode] = useState("");
@@ -510,6 +517,7 @@ const EditToponimContent = () => {
                     setLanguageOrigin(d.language_origin || "");
                     setNameMeaning(d.name_meaning || "");
                     setNameHistory(d.name_history || "");
+                    setPreviousName(d.previous_name || "");
                     setPronounciation(d.pronounciation || "");
                     setSpelling(d.spelling || "");
                     setGenericElement(d.generic_element || "");
@@ -1037,6 +1045,7 @@ const EditToponimContent = () => {
             if (languageOrigin) payload.language_origin = languageOrigin;
             if (nameMeaning) payload.name_meaning = nameMeaning;
             if (nameHistory) payload.name_history = nameHistory;
+            if (previousName) payload.previous_name = previousName;
             if (pronounciation) payload.pronounciation = pronounciation;
             if (spelling) payload.spelling = spelling;
             if (elementCode) payload.element_id = elementCode;
@@ -1291,17 +1300,16 @@ const EditToponimContent = () => {
                                             </Label>
                                             <Input value={specificElement} onChange={(e) => setSpecificElement(e.target.value)} required />
                                         </div>
+
                                         <div className="space-y-2">
                                             <Label>
-                                                Nama Lokal <span className="text-red-500">*</span>
+                                                Nama Rupabumi <span className="text-red-500">*</span>
                                             </Label>
-                                            <Input value={localName} onChange={(e) => setLocalName(e.target.value)} required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>
-                                                Nama Spesifik <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input value={mapName} onChange={(e) => setMapName(e.target.value)} required />
+                                            <Input 
+                                                value={mapName} 
+                                                readOnly 
+                                                className="bg-gray-100 cursor-not-allowed" 
+                                            />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>
@@ -1325,7 +1333,13 @@ const EditToponimContent = () => {
                                             <Label>
                                                 Sejarah Nama <span className="text-red-500">*</span>
                                             </Label>
-                                            <Input value={nameHistory} onChange={(e) => setNameHistory(e.target.value)} required />
+                                            <Textarea value={nameHistory} onChange={(e) => setNameHistory(e.target.value)} required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>
+                                                Nama Sebelumnya <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Input value={previousName} onChange={(e) => setPreviousName(e.target.value)} required />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>

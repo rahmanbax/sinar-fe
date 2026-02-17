@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ChevronDown, ChevronLeft, ChevronRight, Layers, Minus, Plus, RotateCcw, Save, CircleDot, Trash2, Loader2, Check, ChevronsUpDown, Camera, X, Maximize2, FileImage, Mic, Video, FileText, ExternalLink } from "lucide-react";
 import SurveyorLayout from "@/layouts/SurveryorLayout";
@@ -411,10 +412,15 @@ const Page = () => {
     const [languageOrigin, setLanguageOrigin] = useState("");
     const [nameMeaning, setNameMeaning] = useState("");
     const [nameHistory, setNameHistory] = useState("");
+    const [previousName, setPreviousName] = useState("");
     const [pronounciation, setPronounciation] = useState("");
     const [spelling, setSpelling] = useState("");
     const [elementCode, setElementCode] = useState("");
     const [surveyAt, setSurveyAt] = useState("");
+
+    useEffect(() => {
+        setMapName(`${genericElement} ${specificElement}`.trim());
+    }, [genericElement, specificElement]);
 
     // Region codes
     const [provinceCode, setProvinceCode] = useState("");
@@ -1008,6 +1014,7 @@ const Page = () => {
             if (languageOrigin) payload.language_origin = languageOrigin;
             if (nameMeaning) payload.name_meaning = nameMeaning;
             if (nameHistory) payload.name_history = nameHistory;
+            if (previousName) payload.previous_name = previousName;
             if (pronounciation) payload.pronounciation = pronounciation;
             if (spelling) payload.spelling = spelling;
             if (elementCode) payload.element_id = elementCode;
@@ -1262,18 +1269,19 @@ const Page = () => {
                                             <Input id="specific-element" placeholder="Contoh: Merapi" value={specificElement} onChange={(e) => setSpecificElement(e.target.value)} required />
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="local-name">
-                                                Nama Lokal <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input id="local-name" placeholder="Contoh: Gunung Merapi" value={localName} onChange={(e) => setLocalName(e.target.value)} required />
-                                        </div>
+
 
                                         <div className="space-y-2">
                                             <Label htmlFor="map-name">
-                                                Nama Spesifik <span className="text-red-500">*</span>
+                                                Nama Rupabumi <span className="text-red-500">*</span>
                                             </Label>
-                                            <Input id="map-name" placeholder="Contoh: Gunung Merapi" value={mapName} onChange={(e) => setMapName(e.target.value)} required />
+                                            <Input 
+                                                id="map-name" 
+                                                placeholder="Gabungan Elemen Generik & Spesifik" 
+                                                value={mapName} 
+                                                readOnly 
+                                                className="bg-gray-100 cursor-not-allowed"
+                                            />
                                         </div>
 
                                         <div className="space-y-2">
@@ -1301,7 +1309,14 @@ const Page = () => {
                                             <Label htmlFor="name-history">
                                                 Sejarah Nama <span className="text-red-500">*</span>
                                             </Label>
-                                            <Input id="name-history" placeholder="Contoh: Digunakan sejak abad ke-15" value={nameHistory} onChange={(e) => setNameHistory(e.target.value)} required />
+                                            <Textarea id="name-history" placeholder="Contoh: Digunakan sejak abad ke-15" value={nameHistory} onChange={(e) => setNameHistory(e.target.value)} required />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="previous-name">
+                                                Nama Sebelumnya <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Input id="previous-name" placeholder="Contoh: Nama Lama" value={previousName} onChange={(e) => setPreviousName(e.target.value)} required />
                                         </div>
 
                                         <div className="space-y-2">

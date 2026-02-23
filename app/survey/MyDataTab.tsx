@@ -11,6 +11,8 @@ import { ChevronLeft, ChevronRight, Map, Search, SlidersVertical } from "lucide-
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MapModal } from "@/components/map/MapModal";
+
 
 // Custom debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -146,11 +148,8 @@ const MyDataTab: React.FC = () => {
                         <Button variant="outline" size="icon-lg">
                             <SlidersVertical />
                         </Button>
-                        <Link href="/">
-                            <Button variant="outline" size="lg">
-                                <Map /> Lihat Peta
-                            </Button>
-                        </Link>
+                        <MapModal />
+
                     </div>
                     <InputGroup className="flex sm:hidden bg-neutral-50">
                         <InputGroupInput placeholder="Cari..." onChange={(e) => setSearchString(e.target.value)} />

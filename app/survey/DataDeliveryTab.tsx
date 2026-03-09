@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import dayjs from "dayjs"
-import { ChevronLeft, ChevronRight, Map, Plus, Search, SlidersVertical } from "lucide-react"
+import { ChevronLeft, ChevronRight, Map, Plus, Search, SlidersVertical, Upload, FileArchive, X, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
-
+import React, { useState } from "react"
+import { useAuth } from "@/contexts/AuthContext"
+import { uploadShpZip } from "@/api/media"
 
 const data = [
     { id: 123456, source: 'test123', total_data: 10, accepted_data: 4, rejected_data: 6, acquisition_time: 'test123', user: 'SINAR', created_at: new Date(), updated_at: new Date() },
@@ -47,6 +49,7 @@ const DataDeliveryTab: React.FC = () => {
     const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
 
 
+
     const onPageChange = (num: number) => {
         setPage(num)
     }
@@ -60,7 +63,9 @@ const DataDeliveryTab: React.FC = () => {
             <CardContent className="px-8">
                 <div className="flex flex-col lg:flex-row lg:justify-between mb-5 gap-y-3">
                     <div className="flex gap-2">
-                        <Button className="bg-green-500 hover:bg-green-700">Unggah Data</Button>
+                        <Link href="/survey/unggah-data">
+                            <Button className="bg-green-500 hover:bg-green-700 text-white">Unggah Data</Button>
+                        </Link>
                         <InputGroup className='hidden sm:flex bg-neutral-50'>
                             <InputGroupInput placeholder="Cari..." onChange={(e) => setSearchString(e.target.value)} />
                             <InputGroupAddon>

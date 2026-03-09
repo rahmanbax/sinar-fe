@@ -60,3 +60,16 @@ export const uploadVideo = async (file: File, token: string | null): Promise<Upl
     });
     return res.json();
 };
+
+export const uploadShpZip = async (file: File, token: string | null): Promise<UploadResponse> => {
+    if (!token) return { error: true, message: "No token provided", data: { url: "", filename: "" } };
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`${API_URL}/media/upload/shp-zip`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+    });
+    return res.json();
+};

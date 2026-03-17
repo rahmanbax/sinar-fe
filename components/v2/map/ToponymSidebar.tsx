@@ -44,7 +44,7 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                         </h2>
                         <button
                             onClick={onClose}
-                            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                            className="p-2 text-gray-500 hover:text-gray-900"
                         >
                             <X size={20} />
                         </button>

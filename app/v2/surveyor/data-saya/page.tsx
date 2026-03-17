@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import SurveyorLayout from '@/components/v2/nav/SurveyorLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
+import FilterModal, { FilterState } from '@/components/v2/modals/FilterModal';
 import { Plus, SlidersHorizontal, Map as MapIcon, Edit, Trash2 } from 'lucide-react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { useApiHandlerWithPagination, PaginationInfo } from '@/utils/apiHandler';
@@ -52,6 +53,8 @@ const MyDataPage = () => {
     const [limit, setLimit] = useState(10);
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState<PaginationInfo | undefined>(undefined);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [filters, setFilters] = useState<FilterState | undefined>();
 
     const apiHandler = useApiHandlerWithPagination<any>({ setLoading, shouldHandleError: true });
 
@@ -145,12 +148,59 @@ const MyDataPage = () => {
                         setSearch(val);
                         setPage(1);
                     }}
-                    onFilter={() => {}}
+                    onFilter={() => setIsFilterOpen(true)}
                     onMap={() => router.push('/v2/surveyor/data-saya/peta')}
                     pagination={pagination}
                     onPageChange={(p) => setPage(p)}
                 />
             </div>
+
+            {/* Filter Modal */}
+            <FilterModal 
+                isOpen={isFilterOpen}
+                onClose={() => setIsFilterOpen(false)}
+                initialFilters={filters}
+                onApply={(newFilters) => {
+                    setFilters(newFilters);
+                    setPage(1); // reset to page 1 on filter
+                    // TODO: integrate with fetchData
+                }}
+                fields={[
+                    {
+                        id: 'jenisUnsur',
+                        label: 'Jenis Unsur',
+                        options: [
+                            { value: 'gunung', label: 'Gunung' },
+                            { value: 'bukit', label: 'Bukit' },
+                            { value: 'pantai', label: 'Pantai' }
+                        ]
+                    },
+                    {
+                        id: 'provinsi',
+                        label: 'Provinsi',
+                        options: [
+                            { value: '32', label: 'Jawa Barat' },
+                            { value: '33', label: 'Jawa Tengah' }
+                        ]
+                    },
+                    {
+                        id: 'kabupaten',
+                        label: 'Kabupaten/ Kota',
+                        options: [
+                            { value: '3273', label: 'Kota Bandung' },
+                            { value: '3171', label: 'Jakarta Pusat' }
+                        ]
+                    },
+                    {
+                        id: 'status',
+                        label: 'Status',
+                        options: [
+                            { value: 'baku', label: 'Baku' },
+                            { value: 'pengajuan', label: 'Pengajuan' }
+                        ]
+                    }
+                ]}
+            />
         </SurveyorLayout>
     );
 };

@@ -41,7 +41,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             <div className="relative w-lg p-5 bg-white space-y-5 rounded-xl">
                 <button
                     onClick={onClose}
-                    className="absolute top-5 right-5 text-gray-400 hover:text-gray-600"
+                    className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
                     <X size={24} />
                 </button>

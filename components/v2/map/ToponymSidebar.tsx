@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { X, Loader2, Info, MapPin, Globe, History, Image as ImageIcon } from "lucide-react";
 import { useToponymDetail } from "@/hooks/useToponyms";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,6 +10,7 @@ import { Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+import ImageModal from "../modals/ImageModal";
 
 interface ToponymSidebarProps {
     toponymId: string | null;
@@ -24,6 +27,7 @@ const DetailItem = ({ label, value }: { label: string; value: string | React.Rea
 export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarProps) {
     const { data, isLoading, error } = useToponymDetail(toponymId);
     const toponym = data?.data;
+    const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
     return (
         <AnimatePresence>
@@ -40,13 +44,13 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                         <h2 className="text-base font-bold text-navy-900 truncate pr-4 w-full">
                             {isLoading ? (
                                 <div className="h-5 bg-gray-200 rounded-md w-3/4 animate-pulse"></div>
-                            ) : toponym?.local_name || "Detail Toponim"}
+                            ) : toponym?.map_name || "Detail Toponim"}
                         </h2>
                         <button
                             onClick={onClose}
-                            className="p-2 text-gray-500 hover:text-gray-900"
+                            className="p-2 text-gray-500 hover:text-gray-900 cursor-pointer"
                         >
-                            <X size={20} />
+                            <X size={20}/>
                         </button>
                     </div>
 
@@ -105,7 +109,8 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                                                     <img
                                                         src={photo.url}
                                                         alt={`${toponym.local_name} ${idx + 1}`}
-                                                        className="w-full h-full object-cover"
+                                                        className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition"
+                                                        onClick={() => setSelectedImageIndex(idx)}
                                                     />
                                                 </SwiperSlide>
                                             ))}
@@ -166,7 +171,7 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                                             <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100">
                                                 <DetailItem label="Asal Bahasa" value={toponym.language_origin} />
                                                 <DetailItem label="Arti Nama" value={
-                                                    <p className="text-xs leading-relaxed text-left">{toponym.name_meaning}</p>
+                                                    <p className="leading-relaxed text-right">{toponym.name_meaning}</p>
                                                 } />
                                             </div>
                                         </section>
@@ -179,11 +184,11 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                                             <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100">
                                                 <div className="py-2">
                                                     <span className="text-xs font-bold text-gray-400 uppercase block mb-2">Sejarah Nama</span>
-                                                    <p className="text-xs leading-relaxed text-navy-800">{toponym.name_history || "-"}</p>
+                                                    <p className="leading-relaxed text-navy-800">{toponym.name_history || "-"}</p>
                                                 </div>
                                                 <div className="py-2 border-t border-gray-100 mt-2">
                                                     <span className="text-xs font-bold text-gray-400 uppercase block mb-2">Catatan Tambahan</span>
-                                                    <p className="text-xs leading-relaxed text-navy-800">{toponym.notes || "-"}</p>
+                                                    <p className="leading-relaxed text-navy-800">{toponym.notes || "-"}</p>
                                                 </div>
                                             </div>
                                         </section>
@@ -196,6 +201,15 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                             </div>
                         ) : null}
                     </div>
+
+                    {/* Image Modal for Fullscreen View */}
+                    <ImageModal 
+                        isOpen={selectedImageIndex !== null} 
+                        onClose={() => setSelectedImageIndex(null)} 
+                        images={toponym?.photos?.map((p: any) => p.url) || []} 
+                        initialSlideIndex={selectedImageIndex || 0}
+                        altText={toponym?.map_name || toponym?.local_name || "Foto Objek"} 
+                    />
                 </motion.div>
             )}
         </AnimatePresence>

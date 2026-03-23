@@ -19,6 +19,7 @@ interface DataTableProps<TData> {
     showFilter?: boolean;
     showDownload?: boolean;
     showMap?: boolean;
+    initialSearch?: string;
     onSearch?: (value: string) => void;
     onFilter?: () => void;
     onDownload?: () => void;
@@ -43,6 +44,7 @@ export function DataTable<TData>({
     showFilter = true,
     showDownload = false,
     showMap = false,
+    initialSearch = "",
     onSearch,
     onFilter,
     onDownload,
@@ -50,7 +52,7 @@ export function DataTable<TData>({
     pagination,
     onPageChange,
 }: DataTableProps<TData>) {
-    const [searchValue, setSearchValue] = useState("");
+    const [searchValue, setSearchValue] = useState(initialSearch);
     const isFirstRender = React.useRef(true);
     const onSearchRef = React.useRef(onSearch);
 
@@ -58,6 +60,11 @@ export function DataTable<TData>({
     useEffect(() => {
         onSearchRef.current = onSearch;
     }, [onSearch]);
+
+    // Sync external search value changes (e.g., from URL params)
+    useEffect(() => {
+        setSearchValue(initialSearch);
+    }, [initialSearch]);
 
     // Only fire search when searchValue actually changes (and debounced)
     useEffect(() => {

@@ -12,6 +12,7 @@ export interface FilterField {
     label: string;
     placeholder?: string;
     options: { label: string; value: string }[];
+    searchable?: boolean;
 }
 
 interface FilterModalProps {
@@ -55,7 +56,7 @@ const FilterModal = ({ isOpen, onClose, onApply, initialFilters, fields }: Filte
 
                     <button
                         onClick={onClose}
-                        className="p-2 text-gray-500 hover:text-gray-900"
+                        className="p-2 text-gray-500 hover:text-gray-900 cursor-pointer"
                     >
                         <X size={20} />
                     </button>
@@ -70,6 +71,7 @@ const FilterModal = ({ isOpen, onClose, onApply, initialFilters, fields }: Filte
                             value={filters[field.id] || ''}
                             onChange={(val) => setFilters({ ...filters, [field.id]: val })}
                             options={field.options}
+                            searchable={field.searchable}
                         />
                     ))}
                 </div>

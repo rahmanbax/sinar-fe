@@ -4,7 +4,7 @@ import { Search, SlidersHorizontal, Plus, Minus, LocateFixed, Compass, Layers, X
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useSpatialToponyms, type SpatialToponym } from "@/hooks/useToponyms";
 import ToponymSidebar from "./ToponymSidebar";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 const big_office_coord = {
     longitude: 106.8467944,
@@ -59,6 +59,11 @@ const IndonesiaMap = ({
     const mapRef = useRef<MapRef>(null);
     const popupRef = useRef<HTMLDivElement>(null);
 
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const initialZoomDone = useRef(false);
+
     const initialViewState: ViewState = {
         longitude: big_office_coord.longitude,
         latitude: big_office_coord.latitude,
@@ -71,8 +76,8 @@ const IndonesiaMap = ({
     const [viewState, setViewState] = useState(initialViewState);
     const [mapStyle, setMapStyle] = useState(MapStyles[0])
     const [isStylesOpen, setIsStylesOpen] = useState(false);
-    const [selectedToponymId, setSelectedToponymId] = useState<string | null>(null);
-    
+    const [selectedToponymId, setSelectedToponymId] = useState<string | null>(searchParams.get('id') || null);
+
     // State for bounding box to trigger TanStack Query
     const [bounds, setBounds] = useState({
         min_lat: "",
@@ -117,29 +122,78 @@ const IndonesiaMap = ({
         });
     }
 
-    const updateBounds = () => {
-        const map = mapRef.current?.getMap();
-        if (!map) return;
+    const updateBounds = useMemo(() => {
+        let timer: NodeJS.Timeout;
+        return () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                const map = mapRef.current?.getMap();
+                if (!map) return;
 
-        const mapBounds = map.getBounds();
-        setBounds({
-            min_lat: mapBounds.getSouth().toString(),
-            max_lat: mapBounds.getNorth().toString(),
-            min_lng: mapBounds.getWest().toString(),
-            max_lng: mapBounds.getEast().toString()
-        });
-    };
+                const mapBounds = map.getBounds();
+                setBounds({
+                    min_lat: mapBounds.getSouth().toString(),
+                    max_lat: mapBounds.getNorth().toString(),
+                    min_lng: mapBounds.getWest().toString(),
+                    max_lng: mapBounds.getEast().toString()
+                });
+            }, 500); // 500ms debounce
+        };
+    }, []);
 
     const handleMarkerClick = (longitude: number, latitude: number, marker: SpatialToponym) => {
-        mapRef.current?.getMap().flyTo({
+        const currentZoom = mapRef.current?.getMap().getZoom() || 4.55;
+        const targetZoom = Math.max(currentZoom, 15);
+
+        mapRef.current?.getMap().easeTo({
             center: [longitude, latitude],
-            zoom: 14,
+            zoom: targetZoom,
             essential: true,
             duration: 1000
         });
         setSelectedToponymId(marker.id);
+
+        // Sync to URL
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('id', marker.id);
+        router.push(`${pathname}?${params.toString()}`);
+
         if (onMarkerClick) onMarkerClick(marker);
     }
+
+    const handleCloseSidebar = () => {
+        setSelectedToponymId(null);
+
+        // Remove from URL
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('id');
+        router.push(`${pathname}?${params.toString()}`);
+    }
+
+    // Zoom to marker on initial load if ID is in URL
+    useEffect(() => {
+        if (initialZoomDone.current) return;
+
+        const id = searchParams.get('id');
+        if (id && markers.length > 0) {
+            const marker = markers.find((m: SpatialToponym) => m.id === id);
+            if (marker) {
+                const currentZoom = mapRef.current?.getMap().getZoom() || 4.55;
+                const targetZoom = Math.max(currentZoom, 15);
+
+                mapRef.current?.getMap().easeTo({
+                    center: [marker.lng, marker.lat],
+                    zoom: targetZoom,
+                    essential: true,
+                    duration: 500
+                });
+                initialZoomDone.current = true;
+            }
+        } else if (markers.length > 0) {
+            // If markers have loaded but there's no ID, or we couldn't find the marker, mark initial load as done
+            initialZoomDone.current = true;
+        }
+    }, [searchParams, markers]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -296,6 +350,11 @@ const IndonesiaMap = ({
                     [91, -12],
                     [142, 12]
                 ]}
+                onClick={(e) => {
+                    if (selectedToponymId) {
+                        handleCloseSidebar();
+                    }
+                }}
             >
                 {markers.map((marker: SpatialToponym) => (
                     <Marker
@@ -313,13 +372,21 @@ const IndonesiaMap = ({
                         }}
                     >
                         <div className="group relative cursor-pointer">
-                            {/* Label on Hover */}
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white border border-gray-100 rounded shadow-md text-[10px] font-bold text-navy-600 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                            {/* Label on Hover or Active */}
+                            <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white rounded shadow-md text-xs font-bold whitespace-nowrap transition-opacity pointer-events-none z-50 ${
+                                selectedToponymId === marker.id 
+                                    ? 'opacity-100' 
+                                    : 'opacity-0 group-hover:opacity-100 border-gray-100'
+                            }`}>
                                 {marker.local_name || marker.map_name}
                             </div>
 
                             {/* Marker Icon */}
-                            <div className="text-navy-500 hover:scale-125 transition drop-shadow-sm">
+                            <div className={`transition drop-shadow-sm ${
+                                selectedToponymId === marker.id
+                                    ? 'text-navy-700 scale-125'
+                                    : 'text-navy-500 hover:scale-125'
+                            }`}>
                                 <MapPin size={24} />
                             </div>
                         </div>
@@ -340,9 +407,9 @@ const IndonesiaMap = ({
             </Map>
 
             {/* Toponym Detail Sidebar */}
-            <ToponymSidebar 
-                toponymId={selectedToponymId} 
-                onClose={() => setSelectedToponymId(null)} 
+            <ToponymSidebar
+                toponymId={selectedToponymId}
+                onClose={handleCloseSidebar}
             />
         </div>
     )

@@ -13,8 +13,8 @@ const PublicNavbar = () => {
   const navItems = [
     { label: 'Peta', href: '/v2' },
     { label: 'Nama Rupabumi', href: '/v2/pengumuman' },
-    { label: 'Gazeter', href: '#' },
-    { label: 'Bantuan', href: '#' },
+    { label: 'Gazeter', href: '/v2/gazeter' },
+    { label: 'Bantuan', href: '/v2/bantuan' },
   ]
 
   const toggleMenu = () => setIsOpen(!isOpen)
@@ -25,7 +25,7 @@ const PublicNavbar = () => {
     <>
       <nav className="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
         <div className="px-5 py-4">
-          <div className="flex justify-between items-center max-w-7xl mx-auto">
+          <div className="flex justify-between items-center">
             {/* Logo Section */}
             <div className="shrink-0 flex items-center gap-3">
               <Link href="/v2" className="transition-opacity">

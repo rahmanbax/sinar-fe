@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import SurveyorLayout from '@/components/v2/nav/SurveyorLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import FilterModal, { FilterState } from '@/components/v2/modals/FilterModal';
 import { Plus, SlidersHorizontal, Map as MapIcon, Edit, Trash2 } from 'lucide-react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
-import { useApiHandlerWithPagination, PaginationInfo } from '@/utils/apiHandler';
 import { useRouter } from 'next/navigation';
+import { getAccessToken } from '@/contexts/AuthContext';
+import { getToponyms } from '@/api/toponym';
 
 interface ToponymData {
     id: number | string;
@@ -47,50 +49,46 @@ const getStatusBadgeV2 = (status: string) => {
 
 const MyDataPage = () => {
     const router = useRouter();
-    const [loading, setLoading] = useState(false);
-    const [data, setData] = useState<ToponymData[]>([]);
     const [search, setSearch] = useState("");
     const [limit, setLimit] = useState(10);
     const [page, setPage] = useState(1);
-    const [pagination, setPagination] = useState<PaginationInfo | undefined>(undefined);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filters, setFilters] = useState<FilterState | undefined>();
 
-    const apiHandler = useApiHandlerWithPagination<any>({ setLoading, shouldHandleError: true });
+    const token = getAccessToken();
 
-    const fetchData = useCallback(async () => {
-        const queryParams = new URLSearchParams({
-            page: page.toString(),
-            per_page: limit.toString(),
-            ...(search ? { search } : {})
-        });
+    const { data: queryResult, isLoading: loading } = useQuery({
+        queryKey: ['survey-toponyms', page, limit, search, filters],
+        queryFn: async () => {
+            const queryParams: Record<string, string> = {
+                page: page.toString(),
+                per_page: limit.toString(),
+                ...(search ? { search } : {})
+            };
 
-        const result = await apiHandler("GET", `/survey/toponyms?${queryParams.toString()}`);
-        
-        if (result?.data && Array.isArray(result.data)) {
-            const mappedData = result.data.map((item: any, index: number) => ({
-                id: item.id,
-                no: (page - 1) * limit + (index + 1),
-                created_at: item.created_at ? new Date(item.created_at).toLocaleDateString("id-ID") : "-",
-                survey_at: item.survey_at ? new Date(item.survey_at).toLocaleDateString("id-ID") : "-",
-                element_type: item.element?.name ?? "-",
-                generic_element: item.generic_element || "-",
-                specific_element: item.specific_element || "-",
-                province: item.province?.name ?? "-",
-                regency: item.regency?.name ?? "-",
-                source: item.source || "-",
-                status: item.status || "pengajuan",
-            }));
-            setData(mappedData);
-            if (result.pagination) {
-                setPagination(result.pagination);
-            }
+            // TODO: Append actual filters to queryParams here if needed
+            
+            return await getToponyms(token, queryParams);
         }
-    }, [apiHandler, page, limit, search]);
+    });
 
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+    const data = queryResult?.data && Array.isArray(queryResult.data) 
+        ? queryResult.data.map((item: any, index: number) => ({
+            id: item.id,
+            no: (page - 1) * limit + (index + 1),
+            created_at: item.created_at ? new Date(item.created_at).toLocaleDateString("id-ID") : "-",
+            survey_at: item.survey_at ? new Date(item.survey_at).toLocaleDateString("id-ID") : "-",
+            element_type: item.element?.name ?? "-",
+            generic_element: item.generic_element || "-",
+            specific_element: item.specific_element || "-",
+            province: item.province?.name ?? "-",
+            regency: item.regency?.name ?? "-",
+            source: item.source || "-",
+            status: item.status || "pengajuan",
+        })) 
+        : [];
+
+    const pagination = queryResult?.pagination;
 
     const columns: ColumnDef<ToponymData>[] = [
         { header: "No", accessorKey: "no", className: "w-12 text-center" },
@@ -99,19 +97,19 @@ const MyDataPage = () => {
         { header: "Nama Lokal", accessorKey: "specific_element" },
         { header: "Wilayah", cell: (row) => `${row.regency}, ${row.province}`, className: "max-w-[200px] truncate" },
         { header: "Status", cell: (row) => getStatusBadgeV2(row.status) },
-        { 
-            header: "Aksi", 
+        {
+            header: "Aksi",
             className: "w-24 text-center",
             cell: (row) => (
                 <div className="flex items-center justify-center gap-2">
-                    <button 
+                    <button
                         onClick={() => router.push(`/v2/surveyor/data-saya/edit?id=${row.id}`)}
                         className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
                         title="Edit Data"
                     >
                         <Edit size={16} />
                     </button>
-                    <button 
+                    <button
                         className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                         title="Hapus Data"
                     >
@@ -136,27 +134,25 @@ const MyDataPage = () => {
                 />
             </div>
 
-            <div className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
-                <DataTable
-                    columns={columns}
-                    data={data}
-                    isLoading={loading}
-                    showSearch={true}
-                    showFilter={true}
-                    showMap={true}
-                    onSearch={(val) => {
-                        setSearch(val);
-                        setPage(1);
-                    }}
-                    onFilter={() => setIsFilterOpen(true)}
-                    onMap={() => router.push('/v2/surveyor/data-saya/peta')}
-                    pagination={pagination}
-                    onPageChange={(p) => setPage(p)}
-                />
-            </div>
+            <DataTable
+                columns={columns}
+                data={data}
+                isLoading={loading}
+                showSearch={true}
+                showFilter={true}
+                showMap={true}
+                onSearch={(val) => {
+                    setSearch(val);
+                    setPage(1);
+                }}
+                onFilter={() => setIsFilterOpen(true)}
+                onMap={() => router.push('/v2/surveyor/data-saya/peta')}
+                pagination={pagination}
+                onPageChange={(p) => setPage(p)}
+            />
 
             {/* Filter Modal */}
-            <FilterModal 
+            <FilterModal
                 isOpen={isFilterOpen}
                 onClose={() => setIsFilterOpen(false)}
                 initialFilters={filters}
@@ -169,6 +165,7 @@ const MyDataPage = () => {
                     {
                         id: 'jenisUnsur',
                         label: 'Jenis Unsur',
+                        searchable: true,
                         options: [
                             { value: 'gunung', label: 'Gunung' },
                             { value: 'bukit', label: 'Bukit' },
@@ -178,6 +175,7 @@ const MyDataPage = () => {
                     {
                         id: 'provinsi',
                         label: 'Provinsi',
+                        searchable: true,
                         options: [
                             { value: '32', label: 'Jawa Barat' },
                             { value: '33', label: 'Jawa Tengah' }
@@ -186,6 +184,7 @@ const MyDataPage = () => {
                     {
                         id: 'kabupaten',
                         label: 'Kabupaten/ Kota',
+                        searchable: true,
                         options: [
                             { value: '3273', label: 'Kota Bandung' },
                             { value: '3171', label: 'Jakarta Pusat' }

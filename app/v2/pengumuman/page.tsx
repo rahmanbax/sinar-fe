@@ -7,6 +7,8 @@ import { Eye, Download, Search } from 'lucide-react'
 import { useState } from 'react'
 import dayjs from 'dayjs'
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
+import Link from 'next/link';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 // Table Columns Definition
 const generateColumns = (currentPage: number, perPage: number = 10): ColumnDef<PublicToponym>[] => [
@@ -34,11 +36,11 @@ const generateColumns = (currentPage: number, perPage: number = 10): ColumnDef<P
     },
     {
         header: "Aksi",
-        cell: () => (
+        cell: (row) => (
             <div className="flex items-center justify-center gap-2">
-                <button className="p-2 text-navy-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Lihat Detail">
+                <Link href={`/v2?id=${row.id}`} className="p-2 block hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Lihat Peta">
                     <Search size={16} strokeWidth={2.5} />
-                </button>
+                </Link>
             </div>
         ),
         className: "text-center",
@@ -46,8 +48,24 @@ const generateColumns = (currentPage: number, perPage: number = 10): ColumnDef<P
 ];
 
 const PengumumanPage = () => {
-    const [page, setPage] = useState(1);
-    const [search, setSearch] = useState("");
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const page = Number(searchParams.get('page')) || 1;
+    const search = searchParams.get('search') || "";
+
+    const updateParams = (newPage: number, newSearch: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        
+        if (newPage > 1) params.set('page', newPage.toString());
+        else params.delete('page');
+
+        if (newSearch) params.set('search', newSearch);
+        else params.delete('search');
+
+        router.push(`${pathname}?${params.toString()}`);
+    };
 
     // Fetch data using the hook
     const { data: response, isLoading } = usePublicToponyms({
@@ -58,12 +76,12 @@ const PengumumanPage = () => {
 
     return (
         <PublicLayout>
-            <div className="h-full bg-gray-50/30 pt-12 pb-24 overflow-y-auto">
+            <div className="h-full py-12 overflow-y-auto">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-navy-900 mb-2">Nama Rupabumi</h1>
-                        <p className="text-gray-500 text-sm">Daftar nama rupabumi yang terdata dalam sistem informasi.</p>
+                    <div className="mb-8 text-center">
+                        <h1 className="text-3xl font-bold mb-2">Pengumuman Nama Rupabumi</h1>
+                        <p className="text-gray-500 max-w-xl mx-auto">Pantau perkembangan terkini proses pengumpulan, penelaahan, hingga persetujuan dan pembakuan nama rupabumi di seluruh wilayah Indonesia.</p>
                     </div>
 
                     {/* Table Container */}
@@ -72,11 +90,13 @@ const PengumumanPage = () => {
                         data={response?.data || []}
                         isLoading={isLoading}
                         pagination={response?.pagination}
-                        onPageChange={(newPage) => setPage(newPage)}
+                        onPageChange={(newPage) => updateParams(newPage, search)}
                         showDownload={true}
+                        initialSearch={search}
                         onSearch={(v) => {
-                            setSearch(v);
-                            setPage(1); // reset page on search
+                            if (v !== search) {
+                                updateParams(1, v);
+                            }
                         }}
                     />
                 </div>

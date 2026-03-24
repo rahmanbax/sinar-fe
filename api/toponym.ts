@@ -56,3 +56,29 @@ export const getToponymsByBoundingBox = async (token: string | null, params: Rec
     });
     return res.json();
 };
+
+export const getSpatialToponyms = async (params: Record<string, string | number>) => {
+    const query = new URLSearchParams(params as any).toString();
+    const res = await fetch(`${API_URL}/toponyms/spatial/bounding-box?${query}`, {
+        signal: AbortSignal.timeout(10000) // 10 seconds timeout
+    });
+    if (!res.ok) throw new Error("Failed to fetch spatial toponyms");
+    return res.json();
+};
+
+export const getToponymDetail = async (id: string) => {
+    const res = await fetch(`${API_URL}/toponyms/${id}`, {
+        signal: AbortSignal.timeout(10000) // 10 seconds timeout
+    });
+    if (!res.ok) throw new Error("Failed to fetch toponym detail");
+    return res.json();
+};
+
+export const getPublicToponyms = async (params: Record<string, string | number>) => {
+    const query = new URLSearchParams(params as any).toString();
+    const res = await fetch(`${API_URL}/toponyms/?${query}`, {
+        signal: AbortSignal.timeout(10000) // 10 seconds timeout
+    });
+    if (!res.ok) throw new Error("Failed to fetch public toponyms");
+    return res.json();
+};

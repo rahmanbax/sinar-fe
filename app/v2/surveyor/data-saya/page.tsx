@@ -198,12 +198,14 @@ const MyDataPage = () => {
                 isLoading={loading}
                 showSearch={true}
                 showFilter={true}
+                showDownload={true}
                 showMap={true}
                 onSearch={(val) => {
                     setSearch(val);
                     setPage(1);
                 }}
                 onFilter={() => setIsFilterOpen(true)}
+                onDownload={() => alert("Fitur unduh segera hadir!")}
                 onMap={() => router.push('/v2/surveyor/data-saya/peta')}
                 pagination={pagination}
                 onPageChange={(p) => setPage(p)}

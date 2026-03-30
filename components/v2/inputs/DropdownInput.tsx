@@ -30,6 +30,7 @@ const DropdownInput = ({
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLDivElement>(null);
 
     // Filter options based on search query
     const filteredOptions = options.filter(opt => 
@@ -62,7 +63,21 @@ const DropdownInput = ({
             <div className="relative">
                 {/* Custom Trigger */}
                 <div 
-                    onClick={() => setIsOpen(!isOpen)}
+                    ref={triggerRef}
+                    onClick={() => {
+                        const nextOpen = !isOpen;
+                        setIsOpen(nextOpen);
+                        
+                        // Auto-scroll when opening to ensure dropdown menu is visible
+                        if (nextOpen && triggerRef.current) {
+                            setTimeout(() => {
+                                triggerRef.current?.scrollIntoView({ 
+                                    behavior: 'smooth', 
+                                    block: 'center' 
+                                });
+                            }, 50);
+                        }
+                    }}
                     className={`w-full cursor-pointer bg-white border border-gray-200 py-2.5 px-3 rounded-lg flex items-center justify-between focus-within:ring-2 focus-within:ring-navy-500/20 focus-within:border-navy-600 transition-all select-none ${
                         !value ? 'text-gray-500' : 'text-gray-900'
                     }`}

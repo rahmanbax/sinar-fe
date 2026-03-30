@@ -8,8 +8,11 @@ import FilterModal, { FilterState } from '@/components/v2/modals/FilterModal';
 import { Plus, SlidersHorizontal, Map as MapIcon, Edit, Trash2 } from 'lucide-react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { useRouter } from 'next/navigation';
-import { getAccessToken } from '@/contexts/AuthContext';
 import { getToponyms } from '@/api/toponym';
+import { getRegions } from '@/api/region';
+import { getElements } from '@/api/classification';
+import { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ToponymData {
     id: number | string;
@@ -54,19 +57,78 @@ const MyDataPage = () => {
     const [page, setPage] = useState(1);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filters, setFilters] = useState<FilterState | undefined>();
+    const [activeProvinceForFilter, setActiveProvinceForFilter] = useState<string | "">("");
 
-    const token = getAccessToken();
+    // Options for filters
+    const [provinces, setProvinces] = useState<{label: string, value: string}[]>([]);
+    const [cities, setCities] = useState<{label: string, value: string}[]>([]);
+    const [elements, setElements] = useState<{label: string, value: string}[]>([]);
+
+    const { token } = useAuth();
+
+    // Fetch initial filter options
+    useEffect(() => {
+        if (!token) return;
+        
+        // Fetch Provinces
+        getRegions({ level: 'PROVINCE', token }).then(res => {
+            const provinceData = res?.data?.results || res?.results || res?.data || (Array.isArray(res) ? res : []);
+            if (Array.isArray(provinceData)) {
+                setProvinces(provinceData.map((p: any, index: number) => ({ 
+                    label: p.name || p.nama || p.label || "Tanpa Nama", 
+                    value: (p.id?.toString() || p.code?.toString() || p.value?.toString() || `prov-${index}`),
+                    path: p.path 
+                })));
+            }
+        });
+
+        // Fetch Elements
+        getElements(token).then(res => {
+            const elementsData = res?.data?.results || res?.data || (Array.isArray(res) ? res : []);
+            if (Array.isArray(elementsData)) {
+                setElements(elementsData.map((e: any, index: number) => ({ 
+                    label: e.name || e.nama || e.label || "Tanpa Nama", 
+                    value: (e.code || e.id || e.value || `ele-${index}`).toString() 
+                })));
+            }
+        });
+    }, [token]);
+
+    useEffect(() => {
+        const provinceId = activeProvinceForFilter || filters?.provinsi;
+        
+        if (!token || !provinceId) {
+            setCities([]);
+            return;
+        }
+
+        // Find the path for this province ID to get cities
+        const selectedProv = provinces.find(p => p.value === provinceId);
+        const parentPath = (selectedProv as any)?.path || provinceId;
+
+        getRegions({ level: 'CITY', parent: parentPath, token }).then(res => {
+            const cityData = res?.data?.results || res?.results || res?.data || (Array.isArray(res) ? res : []);
+            if (Array.isArray(cityData)) {
+                setCities(cityData.map((c: any, index: number) => ({ 
+                    label: c.name || c.nama || c.label || "Tanpa Nama", 
+                    value: (c.id?.toString() || c.code?.toString() || c.value?.toString() || `city-${index}`)
+                })));
+            }
+        });
+    }, [token, filters?.provinsi, activeProvinceForFilter, provinces]);
 
     const { data: queryResult, isLoading: loading } = useQuery({
-        queryKey: ['survey-toponyms', page, limit, search, filters],
+        queryKey: ['survey-toponyms', page, limit, search, filters, token],
         queryFn: async () => {
             const queryParams: Record<string, string> = {
                 page: page.toString(),
                 per_page: limit.toString(),
-                ...(search ? { search } : {})
+                ...(search ? { search } : {}),
+                ...(filters?.provinsi ? { province_id: filters.provinsi } : {}),
+                ...(filters?.kabupaten ? { regency_id: filters.kabupaten } : {}),
+                ...(filters?.jenisUnsur ? { element_id: filters.jenisUnsur } : {}),
+                ...(filters?.status ? { status: filters.status } : {}),
             };
-
-            // TODO: Append actual filters to queryParams here if needed
             
             return await getToponyms(token, queryParams);
         }
@@ -151,51 +213,56 @@ const MyDataPage = () => {
                 onPageChange={(p) => setPage(p)}
             />
 
-            {/* Filter Modal */}
             <FilterModal
                 isOpen={isFilterOpen}
-                onClose={() => setIsFilterOpen(false)}
+                onClose={() => {
+                    setIsFilterOpen(false);
+                    setActiveProvinceForFilter(""); // clear draft state on close
+                }}
                 initialFilters={filters}
+                onChange={(newFilters) => {
+                    if (newFilters.provinsi !== activeProvinceForFilter) {
+                        setActiveProvinceForFilter(newFilters.provinsi || "");
+                    }
+                }}
                 onApply={(newFilters) => {
                     setFilters(newFilters);
-                    setPage(1); // reset to page 1 on filter
-                    // TODO: integrate with fetchData
+                    setPage(1); 
+                    setIsFilterOpen(false);
                 }}
                 fields={[
                     {
                         id: 'jenisUnsur',
                         label: 'Jenis Unsur',
                         searchable: true,
-                        options: [
-                            { value: 'gunung', label: 'Gunung' },
-                            { value: 'bukit', label: 'Bukit' },
-                            { value: 'pantai', label: 'Pantai' }
-                        ]
+                        options: elements,
+                        placeholder: 'Jenis Unsur'
                     },
                     {
                         id: 'provinsi',
                         label: 'Provinsi',
                         searchable: true,
-                        options: [
-                            { value: '32', label: 'Jawa Barat' },
-                            { value: '33', label: 'Jawa Tengah' }
-                        ]
+                        options: provinces,
+                        placeholder: 'Provinsi'
                     },
                     {
                         id: 'kabupaten',
                         label: 'Kabupaten/ Kota',
                         searchable: true,
-                        options: [
-                            { value: '3273', label: 'Kota Bandung' },
-                            { value: '3171', label: 'Jakarta Pusat' }
-                        ]
+                        options: cities,
+                        placeholder: !(activeProvinceForFilter || filters?.provinsi) ? "Kabupaten/ Kota" : "Kabupaten/ Kota"
                     },
                     {
                         id: 'status',
                         label: 'Status',
                         options: [
                             { value: 'baku', label: 'Baku' },
-                            { value: 'pengajuan', label: 'Pengajuan' }
+                            { value: 'pengajuan', label: 'Pengajuan' },
+                            { value: 'data survei', label: 'Data Survei' },
+                            { value: 'penelaahan kabupaten/kota', label: 'Penelaahan Kab/Kota' },
+                            { value: 'penelaahan provinsi', label: 'Penelaahan Provinsi' },
+                            { value: 'penelaahan pusat', label: 'Penelaahan Pusat' },
+                            { value: 'penetapan', label: 'Penetapan' },
                         ]
                     }
                 ]}

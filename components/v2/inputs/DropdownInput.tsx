@@ -30,6 +30,7 @@ const DropdownInput = ({
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLDivElement>(null);
 
     // Filter options based on search query
     const filteredOptions = options.filter(opt =>

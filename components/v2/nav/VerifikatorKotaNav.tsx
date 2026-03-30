@@ -13,12 +13,12 @@ const navItems = [
         icon: LayoutGrid,
     },
     {
-        name: 'Data Saya',
+        name: 'Data Penelaahan',
         href: '/v2/verifikator-kota/data-penelaahan',
         icon: Database,
     },
     {
-        name: 'Penyampaian Data',
+        name: 'Data Rekomendasi',
         href: '/v2/verifikator-kota/data-rekomendasi',
         icon: Database,
     },
@@ -51,7 +51,10 @@ const VerifikatorKotaNav = () => {
             {/* Navigation Links */}
             <nav className="flex flex-col gap-2 m-4 space-y-1">
                 {navItems.map((item) => {
-                    const isActive = pathname === item.href || (item.href !== '/v2/surveyor' && pathname.startsWith(item.href));
+                    // Logic to prevent dashboard showing as active on all sub-pages
+                    const isActive = item.href === '/v2/verifikator-kota' 
+                        ? pathname === item.href 
+                        : pathname.startsWith(item.href);
                     const Icon = item.icon;
 
                     return (

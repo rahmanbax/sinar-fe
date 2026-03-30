@@ -11,7 +11,7 @@ type AuthModalProps = {
 
 const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     const [isRegistering, setIsRegistering] = useState(false)
-    
+
     // Login states
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
@@ -95,7 +95,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                             />
                             <div className='text-center text-gray-600'>
                                 Sudah Punya Akun? {' '}
-                                <button 
+                                <button
                                     onClick={toggleMode}
                                     className='font-semibold text-navy-500 hover:text-navy-500 cursor-pointer'
                                 >
@@ -136,7 +136,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                             />
                             <div className='text-center text-gray-600'>
                                 Tidak Punya Akun? {' '}
-                                <button 
+                                <button
                                     onClick={toggleMode}
                                     className='font-semibold text-navy-500 hover:text-navy-500 cursor-pointer'
                                 >

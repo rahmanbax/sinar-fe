@@ -13,12 +13,12 @@ const navItems = [
         icon: LayoutGrid,
     },
     {
-        name: 'Data Saya',
+        name: 'Data Penelaahan',
         href: '/v2/verifikator-kota/data-penelaahan',
         icon: Database,
     },
     {
-        name: 'Penyampaian Data',
+        name: 'Data Rekomendasi',
         href: '/v2/verifikator-kota/data-rekomendasi',
         icon: Database,
     },

@@ -28,7 +28,7 @@ const PublicNavbar = () => {
           <div className="flex justify-between items-center">
             {/* Logo Section */}
             <div className="shrink-0 flex items-center gap-3">
-              <Link href="/v2" className="transition-opacity">
+              <a href="/v2" className="transition-opacity">
                 <Image
                   src="/sinar-logo.png"
                   alt="SINAR Logo"
@@ -36,7 +36,7 @@ const PublicNavbar = () => {
                   height={38}
                   className="object-contain"
                 />
-              </Link>
+              </a>
             </div>
 
             {/* Desktop Navigation Links */}
@@ -108,9 +108,9 @@ const PublicNavbar = () => {
         )}
       </nav>
 
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={closeAuthModal} 
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
       />
     </>
   )

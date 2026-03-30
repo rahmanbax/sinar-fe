@@ -18,12 +18,12 @@ interface DropdownInputProps {
     searchable?: boolean;
 }
 
-const DropdownInput = ({ 
-    label, 
-    value, 
-    onChange, 
-    options, 
-    placeholder, 
+const DropdownInput = ({
+    label,
+    value,
+    onChange,
+    options,
+    placeholder,
     className = "",
     searchable = false
 }: DropdownInputProps) => {
@@ -33,7 +33,7 @@ const DropdownInput = ({
     const triggerRef = useRef<HTMLDivElement>(null);
 
     // Filter options based on search query
-    const filteredOptions = options.filter(opt => 
+    const filteredOptions = options.filter(opt =>
         opt.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -58,31 +58,16 @@ const DropdownInput = ({
 
     return (
         <div className={`flex flex-col gap-2 ${className}`} ref={dropdownRef}>
-            {label && <label className="text-sm font-semibold text-gray-900">{label}</label>}
-            
+            {label && <label className="block text-sm font-semibold text-black">{label}</label>}
+
             <div className="relative">
                 {/* Custom Trigger */}
-                <div 
-                    ref={triggerRef}
-                    onClick={() => {
-                        const nextOpen = !isOpen;
-                        setIsOpen(nextOpen);
-                        
-                        // Auto-scroll when opening to ensure dropdown menu is visible
-                        if (nextOpen && triggerRef.current) {
-                            setTimeout(() => {
-                                triggerRef.current?.scrollIntoView({ 
-                                    behavior: 'smooth', 
-                                    block: 'center' 
-                                });
-                            }, 50);
-                        }
-                    }}
-                    className={`w-full cursor-pointer bg-white border border-gray-200 py-2.5 px-3 rounded-lg flex items-center justify-between focus-within:ring-2 focus-within:ring-navy-500/20 focus-within:border-navy-600 transition-all select-none ${
-                        !value ? 'text-gray-500' : 'text-gray-900'
-                    }`}
+                <div
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-200 focus:border-transparent flex items-center justify-between focus-within:ring-2 focus-within:ring-navy-500 focus-within:border-navy-500 transition-all select-none ${!value ? 'text-gray-500' : 'text-black'
+                        }`}
                 >
-                    <span className="truncate text-sm">
+                    <span className="truncate">
                         {selectedOption ? selectedOption.label : (placeholder || "Pilih opsi...")}
                     </span>
                     <ChevronDown size={18} strokeWidth={2} className={`text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -90,7 +75,7 @@ const DropdownInput = ({
 
                 {/* Dropdown Menu */}
                 {isOpen && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden flex flex-col">
+                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden flex flex-col">
                         {searchable && (
                             <div className="p-2 border-b border-gray-200 flex items-center gap-2 cursor-text" onClick={(e) => e.stopPropagation()}>
                                 <Search size={14} className="text-gray-400 shrink-0 ml-1" />
@@ -104,20 +89,19 @@ const DropdownInput = ({
                                 />
                             </div>
                         )}
-                        
+
                         <div className="max-h-60 overflow-y-auto custom-scrollbar">
                             {filteredOptions.length > 0 ? (
                                 filteredOptions.map((opt) => (
-                                    <div 
+                                    <div
                                         key={opt.value}
                                         onClick={() => {
                                             onChange(opt.value);
                                             setIsOpen(false);
                                             setSearchQuery("");
                                         }}
-                                        className={`px-3 py-2.5 text-sm cursor-pointer hover:bg-gray-100 ${
-                                            value === opt.value ? 'bg-gray-100' : 'text-gray-500'
-                                        }`}
+                                        className={`p-3 cursor-pointer hover:bg-gray-100 ${value === opt.value ? 'bg-gray-100 text-black' : 'text-gray-600'
+                                            }`}
                                     >
                                         {opt.label}
                                     </div>
@@ -131,9 +115,9 @@ const DropdownInput = ({
                     </div>
                 )}
             </div>
-            
+
             {/* Native Select Fallback (Hidden) */}
-            <select 
+            <select
                 className="hidden"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}

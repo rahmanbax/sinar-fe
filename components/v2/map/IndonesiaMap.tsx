@@ -326,7 +326,7 @@ const IndonesiaMap = ({
                                         </div>
                                         <div className="flex flex-col items-start">
                                             <span className="text-sm font-semibold">{item.label}</span>
-                                            <span className="text-[10px] text-gray-400">{item.abbrv}</span>
+                                            {/* <span className="text-[10px] text-gray-400">{item.abbrv}</span> */}
                                         </div>
                                     </button>
                                 ))}
@@ -373,20 +373,19 @@ const IndonesiaMap = ({
                     >
                         <div className="group relative cursor-pointer">
                             {/* Label on Hover or Active */}
-                            <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white rounded shadow-md text-xs font-bold whitespace-nowrap transition-opacity pointer-events-none z-50 ${
-                                selectedToponymId === marker.id 
-                                    ? 'opacity-100' 
-                                    : 'opacity-0 group-hover:opacity-100 border-gray-100'
-                            }`}>
+                            <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white rounded shadow-md text-xs font-bold whitespace-nowrap transition-opacity pointer-events-none z-50 ${selectedToponymId === marker.id
+                                ? 'opacity-100'
+                                : 'opacity-0 group-hover:opacity-100 border-gray-100'
+                                }`}>
                                 {marker.local_name || marker.map_name}
                             </div>
 
                             {/* Marker Icon */}
-                            <div className={`transition drop-shadow-sm ${
-                                selectedToponymId === marker.id
-                                    ? 'text-navy-700 scale-125'
-                                    : 'text-navy-500 hover:scale-125'
-                            }`}>
+                            <div className={`transition drop-shadow-sm ${mapStyle.id === 'satellite' || mapStyle.id === 'aerial' ? 'text-white drop-shadow-sm' : 'text-navy-500'
+                                } ${selectedToponymId === marker.id
+                                    ? 'scale-125'
+                                    : 'hover:scale-125'
+                                }`}>
                                 <MapPin size={24} />
                             </div>
                         </div>

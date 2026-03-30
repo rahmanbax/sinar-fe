@@ -27,7 +27,7 @@ const PasswordInput = ({ id, label = "Password", value, onChange, required }: Pa
                     onChange={onChange}
                     name={id}
                     placeholder="Masukkan Password"
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-200 focus:border-transparent transition-all placeholder:text-gray-400 pr-12`}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-300 focus:border-transparent transition-all placeholder:text-gray-400 pr-12`}
                     required={required}
                 />
                 <button

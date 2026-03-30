@@ -50,7 +50,7 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                             onClick={onClose}
                             className="p-2 text-gray-500 hover:text-gray-900 cursor-pointer"
                         >
-                            <X size={20}/>
+                            <X size={20} />
                         </button>
                     </div>
 
@@ -59,7 +59,7 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                             <div className="flex flex-col w-full animate-pulse p-5 gap-6">
                                 {/* Photo Skeleton */}
                                 <div className="w-full h-48 bg-gray-200 rounded-xl"></div>
-                                
+
                                 {/* Section General Info Skeleton */}
                                 <div className="space-y-3">
                                     <div className="h-3 bg-gray-200 rounded-md w-1/3 mb-4"></div>
@@ -69,7 +69,7 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                                         <div className="flex justify-between"><div className="h-3 bg-gray-200 rounded-md w-1/4"></div><div className="h-3 bg-gray-300 rounded-md w-1/2"></div></div>
                                     </div>
                                 </div>
-                                
+
                                 {/* Section Geography Skeleton */}
                                 <div className="space-y-3">
                                     <div className="h-3 bg-gray-200 rounded-md w-2/5 mb-4"></div>
@@ -203,12 +203,12 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                     </div>
 
                     {/* Image Modal for Fullscreen View */}
-                    <ImageModal 
-                        isOpen={selectedImageIndex !== null} 
-                        onClose={() => setSelectedImageIndex(null)} 
-                        images={toponym?.photos?.map((p: any) => p.url) || []} 
+                    <ImageModal
+                        isOpen={selectedImageIndex !== null}
+                        onClose={() => setSelectedImageIndex(null)}
+                        images={toponym?.photos?.map((p: any) => p.url) || []}
                         initialSlideIndex={selectedImageIndex || 0}
-                        altText={toponym?.map_name || toponym?.local_name || "Foto Objek"} 
+                        altText={toponym?.map_name || toponym?.local_name || "Foto Objek"}
                     />
                 </motion.div>
             )}

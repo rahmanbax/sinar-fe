@@ -130,12 +130,14 @@ const MyDataPage = () => {
                 ...(filters?.jenisUnsur ? { element_id: filters.jenisUnsur } : {}),
                 ...(filters?.status ? { status: filters.status } : {}),
             };
-            
+
+            // TODO: Append actual filters to queryParams here if needed
+
             return await getToponyms(token, queryParams);
         }
     });
 
-    const data = queryResult?.data && Array.isArray(queryResult.data) 
+    const data = queryResult?.data && Array.isArray(queryResult.data)
         ? queryResult.data.map((item: any, index: number) => ({
             id: item.id,
             no: (page - 1) * limit + (index + 1),
@@ -148,7 +150,7 @@ const MyDataPage = () => {
             regency: item.regency?.name ?? "-",
             source: item.source || "-",
             status: item.status || "pengajuan",
-        })) 
+        }))
         : [];
 
     const pagination = queryResult?.pagination;

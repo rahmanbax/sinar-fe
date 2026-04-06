@@ -50,7 +50,7 @@ const FilterModal = ({ isOpen, onClose, onApply, initialFilters, fields }: Filte
             ></div>
 
             {/* Modal Content */}
-            <div className="relative bg-white rounded-2xl w-full max-w-sm p-5 space-y-5">
+            <div className="relative bg-white rounded-lg w-full max-w-sm p-5 space-y-5">
                 <div className='flex items-center justify-between'>
                     <h2 className="text-xl font-bold text-gray-900">Filter</h2>
 

@@ -1,3 +1,5 @@
+import AccordionComponent from '@/components/v2/accordion/AccordionComponent'
+import GazeterCard from '@/components/v2/card/GazeterCard'
 import PublicLayout from '@/components/v2/nav/PublicLayout'
 import React from 'react'
 
@@ -11,6 +13,13 @@ const GazeterPage = () => {
             <h1 className="text-3xl font-bold mb-2">Gazeter Republik Indonesia</h1>
             <p className="text-gray-500 max-w-xl mx-auto">Direktori geografis resmi yang memuat profil, letak koordinat, dan rekam jejak historis seluruh entitas rupabumi yang telah dibakukan di Indonesia.</p>
           </div>
+
+          <AccordionComponent title="Gazeter Republik Indonesia 2024">
+            <div className='flex flex-wrap gap-6'>
+              <GazeterCard src="/gazeter-cover.png" altName="GRI Edisi 2 Tahun 2025" title="GRI Edisi 2 Tahun 2025" />
+              <GazeterCard src="/gazeter-cover.png" altName="GRI Edisi 1 Tahun 2025" title="GRI Edisi 1 Tahun 2025" />
+            </div>
+          </AccordionComponent>
 
 
         </div>

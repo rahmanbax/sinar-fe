@@ -4,6 +4,7 @@ import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import VerifikatorKotaLayout from '@/components/v2/nav/VerifikatorKotaLayout'
 import { Database, MapPin, Plus } from 'lucide-react';
 import React from 'react'
+import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap';
 
 const VerifikatorKotaPage = () => {
     return (
@@ -81,11 +82,7 @@ const VerifikatorKotaPage = () => {
 
                 {/* Map View */}
                 <div className="bg-gray-100 rounded-xl border border-gray-200 overflow-hidden min-h-[350px] relative">
-                    <iframe
-                        title="Peta Persebaran"
-                        src="https://www.openstreetmap.org/export/embed.html?bbox=95.00976562500001%2C-11.178401873711785%2C141.06445312500003%2C6.227933930268688&amp;layer=mapnik"
-                        className="w-full h-full absolute inset-0 border-0"
-                    ></iframe>
+                    <MiniIndonesiaMap />
                 </div>
             </div>
         </VerifikatorKotaLayout>

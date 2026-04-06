@@ -19,19 +19,20 @@ interface FilterModalProps {
     isOpen: boolean;
     onClose: () => void;
     onApply?: (filters: FilterState) => void;
-    onChange?: (filters: FilterState) => void;
     initialFilters?: FilterState;
     fields: FilterField[];
 }
 
-const FilterModal = ({ isOpen, onClose, onApply, onChange, initialFilters, fields }: FilterModalProps) => {
+const FilterModal = ({ isOpen, onClose, onApply, initialFilters, fields }: FilterModalProps) => {
     const [filters, setFilters] = useState<FilterState>(initialFilters || {});
 
     useEffect(() => {
-        if (isOpen) {
-            setFilters(initialFilters || {});
+        if (isOpen && initialFilters) {
+            setFilters(initialFilters);
         }
     }, [isOpen, initialFilters]);
+
+    if (!isOpen) return null;
 
     const handleApply = () => {
         if (onApply) {
@@ -40,42 +41,35 @@ const FilterModal = ({ isOpen, onClose, onApply, onChange, initialFilters, field
         onClose();
     };
 
-    const handleReset = () => {
-        setFilters({});
-    };
-
     return (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${!isOpen && 'hidden'}`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            <div
+                className="absolute inset-0 bg-black/40"
                 onClick={onClose}
             ></div>
 
             {/* Modal Content */}
-            <div className="relative bg-white rounded-2xl w-full max-w-md p-6 shadow-xl flex flex-col">
-                <div className='flex items-center justify-between mb-6'>
+            <div className="relative bg-white rounded-lg w-full max-w-sm p-5 space-y-5">
+                <div className='flex items-center justify-between'>
                     <h2 className="text-xl font-bold text-gray-900">Filter</h2>
+
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-gray-500 hover:text-gray-900 cursor-pointer"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
-                <div className="space-y-5 max-h-[60vh] overflow-y-auto px-1 -mx-1 custom-scrollbar">
+                <div className="space-y-4">
                     {fields.map((field) => (
                         <DropdownInput
                             key={field.id}
                             label={field.label}
                             placeholder={field.placeholder || field.label}
                             value={filters[field.id] || ''}
-                            onChange={(val) => {
-                                const newFilters = { ...filters, [field.id]: val };
-                                
-                                // Reset dependent filters if province changes
-                                if (field.id === 'provinsi') {
-                                    newFilters.kabupaten = '';
-                                }
-                                
-                                setFilters(newFilters);
-                                if (onChange) onChange(newFilters);
-                            }}
+                            onChange={(val) => setFilters({ ...filters, [field.id]: val })}
                             options={field.options}
                             searchable={field.searchable}
                         />
@@ -83,17 +77,17 @@ const FilterModal = ({ isOpen, onClose, onApply, onChange, initialFilters, field
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-4 mt-8">
+                <div className="flex gap-4 mt-2">
                     <ButtonComponent
                         label="Batalkan"
                         onClick={onClose}
                         secondary
-                        className='flex-1 justify-center'
+                        className='w-full'
                     />
                     <ButtonComponent
                         label="Terapkan"
                         onClick={handleApply}
-                        className='flex-1 justify-center'
+                        className='w-full'
                     />
                 </div>
             </div>

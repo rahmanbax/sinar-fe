@@ -13,6 +13,7 @@ import { getRegions } from '@/api/region';
 import { getElements } from '@/api/classification';
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import MapModal from '@/components/v2/modals/MapModal';
 
 interface ToponymData {
     id: number | string;
@@ -57,6 +58,7 @@ const MyDataPage = () => {
     const [limit, setLimit] = useState(10);
     const [page, setPage] = useState(1);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [isMapOpen, setIsMapOpen] = useState(false);
     const [filters, setFilters] = useState<FilterState | undefined>();
     const [activeProvinceForFilter, setActiveProvinceForFilter] = useState<string | "">("");
 
@@ -208,7 +210,7 @@ const MyDataPage = () => {
                 }}
                 onFilter={() => setIsFilterOpen(true)}
                 onDownload={() => alert("Fitur unduh segera hadir!")}
-                onMap={() => router.push('/v2/surveyor/data-saya/peta')}
+                onMap={() => setIsMapOpen(true)}
                 pagination={pagination}
                 onPageChange={(p) => setPage(p)}
             />
@@ -220,11 +222,6 @@ const MyDataPage = () => {
                     setActiveProvinceForFilter(""); // clear draft state on close
                 }}
                 initialFilters={filters}
-                onChange={(newFilters) => {
-                    if (newFilters.provinsi !== activeProvinceForFilter) {
-                        setActiveProvinceForFilter(newFilters.provinsi || "");
-                    }
-                }}
                 onApply={(newFilters) => {
                     setFilters(newFilters);
                     setPage(1); 
@@ -266,6 +263,11 @@ const MyDataPage = () => {
                         ]
                     }
                 ]}
+            />
+
+            <MapModal
+                isOpen={isMapOpen}
+                onClose={() => setIsMapOpen(false)}
             />
         </SurveyorLayout>
     );

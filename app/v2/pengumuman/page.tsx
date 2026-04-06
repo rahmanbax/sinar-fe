@@ -1,7 +1,7 @@
 "use client";
 
 import PublicLayout from '@/components/v2/nav/PublicLayout'
-import React from 'react'
+import React, { Suspense } from 'react'
 import { usePublicToponyms, PublicToponym } from '@/hooks/useToponyms'
 import { Eye, Download, Search } from 'lucide-react'
 import { useState } from 'react'
@@ -47,7 +47,7 @@ const generateColumns = (currentPage: number, perPage: number = 10): ColumnDef<P
     },
 ];
 
-const PengumumanPage = () => {
+const PengumumanContent = () => {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -75,32 +75,44 @@ const PengumumanPage = () => {
     });
 
     return (
-        <PublicLayout>
-            <div className="h-full py-12 overflow-y-auto">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    {/* Header */}
-                    <div className="mb-8 text-center">
-                        <h1 className="text-3xl font-bold mb-2">Pengumuman Nama Rupabumi</h1>
-                        <p className="text-gray-500 max-w-xl mx-auto">Pantau perkembangan terkini proses pengumpulan, penelaahan, hingga persetujuan dan pembakuan nama rupabumi di seluruh wilayah Indonesia.</p>
-                    </div>
-
-                    {/* Table Container */}
-                    <DataTable<PublicToponym>
-                        columns={generateColumns(page, 10)}
-                        data={response?.data || []}
-                        isLoading={isLoading}
-                        pagination={response?.pagination}
-                        onPageChange={(newPage) => updateParams(newPage, search)}
-                        showDownload={true}
-                        initialSearch={search}
-                        onSearch={(v) => {
-                            if (v !== search) {
-                                updateParams(1, v);
-                            }
-                        }}
-                    />
+        <div className="h-full py-12 overflow-y-auto">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                {/* Header */}
+                <div className="mb-8 text-center">
+                    <h1 className="text-3xl font-bold mb-2">Pengumuman Nama Rupabumi</h1>
+                    <p className="text-gray-500 max-w-xl mx-auto">Pantau perkembangan terkini proses pengumpulan, penelaahan, hingga persetujuan dan pembakuan nama rupabumi di seluruh wilayah Indonesia.</p>
                 </div>
+
+                {/* Table Container */}
+                <DataTable<PublicToponym>
+                    columns={generateColumns(page, 10)}
+                    data={response?.data || []}
+                    isLoading={isLoading}
+                    pagination={response?.pagination}
+                    onPageChange={(newPage) => updateParams(newPage, search)}
+                    showDownload={true}
+                    initialSearch={search}
+                    onSearch={(v) => {
+                        if (v !== search) {
+                            updateParams(1, v);
+                        }
+                    }}
+                />
             </div>
+        </div>
+    )
+}
+
+const PengumumanPage = () => {
+    return (
+        <PublicLayout>
+            <Suspense fallback={
+                <div className="h-full flex items-center justify-center py-40">
+                    <span className="text-gray-500 font-semibold animate-pulse text-sm">Memuat Pengumuman...</span>
+                </div>
+            }>
+                <PengumumanContent />
+            </Suspense>
         </PublicLayout>
     )
 }

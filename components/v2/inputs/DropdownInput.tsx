@@ -30,7 +30,6 @@ const DropdownInput = ({
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const triggerRef = useRef<HTMLDivElement>(null);
 
     // Filter options based on search query
     const filteredOptions = options.filter(opt =>
@@ -75,7 +74,7 @@ const DropdownInput = ({
 
                 {/* Dropdown Menu */}
                 {isOpen && (
-                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden flex flex-col">
+                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden flex flex-col">
                         {searchable && (
                             <div className="p-2 border-b border-gray-200 flex items-center gap-2 cursor-text" onClick={(e) => e.stopPropagation()}>
                                 <Search size={14} className="text-gray-400 shrink-0 ml-1" />

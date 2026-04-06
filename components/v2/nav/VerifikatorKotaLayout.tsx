@@ -17,7 +17,7 @@ const VerifikatorKotaLayout = ({ children, showNav = true, tightMargin = false }
     const { user } = useAuth();
 
     return (
-        <div className="flex h-screen bg-slate-50/50 overflow-hidden font-sans">
+        <div className="flex h-screen bg-slate-50/50 overflow-hidden">
             {/* Sidebar Navigation */}
             {showNav && <VerifikatorKotaNav />}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import VerifikatorKotaLayout from '@/components/v2/nav/VerifikatorKotaLayout';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
@@ -135,7 +135,7 @@ const ReviewCard = ({
     );
 };
 
-const DataPenelaahanVerifikator = () => {
+const DataPenelaahanVerifikatorContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { token } = useAuth();
@@ -259,8 +259,7 @@ const DataPenelaahanVerifikator = () => {
     ];
 
     return (
-        <VerifikatorKotaLayout>
-            <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-navy-900">Data Penelaahan</h1>
                     <ButtonComponent label="Buat Penelaahan" icon={<Plus size={18} />} onClick={() => router.push('/v2/verifikator-kota/data-penelaahan/buat')} />
@@ -308,6 +307,19 @@ const DataPenelaahanVerifikator = () => {
                     <DataTable columns={toponymColumns} data={filteredToponyms} isLoading={loadingToponyms} showSearch={true} showFilter={true} />
                 )}
             </div>
+    );
+};
+
+const DataPenelaahanVerifikator = () => {
+    return (
+        <VerifikatorKotaLayout>
+            <Suspense fallback={
+                <div className="flex items-center justify-center h-64">
+                    <p className="text-gray-400 animate-pulse font-medium">Memuat halaman penelaahan...</p>
+                </div>
+            }>
+                <DataPenelaahanVerifikatorContent />
+            </Suspense>
         </VerifikatorKotaLayout>
     );
 };

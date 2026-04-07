@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import VerifikatorKotaLayout from '@/components/v2/nav/VerifikatorKotaLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { ChevronLeft, Search } from 'lucide-react';
@@ -13,7 +13,7 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import dayjs from 'dayjs';
 
-const TransactionDetailPage = () => {
+const TransactionDetailContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const transactionId = searchParams.get('transactionId');
@@ -120,18 +120,15 @@ const TransactionDetailPage = () => {
 
     if (loading && !transaction) {
         return (
-            <VerifikatorKotaLayout>
-                <div className="flex items-center justify-center h-64">
-                    <p className="text-gray-400 animate-pulse font-medium">Memuat detail penelaahan...</p>
-                </div>
-            </VerifikatorKotaLayout>
+            <div className="flex items-center justify-center h-64">
+                <p className="text-gray-400 animate-pulse font-medium">Memuat detail penelaahan...</p>
+            </div>
         );
     }
 
     return (
-        <VerifikatorKotaLayout>
-            <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-3">
                     <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg text-navy-900"><ChevronLeft size={24} /></button>
                     <h1 className="text-xl font-bold text-navy-900">{transaction?.title || 'Detail Penelaahan'}</h1>
                 </div>
@@ -171,6 +168,19 @@ const TransactionDetailPage = () => {
                     />
                 </div>
             </div>
+    );
+};
+
+const TransactionDetailPage = () => {
+    return (
+        <VerifikatorKotaLayout>
+            <Suspense fallback={
+                <div className="flex items-center justify-center h-64">
+                    <p className="text-gray-400 animate-pulse font-medium">Menyesuaikan data penelaahan...</p>
+                </div>
+            }>
+                <TransactionDetailContent />
+            </Suspense>
         </VerifikatorKotaLayout>
     );
 };

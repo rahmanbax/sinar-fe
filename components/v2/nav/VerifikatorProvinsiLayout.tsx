@@ -1,41 +1,30 @@
 "use client";
 
-import React, { useState } from 'react';
-import SurveyorNav from './SurveyorNav';
-import { ChevronDown, Menu } from 'lucide-react';
+import React from 'react';
+import VerifikatorProvinsiNav from './VerifikatorProvinsiNav';
+import { ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface SurveyorLayoutProps {
+interface VerifikatorProvinsiLayoutProps {
     children: React.ReactNode;
     showNav?: boolean;
     tightMargin?: boolean;
 }
 
-const SurveyorLayout = ({ children, showNav = true, tightMargin = false }: SurveyorLayoutProps) => {
+const VerifikatorProvinsiLayout = ({ children, showNav = true, tightMargin = false }: VerifikatorProvinsiLayoutProps) => {
     const { user } = useAuth();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
         <div className="flex h-screen bg-slate-50/50 overflow-hidden">
             {/* Sidebar Navigation */}
-            {showNav && <SurveyorNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />}
+            {showNav && <VerifikatorProvinsiNav />}
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 {/* Top Header */}
-                <header className={`p-4 bg-white border-b border-gray-100 flex items-center shrink-0 ${!showNav ? 'justify-between' : 'justify-between md:justify-end'}`}>
-                    <div className="flex items-center gap-3">
-                        {showNav && (
-                            <button 
-                                onClick={() => setIsMobileMenuOpen(true)}
-                                className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-lg md:hidden"
-                            >
-                                <Menu size={24} />
-                            </button>
-                        )}
-                        
+                <header className={`p-4 bg-white border-b border-gray-100 flex items-center shrink-0 ${!showNav ? 'justify-between' : 'justify-end'}`}>
                     {!showNav && <Link href="/v2" className="block w-fit">
                         <Image
                             src="/sinar-logo.png"
@@ -46,8 +35,6 @@ const SurveyorLayout = ({ children, showNav = true, tightMargin = false }: Surve
                             priority
                         />
                     </Link>}
-                    </div>
-
                     <div className="flex items-center gap-2 cursor-pointer">
                         <div className="text-right">
                             <p className="text-sm font-bold text-navy-900 leading-tight">{user?.name || 'User'}</p>
@@ -58,7 +45,7 @@ const SurveyorLayout = ({ children, showNav = true, tightMargin = false }: Surve
                 </header>
 
                 {/* Dynamic Content */}
-                <main className={`flex-1 overflow-y-auto ${tightMargin ? 'p-0' : 'p-4 md:p-8'}`}>
+                <main className={`flex-1 overflow-y-auto ${tightMargin ? 'p-0' : 'p-8'}`}>
                     {children}
                 </main>
             </div>
@@ -66,4 +53,4 @@ const SurveyorLayout = ({ children, showNav = true, tightMargin = false }: Surve
     );
 }
 
-export default SurveyorLayout;
+export default VerifikatorProvinsiLayout;

@@ -15,7 +15,7 @@ const GazeterPage = () => {
           </div>
 
           <AccordionComponent title="Gazeter Republik Indonesia 2024">
-            <div className='flex flex-wrap gap-6'>
+            <div className='grid grid-cols-2 md:grid-cols-4'>
               <GazeterCard src="/gazeter-cover.png" altName="GRI Edisi 2 Tahun 2025" title="GRI Edisi 2 Tahun 2025" />
               <GazeterCard src="/gazeter-cover.png" altName="GRI Edisi 1 Tahun 2025" title="GRI Edisi 1 Tahun 2025" />
             </div>

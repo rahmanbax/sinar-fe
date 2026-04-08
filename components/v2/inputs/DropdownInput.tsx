@@ -16,6 +16,7 @@ interface DropdownInputProps {
     placeholder?: string;
     className?: string;
     searchable?: boolean;
+    required?: boolean;
 }
 
 const DropdownInput = ({
@@ -25,7 +26,8 @@ const DropdownInput = ({
     options,
     placeholder,
     className = "",
-    searchable = false
+    searchable = false,
+    required = false
 }: DropdownInputProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -66,14 +68,14 @@ const DropdownInput = ({
 
     return (
         <div className={`flex flex-col gap-2 ${className}`} ref={dropdownRef}>
-            {label && <label className="block text-sm font-semibold text-black">{label}</label>}
+            {label && <label className="block text-sm font-semibold text-black">{label} {required && <span className="text-red-600">*</span>}</label>}
 
             <div className="relative">
                 {/* Custom Trigger */}
                 <div
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-200 focus:border-transparent flex items-center justify-between focus-within:ring-2 focus-within:ring-navy-500 focus-within:border-navy-500 transition-all select-none ${!value ? 'text-gray-500' : 'text-black'
-                        }`}
+                    className={`w-full px-3 py-2 border-1 rounded-lg focus:outline-none flex items-center justify-between transition-all select-none ${isOpen ? 'border-navy-300 ring-1 ring-navy-300' : 'border-gray-300'
+                        } ${!value ? 'text-gray-500' : 'text-black'}`}
                 >
                     <span className="truncate">
                         {selectedOption ? selectedOption.label : (placeholder || "Pilih opsi...")}
@@ -99,6 +101,17 @@ const DropdownInput = ({
                         )}
 
                         <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                            <div
+                                onClick={() => {
+                                    onChange("");
+                                    setIsOpen(false);
+                                    setSearchQuery("");
+                                }}
+                                className={`p-3 cursor-pointer hover:bg-gray-100 text-gray-500`}
+                            >
+                                Pilih opsi...
+                            </div>
+
                             {filteredOptions.length > 0 ? (
                                 filteredOptions.map((opt) => (
                                     <div
@@ -108,7 +121,7 @@ const DropdownInput = ({
                                             setIsOpen(false);
                                             setSearchQuery("");
                                         }}
-                                        className={`p-3 cursor-pointer hover:bg-gray-100 ${value === opt.value ? 'bg-gray-100 text-black' : 'text-gray-600'
+                                        className={`p-3 cursor-pointer hover:bg-gray-100 ${value === opt.value ? 'bg-gray-100 text-black font-semibold' : 'text-black'
                                             }`}
                                     >
                                         {opt.label}

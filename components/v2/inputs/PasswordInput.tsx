@@ -17,7 +17,7 @@ const PasswordInput = ({ id, label = "Password", value, onChange, required }: Pa
                 htmlFor={id}
                 className="block text-sm font-semibold text-gray-900 mb-2"
             >
-                {label}
+                {label} {required && <span className="text-red-600">*</span>}
             </label>
             <div className="relative">
                 <input

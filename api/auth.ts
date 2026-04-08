@@ -16,7 +16,6 @@ export const registerUser = async (data: {
     password: string;
     password_confirmation: string;
     phone_number: string;
-    user_type_id: string | number;
 }) => {
     const res = await fetch(`${API_URL}/auth/register`, {
         method: "POST",

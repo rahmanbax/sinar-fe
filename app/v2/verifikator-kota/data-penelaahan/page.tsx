@@ -6,22 +6,22 @@ import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Plus, Search, SlidersHorizontal, Check, FileText } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-    getVerificationTransactions, 
-    getAllVerificationToponyms, 
+import {
+    getVerificationTransactions,
+    getAllVerificationToponyms,
     finishVerificationTransaction,
-    VerificationTransaction 
+    VerificationTransaction
 } from '@/api/verification';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 // Sub-component for individual review cards
-const ReviewCard = ({ 
+const ReviewCard = ({
     item,
     token,
     onRefresh,
     viewMode
-}: { 
-    item: VerificationTransaction; 
+}: {
+    item: VerificationTransaction;
     token: string | null;
     onRefresh: () => void;
     viewMode: string;
@@ -36,7 +36,7 @@ const ReviewCard = ({
     const handleFinish = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (isSubmitting) return;
-        
+
         if (!confirm(`Apakah Anda yakin ingin menandai penelaahan "${item.title}" sebagai selesai? Data yang sudah selesai tidak dapat diubah lagi.`)) {
             return;
         }
@@ -57,17 +57,16 @@ const ReviewCard = ({
     };
 
     return (
-        <div 
+        <div
             className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full cursor-pointer group"
             onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail?transactionId=${item.id}&view=${viewMode}`)}
         >
             <div className="flex items-start justify-between mb-4">
                 <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-blue-600 transition-colors">{item.title}</h3>
-                <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${
-                    isCompleted ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 
-                    isIssued ? 'text-blue-600 bg-blue-50 border-blue-100' : 
-                    'text-gray-500 bg-gray-50 border-gray-100'
-                }`}>
+                <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${isCompleted ? 'text-emerald-600 bg-emerald-50 border-emerald-100' :
+                    isIssued ? 'text-blue-600 bg-blue-50 border-blue-100' :
+                        'text-gray-500 bg-gray-50 border-gray-100'
+                    }`}>
                     {isCompleted ? 'Selesai' : isIssued ? 'Proses Penelaahan' : item.status}
                 </span>
             </div>
@@ -139,14 +138,14 @@ const DataPenelaahanVerifikatorContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { token } = useAuth();
-    
+
     // Sync viewMode with URL params
     const viewFromUrl = searchParams.get('view') as 'grid' | 'table' | null;
     const viewMode = viewFromUrl || 'grid';
-    
+
     const [activeTab, setActiveTab] = useState<'semua' | 'toponim'>('semua');
     const [searchText, setSearchText] = useState("");
-    
+
     // Transactions State
     const [transactions, setTransactions] = useState<VerificationTransaction[]>([]);
     const [loadingTransactions, setLoadingTransactions] = useState(true);
@@ -164,7 +163,7 @@ const DataPenelaahanVerifikatorContent = () => {
     const fetchTransactions = useCallback(async () => {
         setLoadingTransactions(true);
         try {
-            const res = await getVerificationTransactions(token); 
+            const res = await getVerificationTransactions(token);
             if (!res.error) {
                 setTransactions(res.data || []);
             }
@@ -220,20 +219,23 @@ const DataPenelaahanVerifikatorContent = () => {
         { header: "Jumlah Data Ditelaah", accessorKey: "total_data", className: "text-center w-32" },
         { header: "Jumlah Disetujui", accessorKey: "accepted_data", className: "text-center w-28" },
         { header: "Jumlah Ditolak", accessorKey: "rejected_data", className: "text-center w-28" },
-        { header: "Status", cell: (row) => (
-            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                row.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
-            }`}>
-                {row.status === 'completed' ? 'Selesai' : 'Proses Penelaahan'}
-            </span>
-        )},
-        { header: "Aksi", className: "w-16 text-center", cell: (row) => (
-            <div className="flex justify-center">
-                <button onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail?transactionId=${row.id}&view=${viewMode}`)} className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md">
-                    <Search size={18} />
-                </button>
-            </div>
-        )}
+        {
+            header: "Status", cell: (row) => (
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${row.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                    {row.status === 'completed' ? 'Selesai' : 'Proses Penelaahan'}
+                </span>
+            )
+        },
+        {
+            header: "Aksi", className: "w-16 text-center", cell: (row) => (
+                <div className="flex justify-center">
+                    <button onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail?transactionId=${row.id}&view=${viewMode}`)} className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md">
+                        <Search size={18} />
+                    </button>
+                </div>
+            )
+        }
     ];
 
     const toponymColumns: ColumnDef<any>[] = [
@@ -242,71 +244,74 @@ const DataPenelaahanVerifikatorContent = () => {
         { header: "Jenis Unsur", accessorKey: "element" },
         { header: "Nama Rupabumi", accessorKey: "name" },
         { header: "Surveyor", accessorKey: "surveyor" },
-        { header: "Status", cell: (row) => (
-            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                row.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-700' : row.status === 'Ditolak' ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-700'
-            }`}>
-                {row.status}
-            </span>
-        )},
-        { header: "Aksi", className: "w-16 text-center", cell: (row) => (
-            <div className="flex justify-center">
-                <button onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/toponim/${row.id}`)} className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md">
-                    <Search size={18} />
-                </button>
-            </div>
-        )}
+        {
+            header: "Status", cell: (row) => (
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${row.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-700' : row.status === 'Ditolak' ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-700'
+                    }`}>
+                    {row.status}
+                </span>
+            )
+        },
+        {
+            header: "Aksi", className: "w-16 text-center", cell: (row) => (
+                <div className="flex justify-center">
+                    <button onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/toponim/${row.id}`)} className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md">
+                        <Search size={18} />
+                    </button>
+                </div>
+            )
+        }
     ];
 
     return (
         <div className="flex flex-col gap-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-navy-900">Data Penelaahan</h1>
-                    <ButtonComponent label="Buat Penelaahan" icon={<Plus size={18} />} onClick={() => router.push('/v2/verifikator-kota/data-penelaahan/buat')} />
-                </div>
-
-                <div className="flex items-center border-b border-gray-100">
-                    <button onClick={() => setActiveTab('semua')} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'semua' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'}`}>
-                        Semua Penelaahan ({transactions.length})
-                    </button>
-                    <button onClick={() => { setActiveTab('toponim'); setSearchText(""); }} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'toponim' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'}`}>
-                        Semua Toponim ({allToponyms.length})
-                    </button>
-                </div>
-
-                {activeTab === 'semua' ? (
-                    <>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg min-w-[300px] border border-gray-100 shadow-sm">
-                                    <Search size={16} className="text-gray-400" />
-                                    <input type="text" placeholder="Cari penelaahan..." value={searchText} onChange={(e) => setSearchText(e.target.value)} className="bg-transparent text-sm w-full outline-none" />
-                                </div>
-                                <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg text-sm font-bold text-navy-700 border border-gray-100 shadow-sm">
-                                    <SlidersHorizontal size={16} /> Filter
-                                </button>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="6" height="16" rx="2" /><rect x="14" y="4" width="6" height="8" rx="2" opacity="0.8" /><rect x="14" y="14" width="6" height="6" rx="2" opacity="1" /></svg></button>
-                                <button onClick={() => setViewMode('table')} className={`p-2 rounded-xl transition-all ${viewMode === 'table' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg></button>
-                            </div>
-                        </div>
-                        {loadingTransactions ? (
-                            <div className="flex justify-center py-20"><p className="text-gray-400 animate-pulse">Memuat data...</p></div>
-                        ) : viewMode === 'grid' ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pb-10">
-                                {filteredTransactions.map((item) => (
-                                    <ReviewCard key={item.id} item={item} token={token} onRefresh={fetchTransactions} viewMode={viewMode} />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="pb-10"><DataTable columns={transactionColumns} data={filteredTransactions} isLoading={loadingTransactions} showSearch={false} showFilter={false} /></div>
-                        )}
-                    </>
-                ) : (
-                    <DataTable columns={toponymColumns} data={filteredToponyms} isLoading={loadingToponyms} showSearch={true} showFilter={true} />
-                )}
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-navy-900">Data Penelaahan</h1>
+                <ButtonComponent label="Buat Penelaahan" icon={<Plus size={18} />} onClick={() => router.push('/v2/verifikator-kota/data-penelaahan/buat')} />
             </div>
+
+            <div className="flex items-center border-b border-gray-100">
+                <button onClick={() => setActiveTab('semua')} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'semua' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'}`}>
+                    Semua Penelaahan ({transactions.length})
+                </button>
+                <button onClick={() => { setActiveTab('toponim'); setSearchText(""); }} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'toponim' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'}`}>
+                    Semua Toponim ({allToponyms.length})
+                </button>
+            </div>
+
+            {activeTab === 'semua' ? (
+                <>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg min-w-[300px] border border-gray-100 shadow-sm">
+                                <Search size={16} className="text-gray-400" />
+                                <input type="text" placeholder="Cari penelaahan..." value={searchText} onChange={(e) => setSearchText(e.target.value)} className="bg-transparent text-sm w-full outline-none" />
+                            </div>
+                            <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg text-sm font-bold text-navy-700 border border-gray-100 shadow-sm">
+                                <SlidersHorizontal size={16} /> Filter
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setViewMode('grid')} className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="6" height="16" rx="2" /><rect x="14" y="4" width="6" height="8" rx="2" opacity="0.8" /><rect x="14" y="14" width="6" height="6" rx="2" opacity="1" /></svg></button>
+                            <button onClick={() => setViewMode('table')} className={`p-2 rounded-xl transition-all ${viewMode === 'table' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg></button>
+                        </div>
+                    </div>
+                    {loadingTransactions ? (
+                        <div className="flex justify-center py-20"><p className="text-gray-400 animate-pulse">Memuat data...</p></div>
+                    ) : viewMode === 'grid' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pb-10">
+                            {filteredTransactions.map((item) => (
+                                <ReviewCard key={item.id} item={item} token={token} onRefresh={fetchTransactions} viewMode={viewMode} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="pb-10"><DataTable columns={transactionColumns} data={filteredTransactions} isLoading={loadingTransactions} showSearch={false} showFilter={false} /></div>
+                    )}
+                </>
+            ) : (
+                <DataTable columns={toponymColumns} data={filteredToponyms} isLoading={loadingToponyms} showSearch={true} showFilter={true} />
+            )}
+        </div>
     );
 };
 

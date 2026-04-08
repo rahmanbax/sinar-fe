@@ -3,12 +3,15 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import ButtonComponent from '../buttons/ButtonComponent'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ChevronDown, LogOut } from 'lucide-react'
 import AuthModal from '../modals/AuthModal'
+import { useAuth } from '@/contexts/AuthContext'
 
 const PublicNavbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const { user, logout } = useAuth()
 
   const navItems = [
     { label: 'Peta', href: '/v2' },
@@ -23,8 +26,8 @@ const PublicNavbar = () => {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
-        <div className="px-5 py-4">
+      <nav className="sticky top-0 z-50 w-full">
+        <div className="relative z-20 p-4 bg-white border-b border-gray-200">
           <div className="flex justify-between items-center">
             {/* Logo Section */}
             <div className="shrink-0 flex items-center gap-3">
@@ -53,10 +56,40 @@ const PublicNavbar = () => {
                   </li>
                 ))}
               </ul>
-              <ButtonComponent
-                label="Masuk"
-                onClick={openAuthModal}
-              />
+
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-2 font-medium transition cursor-pointer"
+                  >
+                    <div className='flex flex-col items-end'>
+                      <span className='text-sm'>{user.name || 'User'}</span>
+                      <span className='text-xs capitalize text-gray-500'>{user.role}</span>
+                    </div>
+                    <ChevronDown size={16} />
+                  </button>
+
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 shadow-xl rounded-xl overflow-hidden py-2 z-50">
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsDropdownOpen(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left flex items-center gap-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                      >
+                        <LogOut size={16} strokeWidth={2} /> Keluar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <ButtonComponent
+                  label="Masuk"
+                  onClick={openAuthModal}
+                />
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -76,9 +109,13 @@ const PublicNavbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Panel */}
-        {isOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-white border-t border-gray-100 shadow-xl z-50">
+        {/* Mobile Menu Panel Layer */}
+        <div className="md:hidden absolute top-full left-0 w-full overflow-hidden">
+          <div 
+            className={`w-full bg-white border-b border-gray-100 shadow-xl transition-transform duration-300 ease-in-out ${
+              isOpen ? 'translate-y-0 pointer-events-auto' : '-translate-y-full pointer-events-none'
+            }`}
+          >
             <div className="px-5 py-6 flex flex-col gap-6">
               <ul className="flex flex-col gap-5">
                 {navItems.map((item) => (
@@ -93,19 +130,32 @@ const PublicNavbar = () => {
                   </li>
                 ))}
               </ul>
-              <div className="pt-2">
-                <ButtonComponent
-                  label="Masuk"
-                  className="w-full justify-center py-3"
-                  onClick={() => {
-                    setIsOpen(false);
-                    openAuthModal();
-                  }}
-                />
+              <div className="pt-2 border-t border-gray-100">
+                {user ? (
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      logout();
+                    }}
+                    className="w-full text-left flex items-center gap-2 font-medium text-red-600 py-2 mt-2"
+                  >
+                    <LogOut size={18} />
+                    <span>Keluar</span>
+                  </button>
+                ) : (
+                  <ButtonComponent
+                    label="Masuk"
+                    className="w-full justify-center py-3 mt-2"
+                    onClick={() => {
+                      setIsOpen(false);
+                      openAuthModal();
+                    }}
+                  />
+                )}
               </div>
             </div>
           </div>
-        )}
+        </div>
       </nav>
 
       <AuthModal

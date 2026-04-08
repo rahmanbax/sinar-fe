@@ -22,9 +22,9 @@ const ButtonComponent = ({
             onClick={onClick}
             disabled={disabled}
             className={`
-                flex items-center gap-2 font-medium py-2 px-4 rounded-md transition cursor-pointer justify-center
-                ${secondary 
-                    ? 'bg-white hover:bg-gray-100 text-navy-500 border border-navy-500 hover:bg-gray-50' 
+                flex items-center gap-1 md:gap-2 font-medium w-fit text-sm md:text-base py-2 px-4 rounded-md transition cursor-pointer justify-center 
+                ${secondary
+                    ? 'bg-white text-navy-500 border border-navy-500 hover:bg-gray-50'
                     : 'bg-navy-500 text-white hover:bg-navy-400 border border-transparent'}
                 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
                 ${className}

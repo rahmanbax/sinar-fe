@@ -37,9 +37,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     });
 
     const registerMutation = useRegisterMutation({
-        onSuccess: (data) => {
-            alert('Pendaftaran berhasil! Silakan masuk dengan akun baru Anda.');
-            toggleMode(); // Otomatis pindah ke mode Login
+        onSuccess: () => {
+            onClose(); // Modal lenyap otomatis karena user telah berhasil terotentikasi & dialihkan
         },
         onError: (error) => {
             alert(error.message);
@@ -56,7 +55,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
     const handleRegister = () => {
         if (!name || !email || !phone || !regPassword || !confirmPassword) {
-            alert('Mohon isi semua kompartemen pendaftaran.');
+            alert('Mohon isi semua form pendaftaran.');
             return;
         }
 
@@ -68,10 +67,9 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         registerMutation.mutate({
             name,
             email,
-            phone_number: phone, // Mapping variabel lokal ke schema endpoint
+            phone_number: phone,
             password: regPassword,
-            password_confirmation: confirmPassword,
-            user_type_id: 3 // Default Surveyor (Ubah statik ini sesuai perundang-undangan role app Anda jika dinamis)
+            password_confirmation: confirmPassword
         });
     };
 

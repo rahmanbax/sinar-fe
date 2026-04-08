@@ -31,10 +31,19 @@ const DropdownInput = ({
     const [searchQuery, setSearchQuery] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Filter options based on search query
-    const filteredOptions = options.filter(opt =>
-        opt.label.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Filter options based on search query and push selected to top
+    const filteredOptions = (() => {
+        const rawFiltered = options.filter(opt =>
+            opt.label.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+        if (!value) return rawFiltered;
+
+        const selected = rawFiltered.filter(opt => opt.value === value);
+        const others = rawFiltered.filter(opt => opt.value !== value);
+
+        return [...selected, ...others];
+    })();
 
     // Handle click outside to close
     useEffect(() => {

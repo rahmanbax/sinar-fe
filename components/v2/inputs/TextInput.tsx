@@ -25,7 +25,7 @@ const TextInput = ({ id, label, value, onChange, required, disabled }: TextInput
                 onChange={onChange}
                 name={id}
                 placeholder={`Masukkan ${label}`}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-300 focus:border-transparent transition-all placeholder:text-gray-400 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-300 focus:border-transparent transition-all placeholder:text-gray-400 ${disabled ? 'bg-gray-100' : ''}`}
                 required={required}
                 disabled={disabled}
             />

@@ -34,7 +34,7 @@ export const getRoleDefaultRoute = (role: Role): string => {
             return '/penelaahan'
         case Role.SURVEYOR:
         case Role.CONTRIBUTOR:
-            return '/survey'
+            return '/v2/surveyor'
         default:
             return '/'
     }

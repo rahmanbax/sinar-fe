@@ -6,6 +6,8 @@ import DropdownInput from '../inputs/DropdownInput';
 import TextInput from '../inputs/TextInput';
 import CalendarInput from '../inputs/CalendarInput';
 import FileInput from '../inputs/FileInput';
+import { Camera, File, MapPin, Mic } from 'lucide-react';
+import ButtonComponent from '../buttons/ButtonComponent';
 
 const ToponymDetailLayout = () => {
   const [sidebarWidth, setSidebarWidth] = useState(400); // Lebar awal dalam pixel
@@ -100,6 +102,7 @@ const ToponymDetailLayout = () => {
             value={""}
             onChange={() => { }}
             required={true}
+            disabled
           />
           <TextInput
             id='nama-lain'
@@ -197,6 +200,56 @@ const ToponymDetailLayout = () => {
             required={true}
             accept='.jpg, .jpeg, .png'
             maxSizeMB={5}
+            icon={<Camera size={20} className='text-gray-500' />}
+          />
+          <FileInput
+            id='sketsa-lokasi'
+            label="Sketsa Lokasi"
+            onChange={() => { }}
+            required={true}
+            accept='.jpg, .jpeg, .png'
+            maxSizeMB={5}
+            icon={<MapPin size={20} className='text-gray-500' />}
+          />
+          <FileInput
+            id='rekaman-suara-pengucapan'
+            label="Rekaman Suara Pengucapan"
+            onChange={() => { }}
+            required={true}
+            accept='.mp3, .wav'
+            maxSizeMB={5}
+            icon={<Mic size={20} className='text-gray-500' />}
+          />
+          <FileInput
+            id='rekaman-audio-visual'
+            label="Rekaman Audio Visual"
+            onChange={() => { }}
+            required={true}
+            accept='.mp4, .avi, .mov'
+            maxSizeMB={5}
+            icon={<Camera size={20} className='text-gray-500' />}
+          />
+          <FileInput
+            id='dokumen-pendukung'
+            label="Dokumen Pendukung"
+            onChange={() => { }}
+            required={true}
+            accept='.pdf, .doc, .docx'
+            maxSizeMB={5}
+            icon={<File size={20} className='text-gray-500' />}
+          />
+        </div>
+        <div className="flex gap-3">
+          <ButtonComponent
+            label="Batal"
+            onClick={() => { }}
+            secondary={true}
+            className='w-full'
+          />
+          <ButtonComponent
+            label="Simpan"
+            onClick={() => { }}
+            className='w-full'
           />
         </div>
       </div>

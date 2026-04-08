@@ -9,10 +9,11 @@ type FileInputProps = {
     required?: boolean,
     disabled?: boolean,
     instructions?: string,
-    maxSizeMB?: number
+    maxSizeMB?: number,
+    icon?: React.ReactNode
 }
 
-const FileInput = ({ id, label, accept, onChange, required, disabled, instructions, maxSizeMB }: FileInputProps) => {
+const FileInput = ({ id, label, accept, onChange, required, disabled, instructions, maxSizeMB, icon }: FileInputProps) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [error, setError] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -58,7 +59,7 @@ const FileInput = ({ id, label, accept, onChange, required, disabled, instructio
             </label>
 
             <div
-                className={`relative w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center transition-all ${disabled ? 'bg-gray-50 opacity-60 cursor-not-allowed' : ' hover:border-navy-300 bg-white'
+                className={`relative w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${disabled ? 'bg-gray-50 opacity-60 cursor-not-allowed' : ' hover:border-navy-300 bg-white'
                     }`}
                 onClick={() => !disabled && inputRef.current?.click()}
             >
@@ -75,7 +76,7 @@ const FileInput = ({ id, label, accept, onChange, required, disabled, instructio
 
                 {!selectedFile ? (
                     <div className="flex flex-col items-center text-center space-y-1">
-                        <Upload size={20} className='text-gray-500' />
+                        {icon || <Upload size={20} className='text-gray-500' />}
                         <p className="text-sm font-medium text-black">
                             Pilih file untuk diunggah
                         </p>

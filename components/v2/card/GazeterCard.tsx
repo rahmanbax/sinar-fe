@@ -10,12 +10,10 @@ interface GazeterCardProps {
 
 const GazeterCard = ({ src, altName, title }: GazeterCardProps) => {
     return (
-        <div className='space-y-3 w-45'>
+        <div className='space-y-3'>
             <Image
                 src={src}
                 alt={altName}
-                width={180}
-                height={255}
                 className='rounded-lg'
             />
             <h3 className='font-semibold text-black w-full'>{title}</h3>

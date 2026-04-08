@@ -394,13 +394,13 @@ const IndonesiaMap = ({
 
                 {isLoading && (
                     <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full border border-gray-100 shadow-sm z-30">
-                        <span className="text-xs font-bold text-navy-500 animate-pulse">Memuat Data Rupabumi...</span>
+                        <span className="text-xs font-bold text-navy-500 animate-pulse text-center">Memuat Data Rupabumi...</span>
                     </div>
                 )}
 
                 {error && (
                     <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full border border-gray-100 shadow-sm z-30">
-                        <span className="text-xs font-semibold text-red-500">Gagal memuat data. Silahkan muat ulang halaman.</span>
+                        <span className="text-xs font-semibold text-red-500 text-center flex justify-center">Gagal memuat data. Silahkan muat ulang halaman.</span>
                     </div>
                 )}
             </Map>

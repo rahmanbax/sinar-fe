@@ -25,6 +25,16 @@ const ToponymDetailLayout = () => {
   };
 
   useEffect(() => {
+    // 1. Muat lebar yang tersimpan dari LocalStorage (jika ada) saat pertama kali buka
+    const savedWidth = localStorage.getItem('toponymSidebarWidth');
+    if (savedWidth) {
+      const parsedWidth = Number(savedWidth);
+      if (parsedWidth >= 300 && parsedWidth <= 800) {
+        setSidebarWidth(parsedWidth);
+      }
+    }
+
+    // 2. Logika Penggeseran
     const resize = (e: MouseEvent | TouchEvent) => {
       if (!isResizingRef.current || !sidebarRef.current) return;
 
@@ -42,6 +52,7 @@ const ToponymDetailLayout = () => {
       // Batas minimum 300px dan maksimum 800px
       if (newWidth >= 300 && newWidth <= 800) {
         setSidebarWidth(newWidth);
+        localStorage.setItem('toponymSidebarWidth', newWidth.toString()); // Simpan secara waktu nyata
       }
     };
 

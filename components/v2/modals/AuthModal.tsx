@@ -3,6 +3,7 @@ import TextInput from '../inputs/TextInput'
 import PasswordInput from '../inputs/PasswordInput'
 import ButtonComponent from '../buttons/ButtonComponent'
 import { X } from 'lucide-react'
+import { useLoginMutation, useRegisterMutation } from '@/hooks/useAuth'
 
 type AuthModalProps = {
     isOpen: boolean;
@@ -22,6 +23,55 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     const [email, setEmail] = useState('')
     const [regPassword, setRegPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+
+    const loginMutation = useLoginMutation({
+        onSuccess: (data) => {
+            // Tindakan sukses: token biasanya disimpan di cookie/context
+            console.log("Login sukses!", data);
+            onClose(); // Tutup modal otomatis ketika sukses
+        },
+        onError: (error) => {
+            // Tindakan error
+            alert(error.message);
+        }
+    });
+
+    const registerMutation = useRegisterMutation({
+        onSuccess: () => {
+            onClose(); // Modal lenyap otomatis karena user telah berhasil terotentikasi & dialihkan
+        },
+        onError: (error) => {
+            alert(error.message);
+        }
+    });
+
+    const handleLogin = () => {
+        if (!email || !password) {
+            alert('Mohon isi email dan kata sandi terlebih dahulu.');
+            return;
+        }
+        loginMutation.mutate({ email, password });
+    };
+
+    const handleRegister = () => {
+        if (!name || !email || !phone || !regPassword || !confirmPassword) {
+            alert('Mohon isi semua form pendaftaran.');
+            return;
+        }
+
+        if (regPassword !== confirmPassword) {
+            alert('Konfirmasi kata sandi tidak cocok!');
+            return;
+        }
+
+        registerMutation.mutate({
+            name,
+            email,
+            phone_number: phone,
+            password: regPassword,
+            password_confirmation: confirmPassword
+        });
+    };
 
     if (!isOpen) return null;
 
@@ -89,9 +139,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         />
                         <div className='space-y-4'>
                             <ButtonComponent
-                                label='Daftar'
-                                onClick={() => { }}
+                                label={registerMutation.isPending ? 'Memproses...' : 'Daftar'}
+                                onClick={handleRegister}
                                 className="w-full justify-center py-3"
+                                disabled={registerMutation.isPending}
                             />
                             <div className='text-center text-gray-600'>
                                 Sudah Punya Akun? {' '}
@@ -108,10 +159,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                     <>
                         <div className='space-y-4'>
                             <TextInput
-                                id='username'
-                                label='Username'
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                id='email'
+                                label='Email'
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required={true}
                             />
                             <PasswordInput
@@ -130,9 +181,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
                         <div className='space-y-4'>
                             <ButtonComponent
-                                label='Masuk'
-                                onClick={() => { }}
+                                label={loginMutation.isPending ? 'Memproses...' : 'Masuk'}
+                                onClick={handleLogin}
                                 className="w-full justify-center py-3"
+                                disabled={loginMutation.isPending}
                             />
                             <div className='text-center text-gray-600'>
                                 Tidak Punya Akun? {' '}

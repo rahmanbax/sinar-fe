@@ -13,7 +13,7 @@ type FileInputProps = {
     icon?: React.ReactNode
 }
 
-const FileInput = ({ id, label, accept, onChange, required, disabled, instructions, maxSizeMB, icon }: FileInputProps) => {
+const FileInput = ({ id, label, accept, onChange, required = false, disabled, instructions, maxSizeMB, icon }: FileInputProps) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [error, setError] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -21,10 +21,10 @@ const FileInput = ({ id, label, accept, onChange, required, disabled, instructio
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         setError(null);
-        
+
         if (files && files.length > 0) {
             const file = files[0];
-            
+
             if (maxSizeMB) {
                 const fileSizeMB = file.size / (1024 * 1024);
                 if (fileSizeMB > maxSizeMB) {
@@ -33,7 +33,7 @@ const FileInput = ({ id, label, accept, onChange, required, disabled, instructio
                     return;
                 }
             }
-            
+
             setSelectedFile(file);
             onChange(file);
         }
@@ -55,7 +55,7 @@ const FileInput = ({ id, label, accept, onChange, required, disabled, instructio
                 htmlFor={id}
                 className="block text-sm font-semibold text-black mb-2"
             >
-                {label}
+                {label} {required && <span className="text-red-600">*</span>}
             </label>
 
             <div

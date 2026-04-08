@@ -16,6 +16,7 @@ interface DropdownInputProps {
     placeholder?: string;
     className?: string;
     searchable?: boolean;
+    required?: boolean;
 }
 
 const DropdownInput = ({
@@ -25,7 +26,8 @@ const DropdownInput = ({
     options,
     placeholder,
     className = "",
-    searchable = false
+    searchable = false,
+    required = false
 }: DropdownInputProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -66,7 +68,7 @@ const DropdownInput = ({
 
     return (
         <div className={`flex flex-col gap-2 ${className}`} ref={dropdownRef}>
-            {label && <label className="block text-sm font-semibold text-black">{label}</label>}
+            {label && <label className="block text-sm font-semibold text-black">{label} {required && <span className="text-red-600">*</span>}</label>}
 
             <div className="relative">
                 {/* Custom Trigger */}

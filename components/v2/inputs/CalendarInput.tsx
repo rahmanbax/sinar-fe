@@ -17,7 +17,7 @@ const CalendarInput = ({ id, label, value, onChange, required = false, disabled 
                 htmlFor={id}
                 className="block text-sm font-semibold text-gray-900 mb-2"
             >
-                {label}
+                {label} {required && <span className="text-red-600">*</span>}
             </label>
             <div className="relative">
                 <input

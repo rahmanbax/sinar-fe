@@ -7,6 +7,7 @@ type ButtonProps = {
     className?: string;
     secondary?: boolean;
     disabled?: boolean;
+    type?: 'button' | 'submit' | 'reset';
 }
 
 const ButtonComponent = ({
@@ -15,12 +16,14 @@ const ButtonComponent = ({
     onClick,
     secondary = false,
     className = '',
-    disabled = false
+    disabled = false,   
+    type = 'button'
 }: ButtonProps) => {
     return (
         <button
             onClick={onClick}
             disabled={disabled}
+            type={type}
             className={`
                 flex items-center gap-1 md:gap-2 font-medium w-fit text-sm md:text-base py-2 px-4 rounded-md transition cursor-pointer justify-center 
                 ${secondary

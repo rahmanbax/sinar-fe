@@ -49,12 +49,12 @@ const MapStyles = [
 type ToponymDetailMapProps = {
     isDrawingMode: boolean;
     drawType: string;
-    drawnPoint: {lat: number, lng: number} | null;
-    setDrawnPoint: (point: {lat: number, lng: number} | null) => void;
-    drawnLine?: {lat: number, lng: number}[];
-    setDrawnLine?: React.Dispatch<React.SetStateAction<{lat: number, lng: number}[]>>;
-    drawnPolygon?: {lat: number, lng: number}[][];
-    setDrawnPolygon?: React.Dispatch<React.SetStateAction<{lat: number, lng: number}[][]>>;
+    drawnPoint: { lat: number, lng: number } | null;
+    setDrawnPoint: (point: { lat: number, lng: number } | null) => void;
+    drawnLine?: { lat: number, lng: number }[];
+    setDrawnLine?: React.Dispatch<React.SetStateAction<{ lat: number, lng: number }[]>>;
+    drawnPolygon?: { lat: number, lng: number }[][];
+    setDrawnPolygon?: React.Dispatch<React.SetStateAction<{ lat: number, lng: number }[][]>>;
     onSave?: () => void;
 }
 
@@ -126,7 +126,7 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
 
     const handleMapClick = (e: MapLayerMouseEvent) => {
         if (!isDrawingMode) return;
-        
+
         if (clickTimer.current) {
             clearTimeout(clickTimer.current);
             clickTimer.current = null;
@@ -146,12 +146,12 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
                     return next;
                 });
             }
-        }, 250);
+        }, 150);
     };
 
     const handleMapDblClick = (e: MapLayerMouseEvent) => {
         if (!isDrawingMode) return;
-        
+
         if (clickTimer.current) {
             clearTimeout(clickTimer.current);
             clickTimer.current = null;
@@ -282,9 +282,9 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
                 cursor={isDrawingMode ? 'crosshair' : 'grab'}
             >
                 {drawnPoint && drawType === 'Point' && (
-                    <Marker 
-                        longitude={drawnPoint.lng} 
-                        latitude={drawnPoint.lat} 
+                    <Marker
+                        longitude={drawnPoint.lng}
+                        latitude={drawnPoint.lat}
                         anchor="bottom"
                         draggable={isDrawingMode}
                         onDrag={e => {
@@ -327,10 +327,10 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
                     </Source>
                 )}
                 {drawType === 'Line' && drawnLine && viewState.zoom > 12 && drawnLine.map((pt, i) => (
-                    <Marker 
-                        key={i} 
-                        longitude={pt.lng} 
-                        latitude={pt.lat} 
+                    <Marker
+                        key={i}
+                        longitude={pt.lng}
+                        latitude={pt.lat}
                         anchor="center"
                         draggable={isDrawingMode}
                         onDrag={e => {
@@ -397,7 +397,7 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
                                             />
                                         </Source>
                                     )}
-                                    
+
                                     {!isComplete && poly.length > 1 && (
                                         <Source
                                             id={`drawn-polygon-line-source-${pIdx}`}
@@ -424,10 +424,10 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
                                     )}
 
                                     {viewState.zoom > 12 && poly.map((pt, i) => (
-                                        <Marker 
-                                            key={`pt-${pIdx}-${i}`} 
-                                            longitude={pt.lng} 
-                                            latitude={pt.lat} 
+                                        <Marker
+                                            key={`pt-${pIdx}-${i}`}
+                                            longitude={pt.lng}
+                                            latitude={pt.lat}
                                             anchor="center"
                                             draggable={isDrawingMode}
                                             onDrag={e => {

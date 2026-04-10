@@ -182,9 +182,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(result.message || "Login gagal")
     }
 
-    // New response structure: token at root level, user data in result.data
+    // Update struktur dari respon: token di root, detail properties user ada di result.data.user
     const authToken = result.token
-    const userData = result.data
+    const userData = result.data?.user || result.data
 
     setToken(authToken)
     setUser(userData)
@@ -218,9 +218,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(result.message || "Registrasi gagal")
     }
 
-    // Response structure: authorization.token and user in result.data
-    const authToken = result.data?.authorization?.token
-    const userData = result.data?.user
+    // Update struktur objek phone dan properti user
+    const authToken = result.token || result.authorization?.token || result.data?.authorization?.token;
+    const userData = result.user || result.data?.user || result.data;
 
     if (!authToken || !userData) {
       throw new Error("Invalid response from server")
@@ -262,7 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoggingOut(false)
     localStorage.removeItem("token")
     localStorage.removeItem("user")
-    router.push("/")
+    router.push("/v2")
   }
 
   const hasRole = useCallback((role: Role): boolean => {

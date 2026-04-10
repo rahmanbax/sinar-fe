@@ -19,6 +19,20 @@ const ToponymDetailLayout = () => {
   const [drawnPolygon, setDrawnPolygon] = useState<{ lat: number, lng: number }[][]>([[]]);
   const isResizingRef = useRef(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const polygonScrollRef = useRef<HTMLDivElement>(null);
+  const lineScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (polygonScrollRef.current) {
+      polygonScrollRef.current.scrollTop = polygonScrollRef.current.scrollHeight;
+    }
+  }, [drawnPolygon]);
+
+  useEffect(() => {
+    if (lineScrollRef.current) {
+      lineScrollRef.current.scrollTop = lineScrollRef.current.scrollHeight;
+    }
+  }, [drawnLine]);
 
   const startResizing = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault(); // Mencegah highlight teks default browser
@@ -150,28 +164,25 @@ const ToponymDetailLayout = () => {
                     }
                   }}
                   secondary={true}
-                  className='w-full text-sm col-span-2'
+                  className='w-full text-sm'
                 />
                 <ButtonComponent
-                  label="Bersihkan Penggambaran"
+                  label="Bersihkan"
                   onClick={() => {
                     if (drawType === 'Point') setDrawnPoint(null);
                     if (drawType === 'Line') setDrawnLine([]);
                     if (drawType === 'Polygon') setDrawnPolygon([[]]);
                   }}
                   secondary={true}
-                  className='w-full text-sm transition-colors col-span-2'
+                  className='w-full text-sm transition-colors'
                 />
                 <ButtonComponent
                   label="Batalkan"
                   onClick={() => {
                     setIsDrawingMode(false);
-                    if (drawType === 'Point') setDrawnPoint(null); // Clear when cancelling
-                    if (drawType === 'Line') setDrawnLine([]);
-                    if (drawType === 'Polygon') setDrawnPolygon([[]]);
                   }}
                   secondary={true}
-                  className='w-full text-sm'
+                  className='w-full text-sm col-span-2'
                 />
                 <ButtonComponent
                   label="Simpan Lokasi"
@@ -179,7 +190,7 @@ const ToponymDetailLayout = () => {
                     // Add logic to save the drawnPoint here
                     setIsDrawingMode(false);
                   }}
-                  className='w-full text-sm'
+                  className='w-full text-sm col-span-2'
                 />
               </div>
             </div>
@@ -201,7 +212,7 @@ const ToponymDetailLayout = () => {
           )}
 
           {drawnLine.length > 0 && drawType === 'Line' && (
-            <div className='p-3 border border-gray-300 bg-gray-50 rounded-lg space-y-2 max-h-40 overflow-y-auto custom-scrollbar'>
+            <div ref={lineScrollRef} className='p-3 border border-gray-300 bg-gray-50 rounded-lg space-y-2 max-h-40 overflow-y-auto custom-scrollbar'>
               <p className='font-medium'>Koordinat Garis ({drawnLine.length} Titik)</p>
               {drawnLine.map((pt, i) => (
                 <div key={i} className='flex flex-col'>
@@ -213,13 +224,13 @@ const ToponymDetailLayout = () => {
           )}
 
           {drawnPolygon.length > 0 && drawnPolygon[0].length > 0 && drawType === 'Polygon' && (
-            <div className='p-3 border border-gray-300 bg-gray-50 rounded-lg space-y-3 max-h-60 overflow-y-auto custom-scrollbar flex flex-col'>
+            <div ref={polygonScrollRef} className='p-3 border border-gray-300 bg-gray-50 rounded-lg space-y-3 max-h-60 overflow-y-auto custom-scrollbar flex flex-col'>
               {drawnPolygon.map((poly, pIdx) => poly.length > 0 && (
                 <div key={pIdx} className="space-y-1">
                   <p className='font-medium'>Area {pIdx + 1} ({poly.length} Titik)</p>
                   {poly.map((pt, i) => (
                     <div key={i} className='flex flex-col'>
-                      <span className='text-gray-500 text-sm'>Sudut {i + 1}</span>
+                      <span className='text-gray-500 text-sm'>Titik {i + 1}</span>
                       <span className='font-medium'>{pt.lng.toFixed(6)}, {pt.lat.toFixed(6)}</span>
                     </div>
                   ))}

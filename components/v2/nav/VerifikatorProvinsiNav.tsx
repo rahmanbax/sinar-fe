@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Database, Users, User } from 'lucide-react';
+import { LayoutGrid, Database, Users, User, X } from 'lucide-react';
 
 const navItems = [
     {
@@ -34,54 +34,75 @@ const navItems = [
     },
 ];
 
-const VerifikatorProvinsiNav = () => {
+interface VerifikatorProvinsiNavProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+}
+
+const VerifikatorProvinsiNav = ({ isOpen = false, onClose }: VerifikatorProvinsiNavProps) => {
     const pathname = usePathname();
 
     return (
-        <aside className="w-[240px] h-screen bg-white border-r border-gray-100 flex flex-col py-4 shrink-0">
-            {/* Logo */}
-            <div className="px-4 mb-6">
-                <Link href="/v2" className="block w-fit">
-                    <Image
-                        src="/sinar-logo.png"
-                        alt="SINAR Logo"
-                        width={100}
-                        height={40}
-                        className="h-10 w-auto"
-                        priority
-                    />
-                </Link>
-            </div>
+        <>
+            {/* Mobile Backdrop */}
+            {isOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={onClose}
+                />
+            )}
 
-            {/* Navigation Links */}
-            <nav className="flex flex-col gap-2 m-4 space-y-1">
-                {navItems.map((item) => {
-                    // Logic to prevent dashboard showing as active on all sub-pages
-                    const isActive = item.href === '/v2/verifikator-provinsi' 
-                        ? pathname === item.href 
-                        : pathname.startsWith(item.href);
-                    const Icon = item.icon;
+            {/* Sidebar Container */}
+            <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[240px] md:w-[240px] bg-white border-r border-gray-100 flex flex-col py-4 shrink-0 transition-transform duration-300 md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                {/* Logo & Close Button */}
+                <div className="px-4 mb-6 flex items-center justify-between">
+                    <Link href="/v2" className="block w-fit">
+                        <Image
+                            src="/sinar-logo.png"
+                            alt="SINAR Logo"
+                            width={100}
+                            height={40}
+                            className="h-10 w-auto"
+                            priority
+                        />
+                    </Link>
+                    {/* Tutup Modal Khusus Mobile */}
+                    <button onClick={onClose} className="md:hidden text-gray-500 hover:text-gray-800 hidden-if-not-mobile">
+                        <X size={24} />
+                    </button>
+                </div>
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center transition-colors p-3 gap-2 font-semibold ${isActive
-                                ? 'bg-slate-200/50 border-l-4 border-navy-800 text-navy-900 rounded-lg'
-                                : 'border-l-4 border-transparent text-gray-600 hover:bg-gray-100 rounded-lg'
-                                }`}
-                        >
-                            <Icon
-                                size={20}
-                                className={isActive ? 'text-navy-800' : 'text-gray-500'}
-                                strokeWidth={isActive ? 2.5 : 2}
-                            />
-                            <span className="text-sm">{item.name}</span>
-                        </Link>
-                    )
-                })}
-            </nav>
-        </aside>
+                {/* Navigation Links */}
+                <nav className="flex flex-col gap-2 m-4 space-y-1">
+                    {navItems.map((item) => {
+                        // Logic to prevent dashboard showing as active on all sub-pages
+                        const isActive = item.href === '/v2/verifikator-provinsi' 
+                            ? pathname === item.href 
+                            : pathname.startsWith(item.href);
+                        const Icon = item.icon;
+
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => onClose?.()}
+                                className={`flex items-center transition-colors p-3 gap-2 font-semibold ${isActive
+                                    ? 'bg-slate-200/50 border-l-4 border-navy-800 text-navy-900 rounded-lg'
+                                    : 'border-l-4 border-transparent text-gray-600 hover:bg-gray-100 rounded-lg'
+                                    }`}
+                            >
+                                <Icon
+                                    size={20}
+                                    className={isActive ? 'text-navy-800' : 'text-gray-500'}
+                                    strokeWidth={isActive ? 2.5 : 2}
+                                />
+                                <span className="text-sm">{item.name}</span>
+                            </Link>
+                        )
+                    })}
+                </nav>
+            </aside>
+        </>
     )
 }
 

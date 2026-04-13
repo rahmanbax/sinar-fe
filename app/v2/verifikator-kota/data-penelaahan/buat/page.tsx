@@ -63,7 +63,7 @@ const BuatPenelaahanPage = () => {
 
   return (
     <VerifikatorKotaLayout showNav={false} tightMargin={true}>
-      <div className='mt-6 mx-5 md:mx-auto max-w-7xl space-y-5'>
+      <div className='mt-6 mx-5 lg:mx-auto max-w-7xl space-y-5'>
         <p className='text-gray-500'>Dashboard / Data Penelaahan / Buat Penelaahan</p>
         <h1 className='text-2xl font-bold'>Buat Penelaahan</h1>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>

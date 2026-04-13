@@ -134,3 +134,4 @@ export const rejectVerificationToponym = async (token: string | null, transactio
     });
     return response.json();
 };
+

@@ -19,6 +19,7 @@ interface DropdownInputProps {
     searchable?: boolean;
     required?: boolean;
     allowCustomValue?: boolean;
+    disabled?: boolean;
 }
 
 const DropdownInput = ({
@@ -30,7 +31,8 @@ const DropdownInput = ({
     className = "",
     searchable = false,
     required = false,
-    allowCustomValue = false
+    allowCustomValue = false,
+    disabled = false
 }: DropdownInputProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -115,9 +117,9 @@ const DropdownInput = ({
             <div className="relative">
                 {/* Custom Trigger */}
                 <div
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={() => !disabled && setIsOpen(!isOpen)}
                     className={`w-full px-3 py-2 border-1 rounded-lg focus:outline-none flex items-center justify-between transition-all select-none ${isOpen ? 'border-navy-300 ring-1 ring-navy-300' : 'border-gray-300'
-                        } ${!value ? 'text-gray-500' : 'text-black'}`}
+                        } ${!value ? 'text-gray-500' : 'text-black'} ${disabled ? 'bg-gray-100' : 'cursor-pointer bg-white'}`}
                 >
                     <span className="truncate">
                         {selectedOption ? selectedOption.label : (value && allowCustomValue ? value : (placeholder || "Pilih opsi..."))}

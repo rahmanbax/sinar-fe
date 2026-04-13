@@ -38,6 +38,7 @@ const HorizontalBarChart = ({
     isLoading = false,
     skeletonRows = 5,
 }: HorizontalBarChartProps) => {
+    const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
     const globalMax = items.reduce((acc, item) => Math.max(acc, item.max), 0) || 1;
 
     // Auto-generate 4 evenly spaced labels if none provided
@@ -62,11 +63,16 @@ const HorizontalBarChart = ({
                 {isLoading
                     ? Array.from({ length: skeletonRows }).map((_, i) => <SkeletonRow key={i} />)
                     : items.map((item, index) => (
-                        <div key={index} className="flex items-center gap-4">
+                        <div 
+                            key={index} 
+                            className="flex items-center gap-4 relative"
+                            onMouseEnter={() => setHoveredIndex(index)}
+                            onMouseLeave={() => setHoveredIndex(null)}
+                        >
                             <span className="text-sm text-gray-600 w-16 shrink-0 truncate" title={item.name}>
                                 {item.name}
                             </span>
-                            <div className="flex-1 h-3.5 bg-gray-50 rounded-full overflow-hidden">
+                            <div className="flex-1 h-3.5 bg-gray-50 rounded-full overflow-hidden relative group cursor-pointer">
                                 <div
                                     className="h-full rounded-r-full transition-all duration-500"
                                     style={{
@@ -74,6 +80,21 @@ const HorizontalBarChart = ({
                                         backgroundColor: color,
                                     }}
                                 />
+                            </div>
+
+                            {/* Tooltip */}
+                            <div 
+                                className={`
+                                    absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#4CB3CF] text-white text-xs font-bold rounded shadow-2xl transition-all duration-200 pointer-events-none z-10
+                                    ${hoveredIndex === index ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'}
+                                `}
+                                style={{
+                                    left: `calc(4rem + 1rem + ${(Math.min((item.value / item.max) * 100, 100) / 2)}% + 8px)`
+                                }}
+                            >
+                                {item.value}
+                                {/* Tooltip Arrow */}
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#4CB3CF] rotate-45" />
                             </div>
                         </div>
                     ))

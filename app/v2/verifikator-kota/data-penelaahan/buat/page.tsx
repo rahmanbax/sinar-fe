@@ -31,7 +31,7 @@ const BuatPenelaahanPage = () => {
   const handleSubmit = (formData: {
     judulPenelaahan: string;
     tanggalPenelaahan: string;
-    jenisUnsur: string;
+    jenisUnsur: string[];
   }) => {
     const due_at = formData.tanggalPenelaahan
       ? `${formData.tanggalPenelaahan}`
@@ -42,7 +42,7 @@ const BuatPenelaahanPage = () => {
         token,
         data: {
           title: formData.judulPenelaahan,
-          elements: [formData.jenisUnsur],
+          elements: formData.jenisUnsur,
           due_at,
         },
       },

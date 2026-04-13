@@ -74,7 +74,7 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
                     ref={inputRef}
                     accept={accept}
                     onChange={handleFileChange}
-                    className="hidden"
+                    className="absolute top-1/2 left-1/2 w-px h-px opacity-0 -z-10"
                     disabled={disabled}
                     required={required && !selectedFile && !initialUrl}
                 />

@@ -57,8 +57,12 @@ const ToponymDetailPage = () => {
             { token, transactionId, toponymId: id },
             { 
                 onSuccess: (res) => {
-                    if (!res.error) router.push('/v2/verifikator-kota/data-penelaahan')
-                    else alert(res.message || 'Gagal menyetujui toponim')
+                    if (!res.error) {
+                        alert('Toponim berhasil disetujui!');
+                        router.push('/v2/verifikator-kota/data-penelaahan');
+                    } else {
+                        alert(res.message || 'Gagal menyetujui toponim');
+                    }
                 },
                 onError: () => alert('Terjadi kesalahan koneksi saat menyetujui toponim')
             }
@@ -71,8 +75,12 @@ const ToponymDetailPage = () => {
             { token, transactionId, toponymId: id },
             {
                 onSuccess: (res) => {
-                    if (!res.error) router.push('/v2/verifikator-kota/data-penelaahan')
-                    else alert(res.message || 'Gagal menolak toponim')
+                    if (!res.error) {
+                        alert('Toponim berhasil ditolak!');
+                        router.push('/v2/verifikator-kota/data-penelaahan');
+                    } else {
+                        alert(res.message || 'Gagal menolak toponim');
+                    }
                 },
                 onError: () => alert('Terjadi kesalahan koneksi saat menolak toponim')
             }

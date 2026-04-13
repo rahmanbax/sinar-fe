@@ -195,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     scheduleRefresh(authToken)
 
     // Redirect berdasarkan role
-    const redirectPath = getRoleDefaultRoute(userData.role as Role)
+    const redirectPath = getRoleDefaultRoute(userData)
     router.push(redirectPath)
   }
 
@@ -211,7 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       password_confirmation: passwordConfirmation,
-      phone,
+      phone_number: phone,
     })
 
     if (result.error) {
@@ -235,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     scheduleRefresh(authToken)
 
     // Redirect berdasarkan role
-    const redirectPath = getRoleDefaultRoute(userData.role as Role)
+    const redirectPath = getRoleDefaultRoute(userData)
     router.push(redirectPath)
   }
 

@@ -307,7 +307,7 @@ const ToponymDetailLayout = ({
         className={`h-full bg-white p-5 overflow-y-auto z-10 shrink-0 shadow-sm space-y-5 ${isResizing ? 'pointer-events-none' : ''}`}
       >
         <h2 className="text-xl font-bold text-gray-900">Data Toponim</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
           <fieldset disabled={isReadOnly} className={`space-y-5`}>
 
             {!isReadOnly && (!isDrawingMode ? (
@@ -623,7 +623,6 @@ const ToponymDetailLayout = ({
               id='sketsa-lokasi'
               label="Sketsa Lokasi"
               onChange={(file) => setFieldValue('sketsaLokasi', file)}
-              required={true}
               accept='.jpg, .jpeg, .png'
               maxSizeMB={5}
               icon={<MapPin size={20} className='text-gray-500' />}
@@ -633,7 +632,6 @@ const ToponymDetailLayout = ({
               id='rekaman-suara-pengucapan'
               label="Rekaman Suara Pengucapan"
               onChange={(file) => setFieldValue('rekamanSuaraPengucapan', file)}
-              required={true}
               accept='.mp3, .wav'
               maxSizeMB={5}
               icon={<Mic size={20} className='text-gray-500' />}
@@ -643,7 +641,6 @@ const ToponymDetailLayout = ({
               id='rekaman-audio-visual'
               label="Rekaman Audio Visual"
               onChange={(file) => setFieldValue('rekamanAudioVisual', file)}
-              required={true}
               accept='.mp4, .avi, .mov'
               maxSizeMB={5}
               icon={<Camera size={20} className='text-gray-500' />}
@@ -653,7 +650,6 @@ const ToponymDetailLayout = ({
               id='dokumen-pendukung'
               label="Dokumen Pendukung"
               onChange={(file) => setFieldValue('dokumenPendukung', file)}
-              required={true}
               accept='.pdf, .doc, .docx'
               maxSizeMB={5}
               icon={<File size={20} className='text-gray-500' />}

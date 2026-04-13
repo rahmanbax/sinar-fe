@@ -135,3 +135,45 @@ export const rejectVerificationToponym = async (token: string | null, transactio
     return response.json();
 };
 
+export const getCompletedVerificationTransactions = async (token: string | null) => {
+    if (!token) return { error: true, message: "No token provided", data: [] };
+    const response = await fetch(`${API_URL}/verifications/transaction?status_num=2`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return response.json();
+};
+
+export const getRecommendations = async (token: string | null) => {
+    if (!token) return { error: true, message: "No token provided", data: [] };
+    const response = await fetch(`${API_URL}/verifications/recommendation/outgoing`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return response.json();
+};
+
+export const createRecommendation = async (token: string | null, data: { recommendation_number: string; recommendation_doc_url: string; transaction_ids: string[] }) => {
+    if (!token) return { error: true, message: "No token provided" };
+    const response = await fetch(`${API_URL}/verifications/recommendation/outgoing`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+    return response.json();
+};
+
+export const getIncomingRecommendations = async (token: string | null) => {
+    if (!token) return { error: true, message: "No token provided", data: [] };
+    const response = await fetch(`${API_URL}/verifications/recommendation/incoming`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return response.json();
+};

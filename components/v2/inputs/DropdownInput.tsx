@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
+import { List } from 'react-window';
 
 export interface DropdownOption {
     label: string;
@@ -16,34 +17,51 @@ interface DropdownInputProps {
     placeholder?: string;
     className?: string;
     searchable?: boolean;
+    required?: boolean;
+    allowCustomValue?: boolean;
 }
 
 const DropdownInput = ({
     label,
     value,
     onChange,
-    options,
+    options = [],
     placeholder,
     className = "",
-    searchable = false
+    searchable = false,
+    required = false,
+    allowCustomValue = false
 }: DropdownInputProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // Ensure unique options by value to prevent React "duplicate key" warnings
+    const uniqueOptions = useMemo(() => {
+        const seen = new Set();
+        return options.filter(opt => {
+            if (seen.has(opt.value)) return false;
+            seen.add(opt.value);
+            return true;
+        });
+    }, [options]);
+
     // Filter options based on search query and push selected to top
-    const filteredOptions = (() => {
-        const rawFiltered = options.filter(opt =>
+    const filteredOptions = useMemo(() => {
+        const rawFiltered = uniqueOptions.filter(opt =>
             opt.label.toLowerCase().includes(searchQuery.toLowerCase())
         );
 
-        if (!value) return rawFiltered;
+        let result = rawFiltered;
+        if (value) {
+            const selected = rawFiltered.filter(opt => opt.value === value);
+            const others = rawFiltered.filter(opt => opt.value !== value);
+            result = [...selected, ...others];
+        }
 
-        const selected = rawFiltered.filter(opt => opt.value === value);
-        const others = rawFiltered.filter(opt => opt.value !== value);
-
-        return [...selected, ...others];
-    })();
+        // Limit the displayed data to 50 items
+        return result.slice(0, 50);
+    }, [uniqueOptions, searchQuery, value]);
 
     // Handle click outside to close
     useEffect(() => {
@@ -62,11 +80,37 @@ const DropdownInput = ({
         };
     }, [isOpen]);
 
-    const selectedOption = options.find(opt => opt.value === value);
+    const selectedOption = useMemo(() => options.find(opt => opt.value === value), [options, value]);
+
+    // If custom value allowed and not empty, show as first option if not in list
+    const showCustomOption = useMemo(() => 
+        allowCustomValue && searchQuery && !options.find(opt => opt.label.toLowerCase() === searchQuery.toLowerCase()
+    ), [allowCustomValue, searchQuery, options]);
+
+    const Row = useCallback(({ index, style, ariaAttributes }: any) => {
+        const opt = filteredOptions[index];
+        if (!opt) return null;
+
+        return (
+            <div
+                {...ariaAttributes}
+                style={style}
+                onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                    setSearchQuery("");
+                }}
+                className={`flex items-center px-3 cursor-pointer hover:bg-gray-100 transition-colors ${value === opt.value ? 'bg-gray-100 text-black font-semibold' : 'text-black'
+                    }`}
+            >
+                <span className="truncate text-base">{opt.label}</span>
+            </div>
+        );
+    }, [filteredOptions, onChange, value]);
 
     return (
         <div className={`flex flex-col gap-2 ${className}`} ref={dropdownRef}>
-            {label && <label className="block text-sm font-semibold text-black">{label}</label>}
+            {label && <label className="block text-sm font-semibold text-black">{label} {required && <span className="text-red-600">*</span>}</label>}
 
             <div className="relative">
                 {/* Custom Trigger */}
@@ -76,9 +120,9 @@ const DropdownInput = ({
                         } ${!value ? 'text-gray-500' : 'text-black'}`}
                 >
                     <span className="truncate">
-                        {selectedOption ? selectedOption.label : (placeholder || "Pilih opsi...")}
+                        {selectedOption ? selectedOption.label : (value && allowCustomValue ? value : (placeholder || "Pilih opsi..."))}
                     </span>
-                    <ChevronDown size={18} strokeWidth={2} className={`text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={18} strokeWidth={2} className={`text-gray-500 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </div>
 
                 {/* Dropdown Menu */}
@@ -98,37 +142,51 @@ const DropdownInput = ({
                             </div>
                         )}
 
-                        <div className="max-h-60 overflow-y-auto custom-scrollbar">
-                            <div
-                                onClick={() => {
-                                    onChange("");
-                                    setIsOpen(false);
-                                    setSearchQuery("");
-                                }}
-                                className={`p-3 cursor-pointer hover:bg-gray-100 text-gray-500`}
-                            >
-                                Pilih opsi...
-                            </div>
+                        <div className="bg-white">
+                            {!searchQuery && (
+                                <div
+                                    onClick={() => {
+                                        onChange("");
+                                        setIsOpen(false);
+                                        setSearchQuery("");
+                                    }}
+                                    className={`p-3 cursor-pointer hover:bg-gray-100 text-gray-500`}
+                                >
+                                    Pilih opsi...
+                                </div>
+                            )}
+
+                            {showCustomOption && (
+                                <div
+                                    onClick={() => {
+                                        onChange(searchQuery);
+                                        setIsOpen(false);
+                                        setSearchQuery("");
+                                    }}
+                                    className={`p-3 cursor-pointer hover:bg-gray-100 text-sm flex items-center gap-2`}
+                                >
+                                    <span className="font-semibold">"{searchQuery}"</span>
+                                </div>
+                            )}
 
                             {filteredOptions.length > 0 ? (
-                                filteredOptions.map((opt) => (
-                                    <div
-                                        key={opt.value}
-                                        onClick={() => {
-                                            onChange(opt.value);
-                                            setIsOpen(false);
-                                            setSearchQuery("");
-                                        }}
-                                        className={`p-3 cursor-pointer hover:bg-gray-100 ${value === opt.value ? 'bg-gray-100 text-black font-semibold' : 'text-black'
-                                            }`}
-                                    >
-                                        {opt.label}
-                                    </div>
-                                ))
+                                <List
+                                    style={{
+                                        height: filteredOptions.length > 5 ? 220 : filteredOptions.length * 44,
+                                        width: '100%'
+                                    }}
+                                    rowCount={filteredOptions.length}
+                                    rowHeight={44}
+                                    rowComponent={Row}
+                                    rowProps={{}}
+                                    className="custom-scrollbar"
+                                />
                             ) : (
-                                <div className="px-3 py-4 text-sm text-center text-gray-400">
-                                    Hasil tidak ditemukan
-                                </div>
+                                !showCustomOption && (
+                                    <div className="px-3 py-4 text-sm text-center text-gray-400">
+                                        Hasil tidak ditemukan
+                                    </div>
+                                )
                             )}
                         </div>
                     </div>
@@ -142,7 +200,7 @@ const DropdownInput = ({
                 onChange={(e) => onChange(e.target.value)}
             >
                 <option value="" disabled hidden>{placeholder || "Pilih..."}</option>
-                {options.map((opt) => (
+                {uniqueOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                         {opt.label}
                     </option>

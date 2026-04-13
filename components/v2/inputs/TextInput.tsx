@@ -5,18 +5,18 @@ type TextInputProps = {
     label: string,
     value?: string,
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
-    required: boolean,
+    required?: boolean,
     disabled?: boolean
 }
 
-const TextInput = ({ id, label, value, onChange, required, disabled }: TextInputProps) => {
+const TextInput = ({ id, label, value, onChange, required = false, disabled }: TextInputProps) => {
     return (
         <div>
             <label
                 htmlFor={id}
                 className="block text-sm font-semibold black mb-2"
             >
-                {label}
+                {label} {required && <span className="text-red-600">*</span>}
             </label>
             <input
                 type="text"

@@ -167,7 +167,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                             />
                             <PasswordInput
                                 id='password'
-                                label='Password'
+                                label='Kata Sandi'
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required={true}

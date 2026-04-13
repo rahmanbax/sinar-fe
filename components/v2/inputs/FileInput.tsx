@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { UploadCloud, File as FileIcon, X, Upload } from 'lucide-react'
+import { File as FileIcon, X, Upload, ExternalLink } from 'lucide-react'
 
 type FileInputProps = {
     id: string,
@@ -10,10 +10,11 @@ type FileInputProps = {
     disabled?: boolean,
     instructions?: string,
     maxSizeMB?: number,
-    icon?: React.ReactNode
+    icon?: React.ReactNode,
+    initialUrl?: string | null,
 }
 
-const FileInput = ({ id, label, accept, onChange, required = false, disabled, instructions, maxSizeMB, icon }: FileInputProps) => {
+const FileInput = ({ id, label, accept, onChange, required = false, disabled, instructions, maxSizeMB, icon, initialUrl }: FileInputProps) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [error, setError] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -49,6 +50,11 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
         }
     };
 
+    // Derive a display name from the URL
+    const existingFileName = initialUrl
+        ? decodeURIComponent(initialUrl.split('/').pop() || initialUrl)
+        : null;
+
     return (
         <div>
             <label
@@ -59,8 +65,7 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
             </label>
 
             <div
-                className={`relative w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${disabled ? 'bg-gray-50 opacity-60 cursor-not-allowed' : ' hover:border-navy-300 bg-white'
-                    }`}
+                className={`relative w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${disabled ? 'bg-gray-50 opacity-60 cursor-not-allowed' : 'hover:border-navy-300 bg-white'}`}
                 onClick={() => !disabled && inputRef.current?.click()}
             >
                 <input
@@ -71,21 +76,10 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
                     onChange={handleFileChange}
                     className="hidden"
                     disabled={disabled}
-                    required={required && !selectedFile}
+                    required={required && !selectedFile && !initialUrl}
                 />
 
-                {!selectedFile ? (
-                    <div className="flex flex-col items-center text-center space-y-1">
-                        {icon || <Upload size={20} className='text-gray-500' />}
-                        <p className="text-sm font-medium text-black">
-                            Pilih file untuk diunggah
-                        </p>
-                        <p className="text-xs text-gray-500">
-                            {instructions || (accept ? `Upload file dengan format: ${accept}` : 'Mendukung semua format file')}
-                            {maxSizeMB ? ` (Maks. ${maxSizeMB} MB)` : ''}
-                        </p>
-                    </div>
-                ) : (
+                {selectedFile ? (
                     <div className="flex items-center justify-between w-full">
                         <div className="flex items-center flex-1 min-w-0 pr-4">
                             <FileIcon size={16} className='text-gray-500' />
@@ -103,6 +97,37 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
                                 <X size={16} />
                             </button>
                         )}
+                    </div>
+                ) : initialUrl ? (
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center flex-1 min-w-0 pr-4">
+                            <FileIcon size={16} className='text-gray-500' />
+                            <div className="ml-4 truncate text-left">
+                                <p className="text-sm font-medium truncate">{existingFileName}</p>
+                                <p className="text-xs text-gray-500">Klik untuk ganti</p>
+                            </div>
+                        </div>
+                        <a
+                            href={initialUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-2 text-gray-400 hover:text-navy-600 rounded-md transition-colors"
+                            title="Buka file"
+                        >
+                            <ExternalLink size={16} />
+                        </a>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center text-center space-y-1">
+                        {icon || <Upload size={20} className='text-gray-500' />}
+                        <p className="text-sm font-medium text-black">
+                            Pilih file untuk diunggah
+                        </p>
+                        <p className="text-xs text-gray-500">
+                            {instructions || (accept ? `Upload file dengan format: ${accept}` : 'Mendukung semua format file')}
+                            {maxSizeMB ? ` (Maks. ${maxSizeMB} MB)` : ''}
+                        </p>
                     </div>
                 )}
             </div>

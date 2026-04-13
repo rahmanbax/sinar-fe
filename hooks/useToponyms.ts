@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { getSpatialToponyms, getToponymDetail, getPublicToponyms } from "@/api/toponym";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSpatialToponyms, getToponymDetail, getPublicToponyms, getToponymById, createToponym, updateToponym } from "@/api/toponym";
 
 export interface SpatialToponym {
     id: string;
@@ -137,6 +137,37 @@ export const useToponymDetail = (id: string | null) => {
         queryFn: () => getToponymDetail(id!),
         enabled: !!id,
         retry: false, // Prevent retrying on failure
+    });
+};
+
+export const useSurveyToponymDetail = (id: string | null, token: string | null) => {
+    return useQuery<ToponymDetailResponse>({
+        queryKey: ["survey-toponym", id],
+        queryFn: () => getToponymById(id!, token),
+        enabled: !!id && !!token,
+        retry: false,
+    });
+};
+
+export const useCreateToponym = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ payload, token }: { payload: any, token: string | null }) => createToponym(payload, token),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["toponyms"] });
+        },
+    });
+};
+
+export const useUpdateToponym = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, payload, token }: { id: string, payload: any, token: string | null }) => updateToponym(id, payload, token),
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["toponyms"] });
+            queryClient.invalidateQueries({ queryKey: ["toponym", variables.id] });
+            queryClient.invalidateQueries({ queryKey: ["survey-toponym", variables.id] });
+        },
     });
 };
 

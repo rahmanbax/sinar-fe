@@ -9,14 +9,23 @@ import { ChevronRight, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { useCompletedVerificationTransactions } from "@/hooks/useVerificationTransactions";
+import { useCompletedVerificationTransactions, useCreateRecommendationMutation } from "@/hooks/useVerificationTransactions";
 import { VerificationTransaction } from "@/api/verification";
+import { uploadDocs } from "@/api/media";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AjukanRekomendasiPage = () => {
     const router = useRouter();
+    const { token } = useAuth();
     const { data: transactionsRes, isLoading } = useCompletedVerificationTransactions();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     
+    // Form States
+    const [noSurat, setNoSurat] = useState("");
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    const { mutateAsync: createRec, isPending } = useCreateRecommendationMutation();
+
     const transactions: VerificationTransaction[] = transactionsRes?.data || [];
 
     const toggleSelect = (id: string) => {
@@ -37,6 +46,41 @@ const AjukanRekomendasiPage = () => {
     const totalSelectedData = transactions
         .filter(t => selectedIds.includes(t.id))
         .reduce((sum, t) => sum + (t.accepted_data || 0), 0);
+
+    // Form Validation
+    const isValid = selectedIds.length > 0 && noSurat.trim() !== "" && selectedFile !== null;
+
+    const handleSubmit = async () => {
+        if (!isValid) return;
+
+        try {
+            // Step 1: Upload Document first
+            const uploadRes = await uploadDocs(selectedFile, token);
+            if (uploadRes.error) {
+                alert(uploadRes.message || "Gagal mengunggah surat");
+                return;
+            }
+
+            const docUrl = uploadRes.data.url;
+
+            // Step 2: Create Recommendation with the doc URL
+            const payload = {
+                recommendation_number: noSurat,
+                recommendation_doc_url: docUrl,
+                transaction_ids: selectedIds
+            };
+
+            const res = await createRec(payload);
+            if (!res.error) {
+                router.push("/v2/verifikator-kota/data-rekomendasi");
+            } else {
+                alert(res.message || "Gagal mengajukan rekomendasi");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Terjadi kesalahan sistem");
+        }
+    };
 
     return (
         <VerifikatorKotaLayout showNav={false}>
@@ -127,14 +171,15 @@ const AjukanRekomendasiPage = () => {
                         <TextInput 
                             id="no_surat"
                             label="No. Surat Rekomendasi"
-                            onChange={() => {}}
+                            value={noSurat}
+                            onChange={(e) => setNoSurat(e.target.value)}
                         />
 
                         {/* Unggah Surat */}
                         <FileInput 
                             id="unggah_surat"
                             label="Unggah Surat"
-                            onChange={() => {}}
+                            onChange={(file) => setSelectedFile(file)}
                             instructions="Klik untuk unggah Surat"
                             icon={<FileText size={20} className="text-gray-400" />}
                         />
@@ -148,9 +193,14 @@ const AjukanRekomendasiPage = () => {
                                 onClick={() => router.back()}
                             />
                             <ButtonComponent 
-                                label="Ajukan"
-                                disabled
-                                className="w-full py-2.5 bg-gray-400 hover:bg-gray-400 border-none cursor-not-allowed"
+                                label={isPending ? "Memproses..." : "Ajukan"}
+                                disabled={!isValid || isPending}
+                                className={`w-full py-2.5 border-none transition-all ${
+                                    isValid 
+                                    ? "bg-navy-900 hover:bg-navy-800 text-white cursor-pointer" 
+                                    : "bg-gray-400 text-white cursor-not-allowed"
+                                }`}
+                                onClick={handleSubmit}
                             />
                         </div>
                     </div>

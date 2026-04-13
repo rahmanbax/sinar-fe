@@ -4,26 +4,18 @@ import React from "react";
 import VerifikatorKotaLayout from "@/components/v2/nav/VerifikatorKotaLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";    
 
 import { useRouter } from "next/navigation";
 
-// Dummy Data matches the image
-const dummyData = [
-    { id: "1", submitted_at: "05/02/2026", recommendation_number: "Rekomendasi Februari", total_data: 20, status: "Diajukan" },
-    { id: "2", submitted_at: "05/02/2026", recommendation_number: "Rekomendasi Februari", total_data: 20, status: "Diajukan" },
-    { id: "3", submitted_at: "05/02/2026", recommendation_number: "Rekomendasi Februari", total_data: 20, status: "Diajukan" },
-    { id: "4", submitted_at: "05/02/2026", recommendation_number: "Rekomendasi Februari", total_data: 20, status: "Diajukan" },
-    { id: "5", submitted_at: "05/02/2026", recommendation_number: "Rekomendasi Februari", total_data: 20, status: "Diajukan" },
-    { id: "6", submitted_at: "05/02/2026", recommendation_number: "Rekomendasi Februari", total_data: 20, status: "Diajukan" },
-    { id: "7", submitted_at: "05/02/2026", recommendation_number: "Rekomendasi Februari", total_data: 20, status: "Diajukan" },
-    { id: "8", submitted_at: "05/02/2026", recommendation_number: "Rekomendasi Februari", total_data: 20, status: "Selesai" },
-    { id: "9", submitted_at: "05/02/2026", recommendation_number: "Rekomendasi Februari", total_data: 20, status: "Selesai" },
-    { id: "10", submitted_at: "05/02/2026", recommendation_number: "Rekomendasi Februari", total_data: 20, status: "Selesai" },
-];
+import { useRecommendations } from "@/hooks/useVerificationTransactions";
+import dayjs from "dayjs";
 
 const DataRekomendasiPage = () => {
     const router = useRouter();
+    const { data: recommendationsRes, isLoading } = useRecommendations();
+    
+    const recommendations = recommendationsRes?.data || [];
 
     const columns: ColumnDef<any>[] = [
         {
@@ -35,24 +27,36 @@ const DataRekomendasiPage = () => {
         },
         {
             header: "Tanggal Pengajuan",
-            accessorKey: "submitted_at",
+            cell: (row) => (
+                <div className="text-gray-900">
+                    {row.created_at ? dayjs(row.created_at).format("DD/MM/YYYY") : "-"}
+                </div>
+            ),
             className: "min-w-[150px]",
         },
         {
             header: "No. Surat Rekomendasi",
-            accessorKey: "recommendation_number",
+            cell: (row) => (
+                <div className="text-gray-900">
+                    {row.recommendation_number || row.number || row.id || "-"}
+                </div>
+            ),
             className: "min-w-[250px]",
         },
         {
             header: "Jumlah Data",
-            accessorKey: "total_data",
+            cell: (row) => (
+                <div className="text-gray-900 text-center">
+                    {row.toponyms_count ?? row.total_data ?? "-"}
+                </div>
+            ),
             className: "text-center w-32",
         },
         {
             header: "Status",
             cell: (row) => {
-                const isDiajukan = row.status === "Diajukan";
-                const isSelesai = row.status === "Selesai";
+                const isDiajukan = row.status === "Diajukan" || row.status === "diajukan" || !row.status;
+                const isSelesai = row.status === "Selesai" || row.status === "selesai";
                 
                 return (
                     <div className="flex justify-center">
@@ -63,7 +67,7 @@ const DataRekomendasiPage = () => {
                             ? "bg-green-100/80 text-green-600" 
                             : "bg-gray-100 text-gray-600"
                         }`}>
-                            {row.status}
+                            {row.status || "Diajukan"}
                         </span>
                     </div>
                 );
@@ -101,16 +105,8 @@ const DataRekomendasiPage = () => {
                 <div className="bg-white rounded-xl shadow-none">
                     <DataTable
                         columns={columns}
-                        data={dummyData}
-                        isLoading={false}
-                        pagination={{
-                            total: 10,
-                            per_page: 10,
-                            current_page: 1,
-                            last_page: 1,
-                            from: 1,
-                            to: 10
-                        }}
+                        data={recommendations}
+                        isLoading={isLoading}
                         showSearch={true}
                         showFilter={true}
                         emptyMessage="Belum ada data rekomendasi"

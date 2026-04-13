@@ -167,3 +167,13 @@ export const createRecommendation = async (token: string | null, data: { recomme
     });
     return response.json();
 };
+
+export const getIncomingRecommendations = async (token: string | null) => {
+    if (!token) return { error: true, message: "No token provided", data: [] };
+    const response = await fetch(`${API_URL}/verifications/recommendation/incoming`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return response.json();
+};

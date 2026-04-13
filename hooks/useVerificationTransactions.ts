@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCompletedVerificationTransactions, createRecommendation, getRecommendations } from "@/api/verification";
+import { getCompletedVerificationTransactions, createRecommendation, getRecommendations, getIncomingRecommendations } from "@/api/verification";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const useCompletedVerificationTransactions = () => {
@@ -32,5 +32,14 @@ export const useCreateRecommendationMutation = () => {
             queryClient.invalidateQueries({ queryKey: ["recommendations"] });
             queryClient.invalidateQueries({ queryKey: ["completed-verification-transactions"] });
         },
+    });
+};
+
+export const useIncomingRecommendations = () => {
+    const { token } = useAuth();
+    return useQuery({
+        queryKey: ["incoming-recommendations"],
+        queryFn: () => getIncomingRecommendations(token),
+        enabled: !!token,
     });
 };

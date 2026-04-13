@@ -56,9 +56,10 @@ type ToponymDetailMapProps = {
     drawnPolygon?: { lat: number, lng: number }[][];
     setDrawnPolygon?: React.Dispatch<React.SetStateAction<{ lat: number, lng: number }[][]>>;
     onSave?: () => void;
+    initialCenter?: { lat: number; lng: number } | null;
 }
 
-const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, drawnLine, setDrawnLine, drawnPolygon, setDrawnPolygon, onSave }: ToponymDetailMapProps) => {
+const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, drawnLine, setDrawnLine, drawnPolygon, setDrawnPolygon, onSave, initialCenter }: ToponymDetailMapProps) => {
     const mapRef = useRef<MapRef>(null);
     const popupRef = useRef<HTMLDivElement>(null);
 
@@ -105,6 +106,16 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
     }
 
     useEffect(() => {
+        if (initialCenter && mapRef.current) {
+            mapRef.current.getMap().flyTo({
+                center: [initialCenter.lng, initialCenter.lat],
+                zoom: 11,
+                essential: true,
+            });
+        }
+    }, [initialCenter]);
+
+    useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
                 setIsStylesOpen(false);
@@ -146,7 +157,7 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
                     return next;
                 });
             }
-        }, 150);
+        }, 200);
     };
 
     const handleMapDblClick = (e: MapLayerMouseEvent) => {
@@ -227,7 +238,7 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
                                 </h3>
                                 <button
                                     onClick={() => setIsStylesOpen(false)}
-                                    className="rounded-full transition text-gray-500 hover:text-gray-600"
+                                    className="rounded-full transition text-gray-500 hover:text-gray-600 cursor-pointer"
                                 >
                                     <X size={20} />
                                 </button>

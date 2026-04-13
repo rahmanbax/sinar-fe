@@ -19,11 +19,12 @@ interface FilterModalProps {
     isOpen: boolean;
     onClose: () => void;
     onApply?: (filters: FilterState) => void;
+    onFieldChange?: (id: string, value: string) => void;
     initialFilters?: FilterState;
     fields: FilterField[];
 }
 
-const FilterModal = ({ isOpen, onClose, onApply, initialFilters, fields }: FilterModalProps) => {
+const FilterModal = ({ isOpen, onClose, onApply, onFieldChange, initialFilters, fields }: FilterModalProps) => {
     const [filters, setFilters] = useState<FilterState>(initialFilters || {});
 
     useEffect(() => {
@@ -69,7 +70,10 @@ const FilterModal = ({ isOpen, onClose, onApply, initialFilters, fields }: Filte
                             label={field.label}
                             placeholder={field.placeholder || field.label}
                             value={filters[field.id] || ''}
-                            onChange={(val) => setFilters({ ...filters, [field.id]: val })}
+                            onChange={(val) => {
+                                setFilters({ ...filters, [field.id]: val });
+                                onFieldChange?.(field.id, val);
+                            }}
                             options={field.options}
                             searchable={field.searchable}
                         />

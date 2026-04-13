@@ -1,33 +1,17 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import SurveyorLayout from '@/components/v2/nav/SurveyorLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import FilterModal, { FilterState } from '@/components/v2/modals/FilterModal';
-import { Plus, SlidersHorizontal, Map as MapIcon, Search, Eye, FileText, Download } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { useRouter } from 'next/navigation';
 import { getToponyms } from '@/api/toponym';
-import { getRegions } from '@/api/region';
-import { getElements } from '@/api/classification';
-import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import MapModal from '@/components/v2/modals/MapModal';
-
-interface ToponymData {
-    id: number | string;
-    no: number;
-    created_at: string;
-    survey_at: string;
-    element_type: string;
-    generic_element: string;
-    specific_element: string;
-    province: string;
-    regency: string;
-    source: string;
-    status: string;
-}
+import { useProvinces, useCities, useElements } from '@/hooks/useRegions';
 
 const getStatusBadgeV2 = (status: string) => {
     const s = status?.toLowerCase() || "";
@@ -60,65 +44,47 @@ const MyDataPage = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isMapOpen, setIsMapOpen] = useState(false);
     const [filters, setFilters] = useState<FilterState | undefined>();
-    const [activeProvinceForFilter, setActiveProvinceForFilter] = useState<string | "">("");
-
-    // Options for filters
-    const [provinces, setProvinces] = useState<{label: string, value: string}[]>([]);
-    const [cities, setCities] = useState<{label: string, value: string}[]>([]);
-    const [elements, setElements] = useState<{label: string, value: string}[]>([]);
+    const [activeProvinceForFilter, setActiveProvinceForFilter] = useState<string>("");
 
     const { token } = useAuth();
 
-    // Fetch initial filter options
-    useEffect(() => {
-        if (!token) return;
-        
-        // Fetch Provinces
-        getRegions({ level: 'PROVINCE', token }).then(res => {
-            const provinceData = res?.data?.results || res?.results || res?.data || (Array.isArray(res) ? res : []);
-            if (Array.isArray(provinceData)) {
-                setProvinces(provinceData.map((p: any, index: number) => ({ 
-                    label: p.name || p.nama || p.label || "Tanpa Nama", 
-                    value: (p.id?.toString() || p.code?.toString() || p.value?.toString() || `prov-${index}`),
-                    path: p.path 
-                })));
-            }
-        });
+    // --- TanStack Query hooks for filter options ---
+    const { data: provincesData } = useProvinces(token);
+    const { data: elementsData } = useElements(token);
 
-        // Fetch Elements
-        getElements(token).then(res => {
-            const elementsData = res?.data?.results || res?.data || (Array.isArray(res) ? res : []);
-            if (Array.isArray(elementsData)) {
-                setElements(elementsData.map((e: any, index: number) => ({ 
-                    label: e.name || e.nama || e.label || "Tanpa Nama", 
-                    value: (e.code || e.id || e.value || `ele-${index}`).toString() 
-                })));
-            }
-        });
-    }, [token]);
+    const provinces = useMemo(() =>
+        (provincesData?.data ?? []).map((p) => ({
+            label: p.name,
+            value: p.code,
+            path: p.path,
+        })),
+        [provincesData]
+    );
 
-    useEffect(() => {
-        const provinceId = activeProvinceForFilter || filters?.provinsi;
-        
-        if (!token || !provinceId) {
-            setCities([]);
-            return;
-        }
+    const elements = useMemo(() =>
+        (elementsData?.data ?? []).map((e: any) => ({
+            label: e.name || e.nama || "Tanpa Nama",
+            value: (e.code || e.id || e.value || "").toString(),
+        })),
+        [elementsData]
+    );
 
-        // Find the path for this province ID to get cities
-        const selectedProv = provinces.find(p => p.value === provinceId);
-        const parentPath = (selectedProv as any)?.path || provinceId;
+    // Resolve the selected province's `path` to use as parent param for useCities
+    const selectedProvinceId = activeProvinceForFilter || filters?.provinsi || null;
+    const selectedProvincePath = useMemo(() => {
+        if (!selectedProvinceId) return null;
+        return provinces.find((p) => p.value === selectedProvinceId)?.path ?? null;
+    }, [selectedProvinceId, provinces]);
 
-        getRegions({ level: 'CITY', parent: parentPath, token }).then(res => {
-            const cityData = res?.data?.results || res?.results || res?.data || (Array.isArray(res) ? res : []);
-            if (Array.isArray(cityData)) {
-                setCities(cityData.map((c: any, index: number) => ({ 
-                    label: c.name || c.nama || c.label || "Tanpa Nama", 
-                    value: (c.id?.toString() || c.code?.toString() || c.value?.toString() || `city-${index}`)
-                })));
-            }
-        });
-    }, [token, filters?.provinsi, activeProvinceForFilter, provinces]);
+    const { data: citiesData } = useCities(selectedProvincePath, token);
+
+    const cities = useMemo(() =>
+        (citiesData?.data ?? []).map((c) => ({
+            label: c.name,
+            value: c.code,
+        })),
+        [citiesData]
+    );
 
     const { data: queryResult, isLoading: loading } = useQuery({
         queryKey: ['survey-toponyms', page, limit, search, filters, token],
@@ -172,7 +138,7 @@ const MyDataPage = () => {
             cell: (row) => (
                 <div className="flex items-center justify-center">
                     <button
-                        onClick={() => router.push(`/v2/surveyor/data-saya/detail?id=${row.id}`)}
+                        onClick={() => router.push(`/v2/surveyor/data-saya/detail/${row.id}`)}
                         className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
                         title="Lihat Detail"
                     >
@@ -219,12 +185,15 @@ const MyDataPage = () => {
                 isOpen={isFilterOpen}
                 onClose={() => {
                     setIsFilterOpen(false);
-                    setActiveProvinceForFilter(""); // clear draft state on close
+                    setActiveProvinceForFilter("");
                 }}
                 initialFilters={filters}
+                onFieldChange={(id, value) => {
+                    if (id === 'provinsi') setActiveProvinceForFilter(value);
+                }}
                 onApply={(newFilters) => {
                     setFilters(newFilters);
-                    setPage(1); 
+                    setPage(1);
                     setIsFilterOpen(false);
                 }}
                 fields={[
@@ -247,7 +216,7 @@ const MyDataPage = () => {
                         label: 'Kabupaten/ Kota',
                         searchable: true,
                         options: cities,
-                        placeholder: !(activeProvinceForFilter || filters?.provinsi) ? "Kabupaten/ Kota" : "Kabupaten/ Kota"
+                        placeholder: !selectedProvinceId ? "Kabupaten/Kota" : "Kabupaten/ Kota"
                     },
                     {
                         id: 'status',

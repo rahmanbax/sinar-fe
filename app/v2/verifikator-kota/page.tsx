@@ -5,6 +5,7 @@ import VerifikatorKotaLayout from '@/components/v2/nav/VerifikatorKotaLayout'
 import { Database, MapPin, Plus } from 'lucide-react';
 import React from 'react'
 import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap';
+import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart';
 
 const VerifikatorKotaPage = () => {
     return (
@@ -48,37 +49,17 @@ const VerifikatorKotaPage = () => {
             {/* Bottom Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
                 {/* Bar Chart Candidate */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
-                    <h3 className="text-sm font-bold text-navy-900 mb-8">Kandidat Jenis Unsur</h3>
-
-                    <div className="space-y-6 flex-1">
-                        {[
-                            { name: 'Gunung', value: 20, max: 20 },
-                            { name: 'Bukit', value: 15, max: 20 },
-                            { name: 'Stadion', value: 10, max: 20 },
-                            { name: 'Candi', value: 10, max: 20 },
-                            { name: 'Laut', value: 2, max: 20 },
-                        ].map((item, index) => (
-                            <div key={index} className="flex items-center gap-4">
-                                <span className="text-sm text-gray-600 w-16 shrink-0">{item.name}</span>
-                                <div className="flex-1 h-3.5 bg-gray-50 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-[#4bb1cc] rounded-r-full"
-                                        style={{ width: `${(item.value / item.max) * 100}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* x-axis labels */}
-                    <div className="flex justify-between pl-20 pr-2 mt-auto text-xs text-gray-600 font-medium pt-3 border-t border-gray-200/60">
-                        <span>5</span>
-                        <span>10</span>
-                        <span>15</span>
-                        <span>20</span>
-                    </div>
-                </div>
+                <HorizontalBarChart
+                    title="Kandidat Jenis Unsur"
+                    items={[
+                        { name: 'Gunung', value: 20, max: 20 },
+                        { name: 'Bukit', value: 15, max: 20 },
+                        { name: 'Stadion', value: 10, max: 20 },
+                        { name: 'Candi', value: 10, max: 20 },
+                        { name: 'Laut', value: 2, max: 20 },
+                    ]}
+                    xLabels={[5, 10, 15, 20]}
+                />
 
                 {/* Map View */}
                 <div className="bg-gray-100 rounded-xl border border-gray-200 overflow-hidden min-h-[350px] relative">

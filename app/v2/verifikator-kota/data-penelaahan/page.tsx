@@ -186,7 +186,8 @@ const DataPenelaahanVerifikatorContent = () => {
                     element: item.element?.name || "-",
                     name: item.map_name || item.local_name || "-",
                     surveyor: item.creator?.name || "-",
-                    status: item.review_transaction_data?.[0]?.accepted === true ? "Disetujui" : item.review_transaction_data?.[0]?.accepted === false ? "Ditolak" : "Belum Ditelaah"
+                    status: item.review_transaction_data?.[0]?.accepted === true ? "Disetujui" : item.review_transaction_data?.[0]?.accepted === false ? "Ditolak" : "Belum Ditelaah",
+                    transactionId: item.review_transaction_toponyms?.[0]?.transaction_id || ""
                 }));
                 setAllToponyms(transformed || []);
             }
@@ -255,7 +256,7 @@ const DataPenelaahanVerifikatorContent = () => {
         {
             header: "Aksi", className: "w-16 text-center", cell: (row) => (
                 <div className="flex justify-center">
-                    <button onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/toponim/${row.id}`)} className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md">
+                    <button onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail/${row.id}?transactionId=${row.transactionId}`)} className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md">
                         <Search size={18} />
                     </button>
                 </div>

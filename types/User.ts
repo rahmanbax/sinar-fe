@@ -25,12 +25,19 @@ export enum Role {
 }
 
 // Role redirect mapping
-export const getRoleDefaultRoute = (role: Role): string => {
-    switch (role) {
+export const getRoleDefaultRoute = (user: { role: Role; permission_level?: number | null; name?: string }): string => {
+    switch (user.role) {
         case Role.ADMIN:
         case Role.BIG:
             return '/big'
         case Role.VERIFICATOR:
+            // Check by permission_level first
+            if (user.permission_level === 2) return '/v2/verifikator-provinsi'
+            if (user.permission_level === 3) return '/v2/verifikator-pusat'
+            
+            // Fallback: check if 'Provinsi' is in the name (common in this system)
+            if (user.name?.toLowerCase().includes('provinsi')) return '/v2/verifikator-provinsi'
+            
             return '/v2/verifikator-kota'
         case Role.SURVEYOR:
         case Role.CONTRIBUTOR:

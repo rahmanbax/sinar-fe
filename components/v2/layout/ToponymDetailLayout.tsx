@@ -17,7 +17,10 @@ export interface ToponymDetailLayoutProps {
   initialData?: any;
   onSubmitAction?: (data: any) => void;
   onCancelAction?: () => void;
+  onRejectAction?: () => void;
+  onApproveAction?: () => void;
   isSubmitting?: boolean;
+  isVerifikator?: boolean;
 }
 
 const ToponymDetailLayout = ({
@@ -25,10 +28,22 @@ const ToponymDetailLayout = ({
   initialData,
   onSubmitAction,
   onCancelAction,
+  onRejectAction,
+  onApproveAction,
   isSubmitting = false,
+  isVerifikator = false,
 }: ToponymDetailLayoutProps) => {
   const { token } = useAuth();
   const { formData, setFieldValue, setAllFormData, resetForm } = useToponymFormStore();
+  const [currentMode, setCurrentMode] = useState<ToponymDetailLayoutProps['mode']>(mode);
+  const [isVerifikatorMode, setIsVerifikatorMode] = useState<boolean>(isVerifikator);
+
+  // Sync prop changes if mode changes from parent
+  useEffect(() => {
+    setCurrentMode(mode);
+    setIsVerifikatorMode(isVerifikator);
+  }, [mode, isVerifikator]);
+
   const [sidebarWidth, setSidebarWidth] = useState(400); // Lebar awal dalam pixel
   const [isResizing, setIsResizing] = useState(false);
   const [isDrawingMode, setIsDrawingMode] = useState(false);
@@ -215,7 +230,7 @@ const ToponymDetailLayout = ({
   // Auto-generate Nama Rupabumi from Generik + Spesifik
   // Skip if we are in the middle of loading data from API (to prevent overriding the loaded namaRupabumi)
   useEffect(() => {
-    if (mode === 'detail') return;
+    if (currentMode === 'detail') return;
     if (isLoadingFromApi.current) return;
 
     const generik = formData.elemenGenerik?.trim() || "";
@@ -225,7 +240,7 @@ const ToponymDetailLayout = ({
     if (combined !== formData.namaRupabumi) {
       setFieldValue('namaRupabumi', combined);
     }
-  }, [formData.elemenGenerik, formData.elemenSpesifik, mode, setFieldValue]);
+  }, [formData.elemenGenerik, formData.elemenSpesifik, currentMode, setFieldValue]);
 
   // Fetching dynamic regions
   const { data: provincesRes } = useProvinces(token);
@@ -276,7 +291,7 @@ const ToponymDetailLayout = ({
     }
   };
 
-  const isReadOnly = mode === 'detail';
+  const isReadOnly = currentMode === 'detail';
 
   // Zoom map to location_point from API (always present on edit/detail)
   const initialCenter = (initialData?.location_point?.coordinates)
@@ -293,9 +308,9 @@ const ToponymDetailLayout = ({
       >
         <h2 className="text-xl font-bold text-gray-900">Data Toponim</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <fieldset disabled={isReadOnly} className={`space-y-5 ${isReadOnly ? 'hidden' : ''}`}>
+          <fieldset disabled={isReadOnly} className={`space-y-5`}>
 
-            {!isDrawingMode ? (
+            {!isReadOnly && (!isDrawingMode ? (
               <ButtonComponent
                 label={(drawnPoint && drawType === 'Point') || (drawnLine.length > 0 && drawType === 'Line') || (drawnPolygon.length > 0 && drawnPolygon[0].length > 0 && drawType === 'Polygon') ? "Ubah Lokasi di Peta" : "Tambah Lokasi di Peta"}
                 onClick={() => setIsDrawingMode(true)}
@@ -381,15 +396,13 @@ const ToponymDetailLayout = ({
                   <ButtonComponent
                     label="Simpan Lokasi"
                     onClick={() => {
-                      // Add logic to save the drawnPoint here
                       setIsDrawingMode(false);
                     }}
                     className='w-full text-sm col-span-2'
                   />
                 </div>
               </div>
-            )}
-
+            ))}
 
             {drawnPoint && drawType === 'Point' && (
               <div className='p-3 border border-gray-300 bg-gray-50 rounded-lg space-y-2'>
@@ -451,6 +464,7 @@ const ToponymDetailLayout = ({
               searchable={true}
               required={true}
               allowCustomValue={true}
+              disabled={isReadOnly}
             />
             <TextInput
               id='elemen-spesifik'
@@ -461,7 +475,7 @@ const ToponymDetailLayout = ({
             />
             <TextInput
               id='nama-rupabumi'
-              label="Nama Rupabumi (Peta)"
+              label="Nama Rupabumi"
               value={formData.namaRupabumi}
               onChange={(e) => setFieldValue('namaRupabumi', e.target.value)}
               disabled
@@ -523,6 +537,7 @@ const ToponymDetailLayout = ({
               options={elementOptions}
               searchable={true}
               required={true}
+              disabled={isReadOnly}
             />
             <DropdownInput
               label="Provinsi"
@@ -542,6 +557,7 @@ const ToponymDetailLayout = ({
               options={provinceOptions}
               searchable={true}
               required={true}
+              disabled={isReadOnly}
             />
             <DropdownInput
               label="Kabupaten/ Kota"
@@ -558,6 +574,7 @@ const ToponymDetailLayout = ({
               options={cityOptions}
               searchable={true}
               required={true}
+              disabled={isReadOnly}
             />
             <DropdownInput
               label="Kecamatan"
@@ -573,6 +590,7 @@ const ToponymDetailLayout = ({
               options={districtOptions}
               searchable={true}
               required={true}
+              disabled={isReadOnly}
             />
             <DropdownInput
               label="Desa/ Kelurahan"
@@ -582,6 +600,7 @@ const ToponymDetailLayout = ({
               options={villageOptions}
               searchable={true}
               required={true}
+              disabled={isReadOnly}
             />
             <CalendarInput
               id='tanggal-survey'
@@ -644,12 +663,12 @@ const ToponymDetailLayout = ({
           <div className="flex gap-3">
             {!isReadOnly && (
               <>
-                <ButtonComponent
+                {/* <ButtonComponent
                   label="Batal"
                   onClick={handleCancel}
                   secondary={true}
                   className='w-full'
-                />
+                /> */}
                 <ButtonComponent
                   label={isSubmitting ? "Menyimpan..." : "Simpan"}
                   className='w-full'
@@ -660,6 +679,35 @@ const ToponymDetailLayout = ({
             )}
           </div>
         </form>
+        {isVerifikatorMode && (
+          <div className='grid grid-cols-2 gap-3'>
+            <ButtonComponent
+              label="Edit"
+              className='w-full col-span-2'
+              secondary={true}
+              onClick={() => {
+                setCurrentMode('edit');
+                setIsVerifikatorMode(false);
+              }}
+            />
+            <ButtonComponent
+              label="Tolak"
+              className='w-full border-red-600 text-red-600'
+              secondary={true}
+              onClick={() => {
+
+                if (onRejectAction) onRejectAction();
+              }}
+            />
+            <ButtonComponent
+              label="Setujui"
+              className='w-full'
+              onClick={() => {
+                if (onApproveAction) onApproveAction();
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Resizer Handle (Pemindah Batas Kolom) */}

@@ -3,6 +3,9 @@ import {
     getVerificationCandidates,
     getVerificationTransactions,
     createVerificationTransaction,
+    acceptVerificationToponym,
+    rejectVerificationToponym,
+    updateVerificationToponym,
 } from "@/api/verification";
 
 export interface VerificationCandidate {
@@ -45,6 +48,62 @@ export const useCreateVerificationTransaction = () => {
             token: string | null;
             data: { title: string; elements: string[]; due_at: string };
         }) => createVerificationTransaction(token, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
+        },
+    });
+};
+
+export const useAcceptVerificationToponym = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            token,
+            transactionId,
+            toponymId,
+        }: {
+            token: string | null;
+            transactionId: string;
+            toponymId: string;
+        }) => acceptVerificationToponym(token, transactionId, toponymId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
+        },
+    });
+};
+
+export const useRejectVerificationToponym = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            token,
+            transactionId,
+            toponymId,
+        }: {
+            token: string | null;
+            transactionId: string;
+            toponymId: string;
+        }) => rejectVerificationToponym(token, transactionId, toponymId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
+        },
+    });
+};
+
+export const useUpdateVerificationToponym = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            token,
+            transactionId,
+            toponymId,
+            payload,
+        }: {
+            token: string | null;
+            transactionId: string;
+            toponymId: string;
+            payload: any;
+        }) => updateVerificationToponym(token, transactionId, toponymId, payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
         },

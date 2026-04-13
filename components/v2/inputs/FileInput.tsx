@@ -101,7 +101,7 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
                 ) : initialUrl ? (
                     <div className="flex items-center justify-between w-full">
                         <div className="flex items-center flex-1 min-w-0 pr-4">
-                            <FileIcon size={16} className='text-gray-500' />
+                            {icon ? icon : <FileIcon size={16} className='text-gray-500' />}
                             <div className="ml-4 truncate text-left">
                                 <p className="text-sm font-medium truncate">{existingFileName}</p>
                                 <p className="text-xs text-gray-500">Klik untuk ganti</p>

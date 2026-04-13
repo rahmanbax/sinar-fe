@@ -31,7 +31,7 @@ export const getRoleDefaultRoute = (role: Role): string => {
         case Role.BIG:
             return '/big'
         case Role.VERIFICATOR:
-            return '/penelaahan'
+            return '/v2/verifikator-kota'
         case Role.SURVEYOR:
         case Role.CONTRIBUTOR:
             return '/v2/surveyor'

@@ -296,7 +296,7 @@ const IndonesiaMap = ({
                                 </h3>
                                 <button
                                     onClick={() => setIsStylesOpen(false)}
-                                    className="rounded-full transition text-gray-500 hover:text-gray-600"
+                                    className="rounded-full transition text-gray-500 hover:text-gray-600 cursor-pointer"
                                 >
                                     <X size={20} />
                                 </button>

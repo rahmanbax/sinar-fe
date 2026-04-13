@@ -14,3 +14,12 @@ export const getElements = async (token: string | null) => {
     });
     return res.json();
 };
+
+export const getGenericElements = async (token: string | null) => {
+    if (!token) return { error: true, message: "No token provided", data: [] };
+    const res = await fetch(`${API_URL}/classification/generic-elements?sort_by=name&sort_order=asc`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.json();
+};
+

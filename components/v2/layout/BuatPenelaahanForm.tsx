@@ -1,7 +1,7 @@
 import React from 'react'
 import TextInput from '../inputs/TextInput'
 import CalendarInput from '../inputs/CalendarInput'
-import DropdownInput from '../inputs/DropdownInput'
+import MultiSelectDropdown from '../inputs/MultiSelectDropdown'
 import ButtonComponent from '../buttons/ButtonComponent'
 import { useBuatPenelaahanStore } from '@/store/useBuatPenelaahanStore'
 
@@ -12,7 +12,7 @@ interface Option {
 
 interface BuatPenelaahanFormProps {
   jenisUnsurOptions?: Option[];
-  onSubmit?: (data: { judulPenelaahan: string; tanggalPenelaahan: string; jenisUnsur: string }) => void;
+  onSubmit?: (data: { judulPenelaahan: string; tanggalPenelaahan: string; jenisUnsur: string[] }) => void;
   isSubmitting?: boolean;
 }
 
@@ -53,7 +53,7 @@ const BuatPenelaahanForm = ({ jenisUnsurOptions, onSubmit, isSubmitting = false 
         onChange={(e) => setFieldValue('tanggalPenelaahan', e.target.value)}
         required
       />
-      <DropdownInput
+      <MultiSelectDropdown
         label="Jenis Unsur"
         value={formData.jenisUnsur}
         onChange={(val) => setFieldValue('jenisUnsur', val)}

@@ -1,12 +1,38 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import SurveyorLayout from '@/components/v2/nav/SurveyorLayout';
 import { Plus, Database, MapPin } from 'lucide-react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap';
+import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePersonalPerformance } from '@/hooks/usePersonal';
 
 const SurveyorPage = () => {
+    const { token } = useAuth();
+    const { data: performanceRes, isLoading } = usePersonalPerformance(token);
+
+    const stats = useMemo(() => {
+        const d = performanceRes?.data?.summary;
+        return [
+            { value: d?.submitted_data ?? '-', label: 'Total Data yang Dikumpulkan', icon: Database },
+            { value: d?.survey_data ?? '-', label: 'Data Survey', icon: MapPin },
+            { value: d?.antara_data ?? '-', label: 'Data Antara', icon: MapPin },
+            { value: d?.standarized ?? '-', label: 'Data yang Dibakukan', icon: MapPin },
+        ];
+    }, [performanceRes]);
+
+    const chartData = useMemo(() => {
+        if (!performanceRes?.data?.five_top_elements) return [];
+        const maxVal = Math.max(...performanceRes.data.five_top_elements.map(e => e.count), 5);
+        return performanceRes.data.five_top_elements.map(e => ({
+            name: e.element_name,
+            value: e.count,
+            max: maxVal
+        }));
+    }, [performanceRes]);
+
     return (
         <SurveyorLayout>
             {/* Header Area */}
@@ -24,17 +50,16 @@ const SurveyorPage = () => {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                {[
-                    { value: '120', label: 'Total Data yang Dikumpulkan', icon: Database },
-                    { value: '70', label: 'Data Survey', icon: MapPin },
-                    { value: '40', label: 'Data Antara', icon: MapPin },
-                    { value: '10', label: 'Data yang Dibakukan', icon: MapPin },
-                ].map((stat, index) => {
+                {stats.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
                         <div key={index} className="bg-white p-5 rounded-xl border border-gray-200 flex items-start justify-between">
                             <div>
-                                <h3 className="text-2xl font-bold text-navy-900 mb-1">{stat.value}</h3>
+                                {isLoading ? (
+                                    <div className="w-12 h-6 bg-gray-200 rounded animate-pulse mb-1" />
+                                ) : (
+                                    <h3 className="text-2xl font-bold text-navy-900 mb-1">{stat.value}</h3>
+                                )}
                                 <p className="text-[13px] text-gray-500 font-medium pr-4 leading-tight">{stat.label}</p>
                             </div>
                             <div className="p-2 bg-gray-50 rounded-lg shrink-0">
@@ -48,37 +73,11 @@ const SurveyorPage = () => {
             {/* Bottom Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
                 {/* Bar Chart Candidate */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
-                    <h3 className="text-sm font-bold text-navy-900 mb-8">Kandidat Jenis Unsur</h3>
-                    
-                    <div className="space-y-6 flex-1">
-                        {[
-                            { name: 'Gunung', value: 20, max: 20 },
-                            { name: 'Bukit', value: 15, max: 20 },
-                            { name: 'Stadion', value: 10, max: 20 },
-                            { name: 'Candi', value: 10, max: 20 },
-                            { name: 'Laut', value: 2, max: 20 },
-                        ].map((item, index) => (
-                            <div key={index} className="flex items-center gap-4">
-                                <span className="text-sm text-gray-600 w-16 shrink-0">{item.name}</span>
-                                <div className="flex-1 h-3.5 bg-gray-50 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-[#4bb1cc] rounded-r-full" 
-                                        style={{ width: `${(item.value / item.max) * 100}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    
-                    {/* x-axis labels */}
-                    <div className="flex justify-between pl-20 pr-2 mt-auto text-xs text-gray-600 font-medium pt-3 border-t border-gray-200/60">
-                        <span>5</span>
-                        <span>10</span>
-                        <span>15</span>
-                        <span>20</span>
-                    </div>
-                </div>
+                <HorizontalBarChart
+                    title="5 Jenis Unsur Teratas"
+                    items={chartData}
+                    isLoading={isLoading}
+                />
 
                 {/* Map View */}
                 <div className="bg-gray-100 rounded-xl border border-gray-200 overflow-hidden min-h-[350px] relative">

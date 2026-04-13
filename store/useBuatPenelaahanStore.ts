@@ -4,16 +4,16 @@ export interface BuatPenelaahanFormState {
   formData: {
     judulPenelaahan: string;
     tanggalPenelaahan: string;
-    jenisUnsur: string;
+    jenisUnsur: string[];
   };
-  setFieldValue: (field: keyof BuatPenelaahanFormState['formData'], value: string) => void;
+  setFieldValue: <K extends keyof BuatPenelaahanFormState['formData']>(field: K, value: BuatPenelaahanFormState['formData'][K]) => void;
   resetForm: () => void;
 }
 
-const initialFormState = {
+const initialFormState: BuatPenelaahanFormState['formData'] = {
   judulPenelaahan: '',
   tanggalPenelaahan: '',
-  jenisUnsur: '',
+  jenisUnsur: [],
 };
 
 export const useBuatPenelaahanStore = create<BuatPenelaahanFormState>((set) => ({

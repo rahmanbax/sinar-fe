@@ -108,7 +108,7 @@ const TransactionDetailContent = () => {
             cell: (row) => (
                 <div className="flex justify-center">
                     <button 
-                        onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail/${row.id}`)}
+                        onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail/${row.id}?transactionId=${transactionId}`)}
                         className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
                     >
                         <Search size={18} />

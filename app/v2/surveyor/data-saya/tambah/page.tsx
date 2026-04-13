@@ -43,7 +43,8 @@ const buildGeometry = (geometry: {
 const TambahDataPage = () => {
     const router = useRouter();
     const { token } = useAuth();
-    const { mutate: createToponym, isPending } = useCreateToponym();
+    const [isUploading, setIsUploading] = React.useState(false);
+    const { mutateAsync: createToponym, isPending } = useCreateToponym();
 
     const handleSubmit = async (data: any) => {
         const geometry = buildGeometry(data._geometry);
@@ -52,6 +53,13 @@ const TambahDataPage = () => {
             return;
         }
 
+        // Basic validation for required fields to prevent unnecessary requests
+        if (!data.elemenGenerik || !data.elemenSpesifik || !data.namaLokal || !data.jenisUnsur || !data.provinsi || !data.kabupatenKota || !data.kecamatan || !data.desaKelurahan || !data.tanggalSurvey) {
+            alert('Silakan lengkapi semua kolom yang bertanda bintang (*).');
+            return;
+        }
+
+        setIsUploading(true);
         try {
             // 1. Upload foto
             let uploadedPhotos: { url: string; filename: string }[] = [];
@@ -128,23 +136,17 @@ const TambahDataPage = () => {
             if (docsUrl) payload.support_document_url = docsUrl;
 
             // 7. Submit
-            createToponym(
-                { payload, token },
-                {
-                    onSuccess: (res) => {
-                        if (!res.error) {
-                            alert('Toponim berhasil disimpan!');
-                            router.push('/v2/surveyor/data-saya');
-                        } else {
-                            alert(`Gagal menyimpan: ${res.message}`);
-                        }
-                    },
-                    onError: () => {
-                        alert('Terjadi kesalahan saat menyimpan.');
-                    },
-                },
-            );
+            const res = await createToponym({ payload, token });
+            setIsUploading(false);
+
+            if (!res.error) {
+                alert('Toponim berhasil disimpan!');
+                router.push('/v2/surveyor/data-saya');
+            } else {
+                alert(`Gagal menyimpan: ${res.message}`);
+            }
         } catch (err) {
+            setIsUploading(false);
             console.error('Submit error:', err);
             alert('Terjadi kesalahan saat menyimpan.');
         }
@@ -155,7 +157,7 @@ const TambahDataPage = () => {
             <ToponymDetailLayout
                 mode='add'
                 onSubmitAction={handleSubmit}
-                isSubmitting={isPending}
+                isSubmitting={isPending || isUploading}
                 onCancelAction={() => router.push('/v2/surveyor/data-saya')}
             />
         </SurveyorLayout>

@@ -3,11 +3,27 @@
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import VerifikatorKotaLayout from '@/components/v2/nav/VerifikatorKotaLayout'
 import { Database, MapPin, Plus } from 'lucide-react';
-import React from 'react'
+import React, { useMemo } from 'react'
 import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap';
 import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart';
+import { useAuth } from '@/contexts/AuthContext';
+import { useVerificationCandidates } from '@/hooks/useVerification';
 
 const VerifikatorKotaPage = () => {
+    const { token } = useAuth();
+    const { data: candidatesRes, isLoading } = useVerificationCandidates(token);
+
+    const chartData = useMemo(() => {
+        if (!candidatesRes?.data) return [];
+
+        const maxVal = Math.max(...candidatesRes.data.map(c => c.count), 5); // Default min max to 5 if data is small
+
+        return candidatesRes.data.map(candidate => ({
+            name: candidate.element_name,
+            value: candidate.count,
+            max: maxVal
+        })).slice(0, 5); // Just show top 5
+    }, [candidatesRes]);
     return (
         <VerifikatorKotaLayout>
             {/* Header Area */}
@@ -51,14 +67,8 @@ const VerifikatorKotaPage = () => {
                 {/* Bar Chart Candidate */}
                 <HorizontalBarChart
                     title="Kandidat Jenis Unsur"
-                    items={[
-                        { name: 'Gunung', value: 20, max: 20 },
-                        { name: 'Bukit', value: 15, max: 20 },
-                        { name: 'Stadion', value: 10, max: 20 },
-                        { name: 'Candi', value: 10, max: 20 },
-                        { name: 'Laut', value: 2, max: 20 },
-                    ]}
-                    xLabels={[5, 10, 15, 20]}
+                    items={chartData}
+                    isLoading={isLoading}
                 />
 
                 {/* Map View */}

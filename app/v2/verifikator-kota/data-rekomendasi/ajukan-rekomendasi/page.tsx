@@ -65,7 +65,7 @@ const AjukanRekomendasiPage = () => {
 
             // Step 2: Create Recommendation with the doc URL
             const payload = {
-                recommendation_number: noSurat,
+                ref_number: noSurat,
                 recommendation_doc_url: docUrl,
                 transaction_ids: selectedIds
             };

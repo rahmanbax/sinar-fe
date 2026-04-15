@@ -27,7 +27,7 @@ export const useCreateRecommendationMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (data: { recommendation_number: string; recommendation_doc_url: string; transaction_ids: string[] }) => createRecommendation(token, data),
+        mutationFn: (data: { ref_number: string; recommendation_doc_url: string; transaction_ids: string[] }) => createRecommendation(token, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["recommendations"] });
             queryClient.invalidateQueries({ queryKey: ["completed-verification-transactions"] });

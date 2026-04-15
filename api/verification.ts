@@ -155,7 +155,7 @@ export const getRecommendations = async (token: string | null) => {
     return response.json();
 };
 
-export const createRecommendation = async (token: string | null, data: { recommendation_number: string; recommendation_doc_url: string; transaction_ids: string[] }) => {
+export const createRecommendation = async (token: string | null, data: { ref_number: string; recommendation_doc_url: string; transaction_ids: string[] }) => {
     if (!token) return { error: true, message: "No token provided" };
     const response = await fetch(`${API_URL}/verifications/recommendation/outgoing`, {
         method: "POST",

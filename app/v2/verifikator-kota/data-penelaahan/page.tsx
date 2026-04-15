@@ -30,6 +30,7 @@ const ReviewCard = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const isCompleted = item.status === 'completed';
+    const isRecommended = item.status === 'recommended';
     const isIssued = item.status === 'issued';
     const isVerificationDone = item.total_data > 0 && item.total_data === item.handled_data;
 
@@ -63,11 +64,12 @@ const ReviewCard = ({
         >
             <div className="flex items-start justify-between mb-4">
                 <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-blue-600 transition-colors">{item.title}</h3>
-                <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${isCompleted ? 'text-emerald-600 bg-emerald-50 border-emerald-100' :
-                    isIssued ? 'text-blue-600 bg-blue-50 border-blue-100' :
+                <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${isRecommended ? 'text-emerald-600 bg-white border-emerald-400' :
+                    isCompleted ? 'text-orange-500 bg-white border-orange-400' :
+                    isIssued ? 'text-blue-600 bg-white border-blue-400' :
                         'text-gray-500 bg-gray-50 border-gray-100'
                     }`}>
-                    {isCompleted ? 'Selesai' : isIssued ? 'Proses Penelaahan' : item.status}
+                    {isRecommended ? 'Selesai' : isCompleted ? 'Cetak BA' : isIssued ? 'Proses Penelaahan' : item.status}
                 </span>
             </div>
 
@@ -119,17 +121,19 @@ const ReviewCard = ({
                 </div>
             </div>
 
-            {isVerificationDone && !isCompleted ? (
+            {isRecommended ? (
+                <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2" onClick={(e) => { e.stopPropagation(); router.push(`/v2/verifikator-kota/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
+                    <FileText size={16} /> Lihat Berita Acara
+                </button>
+            ) : isCompleted ? (
+                <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-navy-500 hover:bg-navy-500 text-white transition-all flex items-center justify-center gap-2" onClick={(e) => { e.stopPropagation(); router.push(`/v2/verifikator-kota/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
+                    <FileText size={16} /> Cetak Berita Acara
+                </button>
+            ) : isVerificationDone ? (
                 <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-all flex items-center justify-center gap-2" onClick={handleFinish} disabled={isSubmitting}>
                     <Check size={16} /> {isSubmitting ? "Memproses..." : "Tandai Selesai"}
                 </button>
-            ) : isCompleted ? (
-                <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center gap-2" onClick={(e) => { e.stopPropagation(); router.push(`/v2/verifikator-kota/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
-                    <FileText size={16} /> Lihat Berita Acara
-                </button>
-            ) : (
-                <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white transition-all">Proses Penelaahan</button>
-            )}
+            ) : null}
         </div>
     );
 };
@@ -222,9 +226,9 @@ const DataPenelaahanVerifikatorContent = () => {
         { header: "Jumlah Ditolak", accessorKey: "rejected_data", className: "text-center w-28" },
         {
             header: "Status", cell: (row) => (
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${row.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${row.status === 'recommended' ? 'bg-emerald-100 text-emerald-700' : row.status === 'completed' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-600'
                     }`}>
-                    {row.status === 'completed' ? 'Selesai' : 'Proses Penelaahan'}
+                    {row.status === 'recommended' ? 'Selesai' : row.status === 'completed' ? 'Cetak BA' : 'Proses Penelaahan'}
                 </span>
             )
         },

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useMemo } from "react";
 import VerifikatorKotaLayout from "@/components/v2/nav/VerifikatorKotaLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
@@ -29,7 +29,7 @@ const DetailRekomendasiContent = () => {
         {
             header: "No",
             cell: (_, index) => (
-                <div className="text-gray-900 text-center">{index + 1}</div>
+                <div className="text-gray-900">{index + 1}</div>
             ),
             className: "w-14 text-center",
         },
@@ -45,7 +45,7 @@ const DetailRekomendasiContent = () => {
         {
             header: "Judul Penelaahan",
             cell: (row) => (
-                <div className="font-medium text-navy-900">{row.title || "-"}</div>
+                <div className="font-bold text-navy-900">{row.title || "-"}</div>
             ),
             className: "min-w-[200px]",
         },
@@ -90,7 +90,7 @@ const DetailRekomendasiContent = () => {
                     >
                         <Search
                             size={18}
-                            className="text-navy-900"
+                            className="text-gray-900"
                             strokeWidth={3}
                         />
                     </button>
@@ -104,9 +104,7 @@ const DetailRekomendasiContent = () => {
         <div className="flex flex-col gap-8">
             {/* Header Section */}
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-navy-900">
-                    Data Rekomendasi
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-900"> Data Rekomendasi</h1>
                 <ButtonComponent
                     label="Ajukan Rekomendasi"
                     onClick={() =>
@@ -120,25 +118,24 @@ const DetailRekomendasiContent = () => {
             </div>
 
             {/* Title Section */}
-            <div className="flex items-center gap-3">
-                <button
-                    onClick={() =>
-                        router.push("/v2/verifikator-kota/data-rekomendasi")
-                    }
-                    className="p-1 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
-                >
-                    <ArrowLeft size={20} className="text-gray-900" />
-                </button>
-                <div className="flex flex-col">
-                    <h2 className="text-lg font-bold text-navy-900">
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() =>
+                            router.push("/v2/verifikator-kota/data-rekomendasi")
+                        }
+                        className="p-1 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
+                    >
+                        <ArrowLeft size={20} className="text-gray-900" />
+                    </button>
+                    <h2 className="text-xl font-bold text-navy-900">
                         {recommendationTitle}
                     </h2>
-                    <p className="text-xs text-gray-400">Detail transaksi dalam rekomendasi ini</p>
                 </div>
             </div>
 
-            {/* Table Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            {/* Table Section - Identical to Main Page */}
+            <div className="bg-white rounded-xl shadow-none">
                 <DataTable
                     columns={columns}
                     data={dummyTransactions}

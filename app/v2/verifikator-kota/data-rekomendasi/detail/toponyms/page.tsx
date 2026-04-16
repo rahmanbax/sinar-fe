@@ -25,19 +25,19 @@ const TransactionToponymsContent = () => {
 
     const columns: ColumnDef<any>[] = [
         { header: "No", accessorKey: "no", className: "w-12 text-center" },
-        { header: "Tanggal Diajukan", accessorKey: "date", className: "w-32 text-gray-900" },
+        { header: "Tanggal Pengajuan", accessorKey: "date", className: "w-32 text-gray-900" },
         { header: "Jenis Unsur", accessorKey: "element", className: "text-gray-900" },
-        { header: "Nama Rupabumi", accessorKey: "name", className: "text-gray-900" },
+        { header: "Nama Rupabumi", accessorKey: "name", className: "text-gray-900 font-bold" },
         { header: "Provinsi", accessorKey: "province", className: "text-gray-900" },
         { header: "Kabupaten/ Kota", accessorKey: "city", className: "text-gray-900" },
         { header: "Surveyor", accessorKey: "surveyor", className: "text-gray-900" },
-        { header: "Ditugaskan ke", accessorKey: "assignedTo", className: "text-gray-900" },
+        { header: "Ditugaskan ke", accessorKey: "assignedTo", className: "text-gray-900 font-bold" },
         { header: "Koordinat", accessorKey: "coordinates", className: "text-gray-900" },
     ];
 
     return (
         <div className="flex flex-col gap-8">
-            {/* Breadcrumb / Title per Gambar 1 */}
+            {/* Breadcrumb / Title Section per Gambar 1 */}
             <div className="flex items-center gap-3">
                 <button
                     onClick={() => router.back()}
@@ -52,8 +52,8 @@ const TransactionToponymsContent = () => {
                 </div>
             </div>
 
-            {/* Table Section */}
-            <div className="bg-white rounded-xl shadow-none border-none overflow-hidden">
+            {/* Table Section - Identical to Main Page */}
+            <div className="bg-white rounded-xl shadow-none">
                 <DataTable
                     columns={columns}
                     data={dummyToponyms}
@@ -71,10 +71,6 @@ const TransactionToponymsContent = () => {
                     }}
                 />
             </div>
-            
-            <p className="text-sm text-gray-500 -mt-4 px-1">
-                Menampilkan 10 dari 2000 data
-            </p>
         </div>
     );
 };

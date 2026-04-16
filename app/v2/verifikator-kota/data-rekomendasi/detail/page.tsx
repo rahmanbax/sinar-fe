@@ -83,7 +83,7 @@ const DetailRekomendasiContent = () => {
                     <button
                         onClick={() =>
                             router.push(
-                                `/v2/verifikator-kota/data-penelaahan/detail?transactionId=${row.id}`
+                                `/v2/verifikator-kota/data-rekomendasi/detail/toponyms`
                             )
                         }
                         className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"

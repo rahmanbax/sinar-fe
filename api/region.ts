@@ -13,16 +13,12 @@ export const getRegions = async (params: {
     level: "PROVINCE" | "CITY" | "DISTRICT" | "VILLAGE";
     parent?: string;
     limit?: number;
-    token: string | null;
 }) => {
-    const { level, parent, limit = 100, token } = params;
-    if (!token) return { error: true, message: "No token provided", data: [] };
+    const { level, parent, limit = 100 } = params;
 
     let url = `${API_URL}/regions?level=${level}&limit=${limit}`;
     if (parent) url += `&parent=${parent}`;
 
-    const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await fetch(url);
     return res.json();
 };

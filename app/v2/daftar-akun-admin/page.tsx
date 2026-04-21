@@ -6,20 +6,14 @@ import FileInput from '@/components/v2/inputs/FileInput'
 import PasswordInput from '@/components/v2/inputs/PasswordInput'
 import TextInput from '@/components/v2/inputs/TextInput'
 import PublicLayout from '@/components/v2/nav/PublicLayout'
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
+import { useProvinces, useCities } from '@/hooks/useRegions'
 
 const dummyInstansiOptions = [
   { label: 'Admin BIG', value: 'admin_big' },
   { label: 'Admin K/L', value: 'admin_kl' },
   { label: 'Admin Provinsi', value: 'admin_provinsi' },
   { label: 'Admin Kab/ Kota', value: 'admin_kab_kota' },
-];
-
-const dummyProvinsiOptions = [
-  { label: 'DKI Jakarta', value: 'dki_jakarta' },
-  { label: 'Jawa Barat', value: 'jawa_barat' },
-  { label: 'Jawa Tengah', value: 'jawa_tengah' },
-  { label: 'Jawa Timur', value: 'jawa_timur' },
 ];
 
 const dummyKabupatenOptions = [
@@ -39,6 +33,31 @@ const DaftarAkunAdminPage = () => {
   const [konfirmasiPassword, setKonfirmasiPassword] = useState("");
   const [provinsi, setProvinsi] = useState("");
   const [kabupaten, setKabupaten] = useState("");
+  const [noSurat, setNoSurat] = useState("");
+
+  const { data: provincesData } = useProvinces();
+
+  const realProvinsiOptions = useMemo(() => {
+    return (provincesData?.data || []).map((prov) => ({
+      label: prov.name,
+      value: prov.code,
+      path: prov.path,
+    }));
+  }, [provincesData]);
+
+  const selectedProvincePath = useMemo(() => {
+    if (!provinsi) return null;
+    return realProvinsiOptions.find((p) => p.value === provinsi)?.path ?? null;
+  }, [provinsi, realProvinsiOptions]);
+
+  const { data: citiesData } = useCities(selectedProvincePath);
+
+  const realKabupatenOptions = useMemo(() => {
+    return (citiesData?.data || []).map((city) => ({
+      label: city.name,
+      value: city.code,
+    }));
+  }, [citiesData]);
 
   return (
     <PublicLayout>
@@ -57,6 +76,7 @@ const DaftarAkunAdminPage = () => {
               }}
               value={instansi}
               options={dummyInstansiOptions}
+              required
             // searchable={true} 
             />
             {/* Conditional Dropdown: Provinsi */}
@@ -69,8 +89,9 @@ const DaftarAkunAdminPage = () => {
                     setKabupaten("");
                 }}
                 value={provinsi}
-                options={dummyProvinsiOptions}
+                options={realProvinsiOptions}
                 searchable={true}
+                required
               />
             )}
             {/* Conditional Dropdown: Kabupaten/Kota */}
@@ -80,8 +101,9 @@ const DaftarAkunAdminPage = () => {
                 placeholder='Pilih Kabupaten/ Kota'
                 onChange={(val) => setKabupaten(val)}
                 value={kabupaten}
-                options={dummyKabupatenOptions}
+                options={realKabupatenOptions}
                 searchable={true}
+                required
               />
             )}
             <TextInput
@@ -121,6 +143,14 @@ const DaftarAkunAdminPage = () => {
               label='Konfirmasi Kata Sandi'
               onChange={(e) => setKonfirmasiPassword(e.target.value)}
               value={konfirmasiPassword}
+              required
+            />
+            {/* no surat */}
+            <TextInput
+              id='noSurat'
+              label='No. Surat'
+              onChange={(e) => setNoSurat(e.target.value)}
+              value={noSurat}
               required
             />
             {/* file input pdf */}

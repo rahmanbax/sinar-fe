@@ -60,11 +60,16 @@ const HorizontalBarChart = ({
 
             {/* Bars */}
             <div className="space-y-6 flex-1">
-                {isLoading
-                    ? Array.from({ length: skeletonRows }).map((_, i) => <SkeletonRow key={i} />)
-                    : items.map((item, index) => (
-                        <div 
-                            key={index} 
+                {isLoading ? (
+                    Array.from({ length: skeletonRows }).map((_, i) => <SkeletonRow key={i} />)
+                ) : items.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                        Tidak ada data untuk ditampilkan
+                    </div>
+                ) : (
+                    items.map((item, index) => (
+                        <div
+                            key={index}
                             className="flex items-center gap-4 relative"
                             onMouseEnter={() => setHoveredIndex(index)}
                             onMouseLeave={() => setHoveredIndex(null)}
@@ -83,7 +88,7 @@ const HorizontalBarChart = ({
                             </div>
 
                             {/* Tooltip */}
-                            <div 
+                            <div
                                 className={`
                                     absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-[#4CB3CF] text-white text-xs font-bold rounded shadow-2xl transition-all duration-200 pointer-events-none z-10
                                     ${hoveredIndex === index ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'}
@@ -98,6 +103,7 @@ const HorizontalBarChart = ({
                             </div>
                         </div>
                     ))
+                )
                 }
             </div>
 
@@ -114,6 +120,7 @@ const HorizontalBarChart = ({
             </div>
         </div>
     );
-};
+}
+
 
 export default HorizontalBarChart;

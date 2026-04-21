@@ -1,0 +1,14 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+    const blockedPaths = ['/v2/surveyor/data-saya/tambah', '/beta-page'];
+
+    if (blockedPaths.includes(request.nextUrl.pathname)) {
+        return NextResponse.redirect(new URL('/v2/surveyor/data-saya', request.url));
+        // atau:
+        // return NextResponse.rewrite(new URL('/maintenance', request.url));
+    }
+
+    return NextResponse.next();
+}

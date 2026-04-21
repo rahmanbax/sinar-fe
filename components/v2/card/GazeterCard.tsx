@@ -14,10 +14,13 @@ const GazeterCard = ({ src, altName, title }: GazeterCardProps) => {
             <Image
                 src={src}
                 alt={altName}
-                className='rounded-lg'
+                width={0}
+                height={0}
+                sizes="100vw"
+                className='w-full h-auto rounded-lg'
             />
             <h3 className='font-semibold text-black w-full'>{title}</h3>
-            <div className='flex items-center gap-3 text-navy-500'>
+            <div className='flex items-center gap-1 md:gap-3 text-navy-500 text-sm md:text-base'>
                 <div className='flex items-center gap-1'>
                     <ExternalLink size={16} />
                     <p className='text-sm'>Lihat</p>

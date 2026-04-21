@@ -113,7 +113,7 @@ const MyDataPage = () => {
             survey_at: item.survey_at ? new Date(item.survey_at).toLocaleDateString("id-ID") : "-",
             element_type: item.element?.name ?? "-",
             generic_element: item.generic_element || "-",
-            specific_element: item.specific_element || "-",
+            map_name: item.map_name || "-",
             province: item.province?.name ?? "-",
             regency: item.regency?.name ?? "-",
             source: item.source || "-",
@@ -128,7 +128,7 @@ const MyDataPage = () => {
         { header: "Tanggal Dibuat", accessorKey: "created_at", className: "w-32" },
         { header: "Tanggal Survey", accessorKey: "survey_at", className: "w-32" },
         { header: "Jenis Unsur", accessorKey: "element_type" },
-        { header: "Nama Rupabumi", accessorKey: "specific_element" },
+        { header: "Nama Rupabumi", accessorKey: "map_name" },
         { header: "Kabupaten/ Kota", accessorKey: "regency", className: "uppercase whitespace-nowrap" },
         { header: "Provinsi", accessorKey: "province", className: "uppercase whitespace-nowrap" },
         { header: "Status", cell: (row) => getStatusBadgeV2(row.status) },
@@ -155,11 +155,11 @@ const MyDataPage = () => {
                 <div>
                     <h1 className="text-2xl font-bold">Data Saya</h1>
                 </div>
-                <ButtonComponent
+                {/* <ButtonComponent
                     label="Tambah Data"
                     onClick={() => router.push('/v2/surveyor/data-saya/tambah')}
                     icon={<Plus size={16} />}
-                />
+                /> */}
             </div>
 
             <DataTable

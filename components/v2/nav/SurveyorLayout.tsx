@@ -52,9 +52,9 @@ const SurveyorLayout = ({ children, showNav = true, tightMargin = false }: Surve
 
                     <div className="relative">
                         <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex font-medium items-center gap-2 cursor-pointer">
-                            <div className='flex flex-col items-end'>
-                                <span className='text-sm'>{user?.name || 'User'}</span>
-                                <span className='text-xs capitalize text-gray-500'>{user?.role}</span>
+                            <div className='flex flex-col text-right items-end max-w-[120px] sm:max-w-[200px]'>
+                                <span className='text-sm truncate w-full block'>{user?.name || 'User'}</span>
+                                <span className='text-xs capitalize text-gray-500 truncate w-full block'>{user?.role || 'Role'}</span>
                             </div>
                             <ChevronDown size={16} />
                         </button>

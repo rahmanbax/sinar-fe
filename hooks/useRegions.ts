@@ -13,36 +13,36 @@ export interface RegionResponse {
     }[];
 }
 
-export const useProvinces = (token: string | null) => {
+export const useProvinces = (token?: string | null) => {
     return useQuery<RegionResponse>({
         queryKey: ["regions", "provinces"],
-        queryFn: () => getRegions({ level: "PROVINCE", token }),
-        enabled: !!token,
-        staleTime: 1000 * 60 * 60, // 1 hour as provinces don't change often
+        queryFn: () => getRegions({ level: "PROVINCE" }),
+        staleTime: Infinity,
     });
 };
 
-export const useCities = (parentCode: string | null, token: string | null) => {
+export const useCities = (parentCode: string | null, token?: string | null) => {
     return useQuery<RegionResponse>({
         queryKey: ["regions", "cities", parentCode],
-        queryFn: () => getRegions({ level: "CITY", parent: parentCode!, token }),
-        enabled: !!token && !!parentCode,
+        queryFn: () => getRegions({ level: "CITY", parent: parentCode! }),
+        enabled: !!parentCode,
+        staleTime: Infinity,
     });
 };
 
-export const useDistricts = (parentCode: string | null, token: string | null) => {
+export const useDistricts = (parentCode: string | null, token?: string | null) => {
     return useQuery<RegionResponse>({
         queryKey: ["regions", "districts", parentCode],
-        queryFn: () => getRegions({ level: "DISTRICT", parent: parentCode!, token }),
-        enabled: !!token && !!parentCode,
+        queryFn: () => getRegions({ level: "DISTRICT", parent: parentCode! }),
+        enabled: !!parentCode,
     });
 };
 
-export const useVillages = (parentCode: string | null, token: string | null) => {
+export const useVillages = (parentCode: string | null, token?: string | null) => {
     return useQuery<RegionResponse>({
         queryKey: ["regions", "villages", parentCode],
-        queryFn: () => getRegions({ level: "VILLAGE", parent: parentCode!, token }),
-        enabled: !!token && !!parentCode,
+        queryFn: () => getRegions({ level: "VILLAGE", parent: parentCode! }),
+        enabled: !!parentCode,
     });
 };
 

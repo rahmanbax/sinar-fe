@@ -102,7 +102,7 @@ const DropdownInput = ({
                     setIsOpen(false);
                     setSearchQuery("");
                 }}
-                className={`flex items-center px-3 cursor-pointer hover:bg-gray-100 transition-colors ${value === opt.value ? 'bg-gray-100 text-black font-semibold' : 'text-black'
+                className={`flex items-center px-3 cursor-pointer transition-colors ${value === opt.value ? 'bg-navy-50 text-navy-500 font-semibold' : 'text-black hover:bg-navy-50'
                     }`}
             >
                 <span className="truncate text-base">{opt.label}</span>

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import AdminLayout from '@/components/v2/nav/AdminLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Search } from 'lucide-react';
+import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
+import { useRouter } from 'next/navigation';
 
 interface AdminAkunData {
     no: number;
@@ -16,23 +18,24 @@ interface AdminAkunData {
 }
 
 const AdminAkunPage = () => {
+    const router = useRouter();
     // Dummy data based on Image 1
     const dummyData: AdminAkunData[] = [
-        { 
-            no: 1, 
-            nama: 'Admin BIG', 
-            email: 'big@gmail.com', 
-            no_telp: '081234567890', 
+        {
+            no: 1,
+            nama: 'Admin BIG',
+            email: 'big@gmail.com',
+            no_telp: '081234567890',
             role: 'Admin BIG',
-            status: 'Aktif' 
+            status: 'Aktif'
         },
-        { 
-            no: 2, 
-            nama: 'Admin Kota', 
-            email: 'adminkota@gmail.com', 
-            no_telp: '081234567891', 
+        {
+            no: 2,
+            nama: 'Admin Kota',
+            email: 'adminkota@gmail.com',
+            no_telp: '081234567891',
             role: 'Admin Kota',
-            status: 'Nonaktif' 
+            status: 'Nonaktif'
         },
     ];
 
@@ -64,7 +67,7 @@ const AdminAkunPage = () => {
                 const badgeStyle = row.status === 'Aktif'
                     ? 'bg-green-50 text-green-600'
                     : 'bg-red-50 text-red-500';
-                
+
                 return (
                     <span className={`px-4 py-1 rounded-full text-xs font-semibold ${badgeStyle}`}>
                         {row.status}
@@ -77,7 +80,7 @@ const AdminAkunPage = () => {
             header: 'Aksi',
             cell: () => (
                 <div className="flex justify-center">
-                    <Link href="/v2/admin/akun/detail">
+                    <Link href="/v2/admin/akun/1">
                         <Search size={18} className="text-navy-900 cursor-pointer hover:text-navy-700 transition-colors" />
                     </Link>
                 </div>
@@ -89,10 +92,16 @@ const AdminAkunPage = () => {
     return (
         <AdminLayout>
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-navy-900 mb-6">Akun</h1>
-                
-                <DataTable 
-                    columns={columns} 
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold">Akun</h1>
+                    <ButtonComponent
+                        label="Tambah Akun"
+                        onClick={() => router.push('/v2/admin/akun/tambah')}
+                    />
+                </div>
+
+                <DataTable
+                    columns={columns}
                     data={dummyData}
                     showSearch={true}
                     showFilter={true}

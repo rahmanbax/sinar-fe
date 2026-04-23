@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const blockedPaths = ['/v2/surveyor/data-saya/tambah', '/beta-page'];
 
     if (blockedPaths.includes(request.nextUrl.pathname)) {

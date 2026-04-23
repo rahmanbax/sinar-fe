@@ -17,6 +17,7 @@ export type UserSignIn = {
 }
 
 export enum Role {
+    SUPERADMIN = 'superadmin',
     ADMIN = 'admin',
     VERIFICATOR = 'verificator',
     SURVEYOR = 'surveyor',
@@ -25,8 +26,10 @@ export enum Role {
 }
 
 // Role redirect mapping
-export const getRoleDefaultRoute = (user: { role: Role; permission_level?: number | null; name?: string }): string => {
+export const getRoleDefaultRoute = (user: { role: Role | string; permission_level?: number | null; name?: string }): string => {
     switch (user.role) {
+        case Role.SUPERADMIN:
+            return '/v2/admin'
         case Role.ADMIN:
         case Role.BIG:
             return '/big'

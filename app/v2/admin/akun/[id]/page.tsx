@@ -34,7 +34,7 @@ const DetailAkunPage = () => {
                                 id="nama"
                                 label="Nama"
                                 value="Admin Kota"
-                                onChange={() => {}}
+                                onChange={() => { }}
                                 required={false}
                                 disabled
                             />
@@ -44,7 +44,7 @@ const DetailAkunPage = () => {
                                 id="email"
                                 label="Email"
                                 value="adminkota@gmail.com"
-                                onChange={() => {}}
+                                onChange={() => { }}
                                 required={false}
                                 disabled
                             />
@@ -54,7 +54,7 @@ const DetailAkunPage = () => {
                                 id="wa"
                                 label="No. Telepon WhatsApp"
                                 value="081234567890"
-                                onChange={() => {}}
+                                onChange={() => { }}
                                 required={false}
                                 disabled
                             />
@@ -64,7 +64,7 @@ const DetailAkunPage = () => {
                                 id="provinsi"
                                 label="Provinsi"
                                 value="Jawa Barat"
-                                onChange={() => {}}
+                                onChange={() => { }}
                                 required={false}
                                 disabled
                             />
@@ -74,7 +74,7 @@ const DetailAkunPage = () => {
                                 id="kota"
                                 label="Kab/ Kota"
                                 value="Kota Bandung"
-                                onChange={() => {}}
+                                onChange={() => { }}
                                 required={false}
                                 disabled
                             />
@@ -100,15 +100,15 @@ const DetailAkunPage = () => {
                                         id="status"
                                         label="Status Akun"
                                         value="Nonaktif"
-                                        onChange={() => {}}
+                                        onChange={() => { }}
                                         required={false}
                                         disabled
                                     />
                                 </div>
-                                <ButtonComponent 
-                                    label="Aktifkan Akun" 
+                                <ButtonComponent
+                                    label="Aktifkan Akun"
                                     className="h-[42px] px-8" // Adjusted to match input height
-                                    onClick={() => {}}
+                                    onClick={() => { }}
                                 />
                             </div>
                         </div>

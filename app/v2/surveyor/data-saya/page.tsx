@@ -155,11 +155,11 @@ const MyDataPage = () => {
                 <div>
                     <h1 className="text-2xl font-bold">Data Saya</h1>
                 </div>
-                {/* <ButtonComponent
+                <ButtonComponent
                     label="Tambah Data"
                     onClick={() => router.push('/v2/surveyor/data-saya/tambah')}
                     icon={<Plus size={16} />}
-                /> */}
+                />
             </div>
 
             <DataTable

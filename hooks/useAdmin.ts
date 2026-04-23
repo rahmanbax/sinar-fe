@@ -20,6 +20,7 @@ type ManualAdminVariables = {
     password_confirmation: string;
     recommendation_file: File;
     ref_number: string;
+    is_admin_big: boolean;
 };
 
 export const useCreateManualAdminMutation = (
@@ -36,6 +37,7 @@ export const useCreateManualAdminMutation = (
                 password_confirmation: vars.password_confirmation,
                 recommendation_file: vars.recommendation_file,
                 ref_number: vars.ref_number,
+                is_admin_big: vars.is_admin_big,
             });
             if (result.error) throw new Error(result.message);
             return result;

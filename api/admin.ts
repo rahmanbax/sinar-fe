@@ -48,6 +48,7 @@ export const createManualAdmin = async (
         password_confirmation: string;
         recommendation_file: File;
         ref_number: string;
+        is_admin_big: boolean;
     }
 ) => {
     if (!token) return { error: true, message: "No token provided" };
@@ -61,6 +62,7 @@ export const createManualAdmin = async (
     formData.append('password_confirmation', data.password_confirmation);
     formData.append('recommendation_file', data.recommendation_file);
     formData.append('ref_number', data.ref_number);
+    formData.append('is_admin_big', String(data.is_admin_big));
 
     const res = await fetch(`${API_URL}/admin/users/manual/create-admin`, {
         method: 'POST',

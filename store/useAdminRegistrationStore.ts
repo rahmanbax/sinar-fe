@@ -14,6 +14,7 @@ interface AdminRegistrationState {
   userFile: File | null;
   noSuratRekomendasi: string;
   suratRekomendasi: File | null;
+  isAdminBig: boolean;
   
   // Actions
   setInstansi: (val: string) => void;
@@ -29,6 +30,7 @@ interface AdminRegistrationState {
   setUserFile: (file: File | null) => void;
   setNoSuratRekomendasi: (val: string) => void;
   setSuratRekomendasi: (file: File | null) => void;
+  setIsAdminBig: (val: boolean) => void;
   resetForm: () => void;
 }
 
@@ -46,6 +48,7 @@ const initialState = {
   userFile: null,
   noSuratRekomendasi: '',
   suratRekomendasi: null,
+  isAdminBig: false,
 };
 
 export const useAdminRegistrationStore = create<AdminRegistrationState>((set) => ({
@@ -64,5 +67,6 @@ export const useAdminRegistrationStore = create<AdminRegistrationState>((set) =>
   setUserFile: (file) => set({ userFile: file }),
   setNoSuratRekomendasi: (val) => set({ noSuratRekomendasi: val }),
   setSuratRekomendasi: (file) => set({ suratRekomendasi: file }),
+  setIsAdminBig: (val) => set({ isAdminBig: val }),
   resetForm: () => set(initialState),
 }));

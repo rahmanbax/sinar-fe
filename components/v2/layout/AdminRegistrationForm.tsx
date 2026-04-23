@@ -24,6 +24,7 @@ const AdminRegistrationForm = () => {
         userFile, setUserFile,
         noSuratRekomendasi, setNoSuratRekomendasi,
         suratRekomendasi, setSuratRekomendasi,
+        isAdminBig, setIsAdminBig,
     } = useAdminRegistrationStore();
 
     const [activeTab, setActiveTab] = React.useState<'formulir' | 'xlsx'>('formulir');
@@ -69,6 +70,7 @@ const AdminRegistrationForm = () => {
             password_confirmation: konfirmasiPassword,
             recommendation_file: suratPermohonan,
             ref_number: noSurat,
+            is_admin_big: isAdminBig,
         });
     };
 

@@ -71,8 +71,8 @@ const DaftarAkunAdminPage = () => {
               onChange={(val) => {
                   setInstansi(val);
                   // Reset child fields when parent changes
-                  setProvinsi("");
-                  setKabupaten("");
+                  // setProvinsi("");
+                  // setKabupaten("");
               }}
               value={instansi}
               options={dummyInstansiOptions}
@@ -80,7 +80,7 @@ const DaftarAkunAdminPage = () => {
             // searchable={true} 
             />
             {/* Conditional Dropdown: Provinsi */}
-            {(instansi === 'admin_provinsi' || instansi === 'admin_kab_kota') && (
+            {/* {(instansi === 'admin_provinsi' || instansi === 'admin_kab_kota') && (
               <DropdownInput
                 label='Provinsi'
                 placeholder='Pilih Provinsi'
@@ -93,9 +93,9 @@ const DaftarAkunAdminPage = () => {
                 searchable={true}
                 required
               />
-            )}
+            )} */}
             {/* Conditional Dropdown: Kabupaten/Kota */}
-            {instansi === 'admin_kab_kota' && (
+            {/* {instansi === 'admin_kab_kota' && (
               <DropdownInput
                 label='Kabupaten/ Kota'
                 placeholder='Pilih Kabupaten/ Kota'
@@ -105,7 +105,7 @@ const DaftarAkunAdminPage = () => {
                 searchable={true}
                 required
               />
-            )}
+            )} */}
             <TextInput
               id='noTelepon'
               label='No Telepon WhatsApp'

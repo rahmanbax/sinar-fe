@@ -184,11 +184,11 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                                             <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100">
                                                 <div className="py-2">
                                                     <span className="text-xs font-bold text-gray-400 uppercase block mb-2">Sejarah Nama</span>
-                                                    <p className="leading-relaxed text-navy-800">{toponym.name_history || "-"}</p>
+                                                    <p className="leading-relaxed">{toponym.name_history || "-"}</p>
                                                 </div>
                                                 <div className="py-2 border-t border-gray-100 mt-2">
                                                     <span className="text-xs font-bold text-gray-400 uppercase block mb-2">Catatan Tambahan</span>
-                                                    <p className="leading-relaxed text-navy-800">{toponym.notes || "-"}</p>
+                                                    <p className="leading-relaxed">{toponym.notes || "-"}</p>
                                                 </div>
                                             </div>
                                         </section>

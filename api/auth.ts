@@ -57,3 +57,38 @@ export const getUserProfile = async (token: string) => {
     });
     return res;
 };
+
+export const registerAdmin = async (data: {
+    institution_type: string;
+    org_id: string;
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    password_confirmation: string;
+    recommendation_file: File;
+    ref_number: string;
+}) => {
+    const formData = new FormData();
+    formData.append("institution_type", data.institution_type);
+    formData.append("org_id", data.org_id);
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("phone", data.phone);
+    formData.append("password", data.password);
+    formData.append("password_confirmation", data.password_confirmation);
+    formData.append("recommendation_file", data.recommendation_file);
+    formData.append("ref_number", data.ref_number);
+
+    const res = await fetch(`${API_URL}/auth/admin/register`, {
+        method: "POST",
+        body: formData,
+    });
+    
+    if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Gagal mendaftar sebagai admin");
+    }
+
+    return res.json();
+};

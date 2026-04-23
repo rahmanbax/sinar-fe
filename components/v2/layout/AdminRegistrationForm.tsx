@@ -30,7 +30,7 @@ const AdminRegistrationForm = () => {
     const [activeTab, setActiveTab] = React.useState<'formulir' | 'xlsx'>('formulir');
 
     const { token } = useAuth();
-    const { data: organizationResponse } = useOrganizations(token);
+    const { data: organizationResponse } = useOrganizations();
     
     const instansiOptions = React.useMemo(() => {
         if (!organizationResponse?.data) return [];

@@ -1,5 +1,6 @@
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 import { useAuth as useAuthContext } from '@/contexts/AuthContext';
+import { registerAdmin } from '@/api/auth';
 
 type LoginVariables = {
     email: string;
@@ -44,6 +45,30 @@ export const useRegisterMutation = (
                 vars.phone_number
             );
             return true;
+        },
+        ...options,
+    });
+};
+
+type RegisterAdminVariables = {
+    institution_type: string;
+    org_id: string;
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    password_confirmation: string;
+    recommendation_file: File;
+    ref_number: string;
+};
+
+export const useRegisterAdminMutation = (
+    options?: Omit<UseMutationOptions<any, Error, RegisterAdminVariables>, 'mutationFn'>
+) => {
+    return useMutation({
+        mutationFn: async (vars: RegisterAdminVariables) => {
+            const result = await registerAdmin(vars);
+            return result;
         },
         ...options,
     });

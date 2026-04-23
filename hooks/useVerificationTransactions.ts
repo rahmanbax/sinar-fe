@@ -1,5 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCompletedVerificationTransactions, createRecommendation, getRecommendations, getIncomingRecommendations } from "@/api/verification";
+import { 
+    getCompletedVerificationTransactions, 
+    createRecommendation, 
+    getRecommendations, 
+    getIncomingRecommendations,
+    getIncomingRecommendationDetail,
+    acceptIncomingRecommendation
+} from "@/api/verification";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const useCompletedVerificationTransactions = () => {
@@ -41,5 +48,28 @@ export const useIncomingRecommendations = () => {
         queryKey: ["incoming-recommendations"],
         queryFn: () => getIncomingRecommendations(token),
         enabled: !!token,
+    });
+};
+
+export const useIncomingRecommendationDetail = (id: string) => {
+    const { token } = useAuth();
+
+    return useQuery({
+        queryKey: ["incoming-recommendation-detail", id],
+        queryFn: () => getIncomingRecommendationDetail(token, id),
+        enabled: !!token && !!id,
+    });
+};
+
+export const useAcceptIncomingRecommendation = () => {
+    const { token } = useAuth();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: { id: string; data: { transaction_ids: string[]; is_sesuai: boolean; alasan?: string } }) =>
+            acceptIncomingRecommendation(token, payload.id, payload.data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["incoming-recommendations"] });
+        },
     });
 };

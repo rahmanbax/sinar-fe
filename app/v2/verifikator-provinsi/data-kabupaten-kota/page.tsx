@@ -3,7 +3,7 @@
 import React from "react";
 import VerifikatorProvinsiLayout from "@/components/v2/nav/VerifikatorProvinsiLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
-import { Search, Eye } from "lucide-react";
+import { Search } from "lucide-react";
 import { useIncomingRecommendations } from "@/hooks/useVerificationTransactions";
 import dayjs from "dayjs";
 import Link from "next/link";
@@ -87,7 +87,7 @@ const DataKabupatenKotaPage = () => {
                         href={`/v2/verifikator-provinsi/data-kabupaten-kota/${row.id}`}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-navy-900"
                     >
-                        <Eye size={18} />
+                        <Search size={18} />
                     </Link>
                 </div>
             ),
@@ -100,7 +100,6 @@ const DataKabupatenKotaPage = () => {
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-1">
                     <h1 className="text-2xl font-bold text-navy-900">Data Kabupaten/ Kota</h1>
-                    <p className="text-sm text-gray-500">Daftar rekomendasi yang masuk dari Kabupaten/ Kota</p>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-none">

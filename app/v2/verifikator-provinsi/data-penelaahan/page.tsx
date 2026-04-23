@@ -231,6 +231,20 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
                     {row.status === 'recommended' ? 'Selesai' : row.status === 'completed' ? 'Cetak BA' : 'Proses Penelaahan'}
                 </span>
             )
+        },
+        {
+            header: "Aksi",
+            className: "w-16 text-center",
+            cell: (row) => (
+                <div className="flex justify-center">
+                    <button 
+                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail?transactionId=${row.id}&view=${viewMode}`)} 
+                        className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
+                    >
+                        <Search size={18} />
+                    </button>
+                </div>
+            )
         }
     ];
 
@@ -248,6 +262,20 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
                 }`}>
                     {row.status}
                 </span>
+            )
+        },
+        {
+            header: "Aksi",
+            className: "w-16 text-center",
+            cell: (row) => (
+                <div className="flex justify-center">
+                    <button 
+                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/toponym/${row.id}`)} 
+                        className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
+                    >
+                        <Search size={18} />
+                    </button>
+                </div>
             )
         }
     ];

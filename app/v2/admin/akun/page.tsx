@@ -34,7 +34,7 @@ const AdminAkunPage = () => {
             email: user.email,
             no_telp: user.phone,
             role: user.role,
-            status: user.status_account || 'Aktif',
+            status: user.status_account || 'Pending',
         }));
     }, [usersResponse]);
 
@@ -63,13 +63,20 @@ const AdminAkunPage = () => {
         {
             header: 'Status',
             cell: (row) => {
-                const badgeStyle = row.status === 'Aktif'
-                    ? 'bg-green-50 text-green-600'
-                    : 'bg-red-50 text-red-500';
+                let badgeStyle = '';
+                const status = (row.status || '').toLowerCase();
+                
+                if (status === 'aktif') {
+                    badgeStyle = 'bg-green-50 text-green-600';
+                } else if (status === 'nonaktif' || status === 'tidak aktif') {
+                    badgeStyle = 'bg-red-50 text-red-500';
+                } else {
+                    badgeStyle = 'bg-yellow-50 text-yellow-600';
+                }
 
                 return (
                     <span className={`px-4 py-1 rounded-full text-xs font-semibold ${badgeStyle}`}>
-                        {row.status}
+                        {row.status || 'Pending'}
                     </span>
                 );
             },

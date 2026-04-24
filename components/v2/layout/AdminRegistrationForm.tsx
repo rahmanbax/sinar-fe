@@ -125,9 +125,12 @@ const AdminRegistrationForm = () => {
                             placeholder='Pilih Instansi'
                             onChange={(val) => {
                                 setInstansi(val);
-                                // Reset child fields when parent changes
-                                // setProvinsi("");
-                                // setKabupaten("");
+                                const selectedOrg = organizationResponse?.data?.find((org: any) => org.id === val);
+                                if (selectedOrg?.name?.toLowerCase().includes('badan informasi geospasial') || selectedOrg?.code?.toLowerCase() === 'big') {
+                                    setIsAdminBig(true);
+                                } else {
+                                    setIsAdminBig(false);
+                                }
                             }}
                             value={instansi}
                             options={instansiOptions}
@@ -257,6 +260,12 @@ const AdminRegistrationForm = () => {
                         placeholder='Pilih Instansi'
                         onChange={(val) => {
                             setInstansi(val);
+                            const selectedOrg = organizationResponse?.data?.find((org: any) => org.id === val);
+                            if (selectedOrg?.name?.toLowerCase().includes('badan informasi geospasial') || selectedOrg?.code?.toLowerCase() === 'big') {
+                                setIsAdminBig(true);
+                            } else {
+                                setIsAdminBig(false);
+                            }
                         }}
                         value={instansi}
                         options={instansiOptions}

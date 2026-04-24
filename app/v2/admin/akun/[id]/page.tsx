@@ -10,14 +10,13 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminUser, useRejectRegistrationMutation, useApproveRegistrationMutation } from '@/hooks/useAdmin';
 import RejectionModal from '@/components/v2/modals/RejectionModal';
-// userouter
 
 
 const DetailAkunPage = () => {
     const params = useParams();
     const id = params.id as string;
     const { token } = useAuth();
-    const { data: userResponse } = useAdminUser(token, id);
+    const { data: userResponse, refetch } = useAdminUser(token, id);
     const userData = userResponse?.data;
     const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
     const router = useRouter();
@@ -35,7 +34,7 @@ const DetailAkunPage = () => {
     const { mutate: approveRegistration, isPending: isApproving } = useApproveRegistrationMutation({
         onSuccess: () => {
             alert('Berhasil menyetujui pendaftaran!');
-            router.push('/v2/admin/akun');
+            refetch();
         },
         onError: (err) => {
             alert(`Gagal menyetujui pendaftaran: ${err.message}`);
@@ -47,6 +46,14 @@ const DetailAkunPage = () => {
             approveRegistration({ token, id });
         }
     };
+
+    const currentStatus = (userData?.status_account || '').toLowerCase();
+    
+    const isAktif = currentStatus === 'aktif';
+    const isNonaktif = currentStatus === 'nonaktif' || currentStatus === 'tidak aktif';
+    const isPending = isAktif === false && isNonaktif === false;
+
+    const statusDisplay = isAktif ? 'Aktif' : isNonaktif ? 'Nonaktif' : '-';
 
     return (
         <AdminLayout showNav={false}>
@@ -127,26 +134,6 @@ const DetailAkunPage = () => {
                             disabled
                         />
 
-                        {/* Provinsi */}
-                        {/* <TextInput
-                                id="provinsi"
-                                label="Provinsi"
-                                value="Jawa Barat"
-                                onChange={() => { }}
-                                required={false}
-                                disabled
-                            /> */}
-
-                        {/* Kab/ Kota */}
-                        {/* <TextInput
-                                id="kota"
-                                label="Kab/ Kota"
-                                value="Kota Bandung"
-                                onChange={() => { }}
-                                required={false}
-                                disabled
-                            /> */}
-
                         {/* Preview Dokumen */}
                         <div>
                             <label className="block text-sm font-semibold text-black mb-2">
@@ -167,25 +154,41 @@ const DetailAkunPage = () => {
                                 <TextInput
                                     id="status"
                                     label="Status Akun"
-                                    value={userData?.status_account || '-'}
+                                    value={statusDisplay}
                                     onChange={() => { }}
                                     required={false}
                                     disabled
                                 />
                             </div>
                             <div className='flex gap-2'>
-                                <ButtonComponent
-                                    label="Setujui Aktivasi"
-                                    className=""
-                                    onClick={handleApprove}
-                                    disabled={isApproving}
-                                />
-                                <ButtonComponent
-                                    label="Tolak"
-                                    className="text-red-500 border-red-500"
-                                    onClick={() => setIsRejectionModalOpen(true)}
-                                    secondary={true}
-                                />
+                                {isPending ? (
+                                    <>
+                                        <ButtonComponent
+                                            label="Setujui Aktivasi"
+                                            onClick={handleApprove}
+                                            disabled={isApproving}
+                                        />
+                                        <ButtonComponent
+                                            label="Tolak"
+                                            className="text-red-500 border-red-500"
+                                            onClick={() => setIsRejectionModalOpen(true)}
+                                            secondary={true}
+                                            disabled={isRejecting}
+                                        />
+                                    </>
+                                ) : isAktif ? (
+                                    <ButtonComponent
+                                        label="Nonaktifkan Akun"
+                                        className="text-red-500 border-red-500 hover:bg-red-50"
+                                        onClick={() => { /* Pending endpoint */ }}
+                                        secondary={true}
+                                    />
+                                ) : isNonaktif ? (
+                                    <ButtonComponent
+                                        label="Aktifkan Akun"
+                                        onClick={() => { /* Pending endpoint */ }}
+                                    />
+                                ) : null}
                             </div>
                         </div>
                     </div>

@@ -1,12 +1,27 @@
 import { useQuery, useMutation, UseMutationOptions } from "@tanstack/react-query";
-import { getOrganizations, createManualAdmin, importAdminData } from "@/api/admin";
+import { getOrganizations, createManualAdmin, importAdminData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration } from "@/api/admin";
 
-export const useOrganizations = (token: string | null) => {
+export const useOrganizations = () => {
     return useQuery({
         queryKey: ["admin", "organizations"],
-        queryFn: () => getOrganizations(token),
-        enabled: !!token,
+        queryFn: () => getOrganizations(),
         staleTime: Infinity,
+    });
+};
+
+export const useAdminUsers = (token: string | null) => {
+    return useQuery({
+        queryKey: ["admin", "users"],
+        queryFn: () => getAdminUsers(token),
+        enabled: !!token,
+    });
+};
+
+export const useAdminUser = (token: string | null, id: string) => {
+    return useQuery({
+        queryKey: ["admin", "users", id],
+        queryFn: () => getAdminUser(token, id),
+        enabled: !!token && !!id,
     });
 };
 
@@ -65,6 +80,47 @@ export const useImportAdminMutation = (
                 recommendation_file: vars.recommendation_file,
                 ref_number: vars.ref_number,
             });
+            if (result.error) throw new Error(result.message);
+            return result;
+        },
+        ...options,
+    });
+};
+
+type RejectRegistrationVariables = {
+    token: string | null;
+    id: string;
+    note: string;
+};
+
+export const useRejectRegistrationMutation = (
+    options?: Omit<UseMutationOptions<any, Error, RejectRegistrationVariables>, 'mutationFn'>
+) => {
+    return useMutation({
+        mutationFn: async (vars: RejectRegistrationVariables) => {
+            const result = await rejectAdminRegistration(
+                vars.token,
+                vars.id,
+                vars.note
+            );
+            if (result.error) throw new Error(result.message);
+            return result;
+        },
+        ...options,
+    });
+};
+
+type ApproveRegistrationVariables = {
+    token: string | null;
+    id: string;
+};
+
+export const useApproveRegistrationMutation = (
+    options?: Omit<UseMutationOptions<any, Error, ApproveRegistrationVariables>, 'mutationFn'>
+) => {
+    return useMutation({
+        mutationFn: async (vars: ApproveRegistrationVariables) => {
+            const result = await approveAdminRegistration(vars.token, vars.id);
             if (result.error) throw new Error(result.message);
             return result;
         },

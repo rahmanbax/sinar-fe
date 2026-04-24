@@ -15,6 +15,7 @@ Do:
 - Always use components from components/v2.
 - Always fetch data using TanStack Query in /hooks. 
 - Always use endpoint from /api.
+- Always use form management with React Hook Form.
 - Always use state management with Zustand.
 
 Don't:

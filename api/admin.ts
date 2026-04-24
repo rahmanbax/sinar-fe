@@ -16,19 +16,12 @@ export interface Organization {
     } | null;
 }
 
-export const getOrganizations = async (token: string | null): Promise<{
+export const getOrganizations = async (): Promise<{
     error: boolean;
     message: string;
     data: Organization[];
 }> => {
-    // Assuming backend returns { error, message, data } based on the provided JSON payload
-    if (!token) return { error: true, message: "No token provided", data: [] };
-    
-    const res = await fetch(`${API_URL}/admin/organizations`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
+    const res = await fetch(`${API_URL}/admin/organizations`);
     
     if (!res.ok) {
         throw new Error('Failed to fetch organizations data');
@@ -108,6 +101,83 @@ export const importAdminData = async (
     if (!res.ok) {
         const errVal = await res.text();
         throw new Error(errVal || 'Failed to import admin data');
+    }
+
+    return res.json();
+};
+
+export const getAdminUsers = async (token: string | null) => {
+    if (!token) return { error: true, message: "No token provided", data: [], pagination: null };
+    
+    const res = await fetch(`${API_URL}/admin/users`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+    
+    if (!res.ok) {
+        throw new Error('Failed to fetch admin users');
+    }
+    
+    return res.json();
+};
+
+export const getAdminUser = async (token: string | null, id: string) => {
+    if (!token) return { error: true, message: "No token provided", data: null };
+    
+    const res = await fetch(`${API_URL}/admin/users/${id}`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+    
+    if (!res.ok) {
+        throw new Error('Failed to fetch admin user detail');
+    }
+    
+    return res.json();
+};
+
+export const rejectAdminRegistration = async (
+    token: string | null,
+    id: string,
+    note: string
+) => {
+    if (!token) return { error: true, message: "No token provided" };
+
+    const res = await fetch(`${API_URL}/admin/registrations/${id}/reject`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ note })
+    });
+
+    if (!res.ok) {
+        const errVal = await res.text();
+        throw new Error(errVal || 'Failed to reject admin registration');
+    }
+
+    return res.json();
+};
+
+export const approveAdminRegistration = async (
+    token: string | null,
+    id: string
+) => {
+    if (!token) return { error: true, message: "No token provided" };
+
+    const res = await fetch(`${API_URL}/admin/registrations/${id}/approve`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    if (!res.ok) {
+        const errVal = await res.text();
+        throw new Error(errVal || 'Failed to approve admin registration');
     }
 
     return res.json();

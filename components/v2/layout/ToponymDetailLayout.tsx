@@ -307,8 +307,8 @@ const ToponymDetailLayout = ({
         className={`h-full bg-white p-5 overflow-y-auto z-10 shrink-0 shadow-sm space-y-5 ${isResizing ? 'pointer-events-none' : ''}`}
       >
         <h2 className="text-xl font-bold text-gray-900">Data Toponim</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
-          <fieldset disabled={isReadOnly} className={`space-y-5`}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full" noValidate>
+          <fieldset disabled={isReadOnly} className={`space-y-5 w-full min-w-0`}>
 
             {!isReadOnly && (!isDrawingMode ? (
               <ButtonComponent

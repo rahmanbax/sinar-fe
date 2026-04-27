@@ -201,3 +201,12 @@ export const acceptIncomingRecommendation = async (token: string | null, id: str
     });
     return response.json();
 };
+export const getOutgoingRecommendationData = async (token: string | null, id: string) => {
+    if (!token) return { error: true, message: "No token provided" };
+    const response = await fetch(`${API_URL}/verifications/recommendation/outgoing/${id}/data`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return response.json();
+};

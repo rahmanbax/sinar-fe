@@ -84,7 +84,7 @@ const DaftarAkunAdminPage = () => {
     }
 
     registerAdmin({
-      institution_type: 'admin_kabkota',
+      institution_type: 'admin_kabkota', // hard code
       org_id: data.instansi,
       name: data.nama,
       email: data.emailInstansi,

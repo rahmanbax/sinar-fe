@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
-import MiniIndonesiaMap from '../map/MiniIndonesiaMap';
+import MiniIndonesiaMap, { MiniMapMarker } from '../map/MiniIndonesiaMap';
 
 interface MapModalProps {
     isOpen: boolean;
     onClose: () => void;
+    markers?: MiniMapMarker[];
 }
 
-const MapModal = ({ isOpen, onClose }: MapModalProps) => {
+const MapModal = ({ isOpen, onClose, markers = [] }: MapModalProps) => {
     if (!isOpen) return null;
 
     return (
@@ -34,7 +35,7 @@ const MapModal = ({ isOpen, onClose }: MapModalProps) => {
                 </div>
 
                 <div className="flex-1 min-h-0 relative rounded-lg overflow-hidden border border-gray-100">
-                    <MiniIndonesiaMap />
+                    <MiniIndonesiaMap markers={markers} />
                 </div>
             </div>
         </div>

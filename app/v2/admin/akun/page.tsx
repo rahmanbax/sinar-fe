@@ -100,11 +100,12 @@ const AdminAkunPage = () => {
             <div className="mb-8">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Akun</h1>
-                    <ButtonComponent
-                        icon={<Plus size={16} />}
-                        label="Tambah Akun"
-                        onClick={() => router.push('/v2/admin/akun/tambah')}
-                    />
+                    <Link href="/v2/admin/akun/tambah">
+                        <ButtonComponent
+                            icon={<Plus size={16} />}
+                            label="Tambah Akun"
+                        />
+                    </Link>
                 </div>
 
                 <DataTable

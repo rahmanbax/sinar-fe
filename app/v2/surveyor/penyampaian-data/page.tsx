@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import SurveyorLayout from '@/components/v2/nav/SurveyorLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Plus, Search, SlidersHorizontal, Download, Map as MapIcon } from 'lucide-react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 interface DeliveryData {
     id: number | string;
@@ -26,6 +28,7 @@ const mockDeliveryData: DeliveryData[] = [
 
 const DataDeliveryPage = () => {
     const [loading] = useState(false);
+    const router = useRouter();
 
     const columns: ColumnDef<DeliveryData>[] = [
         { header: "No", accessorKey: "no", className: "w-16 text-center" },
@@ -34,8 +37,8 @@ const DataDeliveryPage = () => {
         { header: "Jumlah Data", accessorKey: "total_data", className: "w-40" },
         { header: "Data Diterima", accessorKey: "accepted_data", className: "w-40" },
         { header: "Data Ditolak", accessorKey: "rejected_data", className: "w-40" },
-        { 
-            header: "Aksi", 
+        {
+            header: "Aksi",
             className: "w-24 text-center",
             cell: () => (
                 <div className="flex justify-center">
@@ -48,15 +51,15 @@ const DataDeliveryPage = () => {
     ];
 
     return (
-        <SurveyorLayout>
+        <DashboardLayout>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10">
                 <h1 className="text-2xl font-bold text-navy-900">Data Saya</h1>
-                <ButtonComponent
-                    label="Buat Penyampaian Data"
-                    onClick={() => {}}
-                    icon={<Plus size={18} />}
-                    className="bg-[#083551] hover:bg-[#062a41] px-6 py-2.5 rounded-lg"
-                />
+                <Link href="/v2/surveyor/penyampaian-data/buat">
+                    <ButtonComponent
+                        label="Buat Penyampaian Data"
+                        icon={<Plus size={16} />}
+                    />
+                </Link>
             </div>
 
             <div className="bg-white rounded-xl">
@@ -68,10 +71,10 @@ const DataDeliveryPage = () => {
                     showFilter={true}
                     showDownload={true}
                     showMap={true}
-                    onSearch={() => {}}
-                    onFilter={() => {}}
-                    onDownload={() => {}}
-                    onMap={() => {}}
+                    onSearch={() => { }}
+                    onFilter={() => { }}
+                    onDownload={() => { }}
+                    onMap={() => { }}
                     pagination={{
                         total: 5,
                         per_page: 5,
@@ -82,7 +85,7 @@ const DataDeliveryPage = () => {
                     }}
                 />
             </div>
-        </SurveyorLayout>
+        </DashboardLayout>
     );
 };
 

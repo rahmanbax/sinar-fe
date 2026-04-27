@@ -6,7 +6,19 @@ import {
     acceptVerificationToponym,
     rejectVerificationToponym,
     updateVerificationToponym,
+    getOutgoingRecommendationData,
 } from "@/api/verification";
+
+// ... existing interfaces
+
+export const useOutgoingRecommendationData = (token: string | null, id: string) => {
+    return useQuery({
+        queryKey: ["outgoing-recommendation-data", id],
+        queryFn: () => getOutgoingRecommendationData(token, id),
+        enabled: !!token && !!id,
+        retry: false,
+    });
+};
 
 export interface VerificationCandidate {
     count: number;

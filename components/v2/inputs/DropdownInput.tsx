@@ -61,8 +61,7 @@ const DropdownInput = ({
             result = [...selected, ...others];
         }
 
-        // Limit the displayed data to 50 items
-        return result.slice(0, 50);
+        return result;
     }, [uniqueOptions, searchQuery, value]);
 
     // Handle click outside to close

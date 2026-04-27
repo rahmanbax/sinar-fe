@@ -65,7 +65,7 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
             </label>
 
             <div
-                className={`relative w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${disabled ? 'bg-gray-50 opacity-60 cursor-not-allowed' : 'hover:border-navy-300 bg-white'}`}
+                className={`relative w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center transition-all ${disabled ? 'bg-gray-50 opacity-60 cursor-not-allowed' : 'hover:border-navy-300 bg-white cursor-pointer'}`}
                 onClick={() => !disabled && inputRef.current?.click()}
             >
                 <input

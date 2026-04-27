@@ -95,7 +95,7 @@ export function DataTable<TData>({
                         <input
                             type="text"
                             placeholder="Cari"
-                            className="bg-transparent text-sm w-full outline-none text-navy-900 placeholder:text-gray-400"
+                            className="bg-transparent text-sm w-full outline-none text-black placeholder:text-gray-400"
                             value={searchValue}
                             onChange={(e) => setSearchValue(e.target.value)}
                         />
@@ -174,7 +174,7 @@ export function DataTable<TData>({
                                         {columns.map((col, colIndex) => (
                                             <td
                                                 key={colIndex}
-                                                className={`px-3 py-3 text-navy-900 ${col.className || ""}`}
+                                                className={`px-3 py-3 text-black ${col.className || ""}`}
                                             >
                                                 {col.cell
                                                     ? col.cell(row, rowIndex)

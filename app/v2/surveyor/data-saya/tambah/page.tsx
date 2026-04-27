@@ -1,12 +1,12 @@
 "use client"
 
 import ToponymDetailLayout from '@/components/v2/layout/ToponymDetailLayout'
-import SurveyorLayout from '@/components/v2/nav/SurveyorLayout'
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCreateToponym } from '@/hooks/useToponyms'
 import { uploadImage, uploadAudio, uploadVideo, uploadDocs } from '@/api/media'
+import DashboardLayout from '@/components/v2/nav/DashboardLayout'
 
 // Helper: build GeoJSON geometry from layout's _geometry snapshot
 const buildGeometry = (geometry: {
@@ -153,14 +153,14 @@ const TambahDataPage = () => {
     };
 
     return (
-        <SurveyorLayout showNav={false} tightMargin={true}>
+        <DashboardLayout showNav={false} tightMargin={true}>
             <ToponymDetailLayout
                 mode='add'
                 onSubmitAction={handleSubmit}
                 isSubmitting={isPending || isUploading}
                 onCancelAction={() => router.push('/v2/surveyor/data-saya')}
             />
-        </SurveyorLayout>
+        </DashboardLayout>
     )
 }
 

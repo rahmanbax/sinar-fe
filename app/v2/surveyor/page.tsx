@@ -1,17 +1,20 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import SurveyorLayout from '@/components/v2/nav/SurveyorLayout';
 import { Plus, Database, MapPin } from 'lucide-react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap';
 import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePersonalPerformance } from '@/hooks/usePersonal';
+import { useSurveyBoundingBox } from '@/hooks/useToponyms';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
+import Link from 'next/link';
 
 const SurveyorPage = () => {
     const { token } = useAuth();
     const { data: performanceRes, isLoading } = usePersonalPerformance(token);
+    const { data: boundingBoxRes } = useSurveyBoundingBox(token);
 
     const stats = useMemo(() => {
         const d = performanceRes?.data?.summary;
@@ -33,19 +36,30 @@ const SurveyorPage = () => {
         }));
     }, [performanceRes]);
 
+    const markers = useMemo(() => {
+        if (!boundingBoxRes?.data?.results) return [];
+        return boundingBoxRes.data.results.map((item) => ({
+            longitude: item.lng,
+            latitude: item.lat,
+            color: item.status === 'baku' ? '#053378' : '#DEB43F',
+            label: item.map_name || item.local_name,
+        }));
+    }, [boundingBoxRes]);
+
     return (
-        <SurveyorLayout>
+        <DashboardLayout>
             {/* Header Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-navy-900 mb-1">Halo, John Doe</h1>
                     <p className="text-gray-500 text-sm">Berikut adalah ringkasan data yang telah anda kumpulkan.</p>
                 </div>
-                <ButtonComponent
-                    label="Tambah Data"
-                    onClick={() => { }}
-                    icon={<Plus size={16} />}
-                />
+                <Link href="/v2/surveyor/data-saya/tambah">
+                    <ButtonComponent
+                        label="Tambah Data"
+                        icon={<Plus size={16} />}
+                    />
+                </Link>
             </div>
 
             {/* Stats Cards */}
@@ -60,7 +74,7 @@ const SurveyorPage = () => {
                                 ) : (
                                     <h3 className="text-2xl font-bold text-navy-900 mb-1">{stat.value}</h3>
                                 )}
-                                <p className="text-[13px] text-gray-500 font-medium pr-4 leading-tight">{stat.label}</p>
+                                <p className="text-sm text-gray-500 font-medium pr-4 leading-tight">{stat.label}</p>
                             </div>
                             <div className="p-2 bg-gray-50 rounded-lg shrink-0">
                                 <Icon size={20} className="text-navy-900" />
@@ -81,10 +95,10 @@ const SurveyorPage = () => {
 
                 {/* Map View */}
                 <div className="bg-gray-100 rounded-xl border border-gray-200 overflow-hidden min-h-[350px] relative">
-                    <MiniIndonesiaMap />
+                    <MiniIndonesiaMap markers={markers} />
                 </div>
             </div>
-        </SurveyorLayout>
+        </DashboardLayout>
     );
 }
 

@@ -32,7 +32,7 @@ export const getRoleDefaultRoute = (user: { role: Role | string; permission_leve
             return '/v2/admin'
         case Role.ADMIN:
         case Role.BIG:
-            return '/big'
+            return '/v2/big'
         case Role.VERIFICATOR:
             // Check by permission_level first
             if (user.permission_level === 2) return '/v2/verifikator-provinsi'

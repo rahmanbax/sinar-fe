@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import SurveyorLayout from '@/components/v2/nav/SurveyorLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import FilterModal, { FilterState } from '@/components/v2/modals/FilterModal';
 import { Plus, Search } from 'lucide-react';
@@ -12,6 +11,9 @@ import { getToponyms } from '@/api/toponym';
 import { useAuth } from '@/contexts/AuthContext';
 import MapModal from '@/components/v2/modals/MapModal';
 import { useProvinces, useCities, useElements } from '@/hooks/useRegions';
+import { useSurveyBoundingBox } from '@/hooks/useToponyms';
+import Link from 'next/link';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 const getStatusBadgeV2 = (status: string) => {
     const s = status?.toLowerCase() || "";
@@ -47,6 +49,18 @@ const MyDataPage = () => {
     const [activeProvinceForFilter, setActiveProvinceForFilter] = useState<string>("");
 
     const { token } = useAuth();
+
+    // --- Bounding box markers ---
+    const { data: boundingBoxRes } = useSurveyBoundingBox(token);
+    const mapMarkers = useMemo(() => {
+        if (!boundingBoxRes?.data?.results) return [];
+        return boundingBoxRes.data.results.map((item) => ({
+            longitude: item.lng,
+            latitude: item.lat,
+            color: item.status === 'baku' ? '#053378' : '#DEB43F',
+            label: item.map_name || item.local_name,
+        }));
+    }, [boundingBoxRes]);
 
     // --- TanStack Query hooks for filter options ---
     const { data: provincesData } = useProvinces(token);
@@ -150,16 +164,17 @@ const MyDataPage = () => {
     ];
 
     return (
-        <SurveyorLayout>
+        <DashboardLayout>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold">Data Saya</h1>
                 </div>
-                <ButtonComponent
-                    label="Tambah Data"
-                    onClick={() => router.push('/v2/surveyor/data-saya/tambah')}
-                    icon={<Plus size={16} />}
-                />
+                <Link href="/v2/surveyor/data-saya/tambah">
+                    <ButtonComponent
+                        label="Tambah Data"
+                        icon={<Plus size={16} />}
+                    />
+                </Link>
             </div>
 
             <DataTable
@@ -237,8 +252,9 @@ const MyDataPage = () => {
             <MapModal
                 isOpen={isMapOpen}
                 onClose={() => setIsMapOpen(false)}
+                markers={mapMarkers}
             />
-        </SurveyorLayout>
+        </DashboardLayout>
     );
 };
 

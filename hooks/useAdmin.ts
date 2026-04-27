@@ -1,5 +1,25 @@
 import { useQuery, useMutation, UseMutationOptions } from "@tanstack/react-query";
-import { getOrganizations, createManualAdmin, importAdminData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration } from "@/api/admin";
+import { getOrganizations, createManualAdmin, importAdminData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration, updateAdminStatus } from "@/api/admin";
+
+
+type UpdateStatusVariables = {
+    token: string | null;
+    id: string;
+    status: boolean;
+};
+
+export const useUpdateAdminStatusMutation = (
+    options?: Omit<UseMutationOptions<any, Error, UpdateStatusVariables>, 'mutationFn'>
+) => {
+    return useMutation({
+        mutationFn: async (vars: UpdateStatusVariables) => {
+            const result = await updateAdminStatus(vars.token, vars.id, vars.status);
+            if (result.error) throw new Error(result.message);
+            return result;
+        },
+        ...options,
+    });
+};
 
 export const useOrganizations = () => {
     return useQuery({

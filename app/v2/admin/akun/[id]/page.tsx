@@ -8,7 +8,7 @@ import { FileText, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAdminUser, useRejectRegistrationMutation, useApproveRegistrationMutation } from '@/hooks/useAdmin';
+import { useAdminUser, useRejectRegistrationMutation, useApproveRegistrationMutation, useUpdateAdminStatusMutation } from '@/hooks/useAdmin';
 import RejectionModal from '@/components/v2/modals/RejectionModal';
 
 
@@ -41,17 +41,35 @@ const DetailAkunPage = () => {
         }
     });
 
+    const { mutate: updateStatus, isPending: isUpdating } = useUpdateAdminStatusMutation({
+        onSuccess: () => {
+            alert('Status akun berhasil diperbarui!');
+            refetch();
+        },
+        onError: (err) => {
+            alert(`Gagal memperbarui status: ${err.message}`);
+        }
+    });
+
     const handleApprove = () => {
         if (window.confirm('Apakah Anda yakin ingin menyetujui pendaftaran akun ini?')) {
             approveRegistration({ token, id });
         }
     };
 
-    const currentStatus = (userData?.status_account || '').toLowerCase();
+    const handleToggleStatus = (newStatus: boolean) => {
+        const action = newStatus ? 'mengaktifkan' : 'menonaktifkan';
+        if (window.confirm(`Apakah Anda yakin ingin ${action} akun ini?`)) {
+            updateStatus({ token, id, status: newStatus });
+        }
+    };
+
+    const rawStatus = userData?.status_account_label || userData?.approval_status_label || (userData?.status_account === true ? 'Aktif' : userData?.status_account === false ? 'Nonaktif' : '');
+    const currentStatus = String(rawStatus || '').toLowerCase();
     
-    const isAktif = currentStatus === 'aktif';
+    const isAktif = currentStatus === 'aktif' || currentStatus === 'disetujui';
     const isNonaktif = currentStatus === 'nonaktif' || currentStatus === 'tidak aktif';
-    const isPending = isAktif === false && isNonaktif === false;
+    const isPending = !isAktif && !isNonaktif;
 
     const statusDisplay = isAktif ? 'Aktif' : isNonaktif ? 'Nonaktif' : '-';
 
@@ -180,13 +198,15 @@ const DetailAkunPage = () => {
                                     <ButtonComponent
                                         label="Nonaktifkan Akun"
                                         className="text-red-500 border-red-500 hover:bg-red-50"
-                                        onClick={() => { /* Pending endpoint */ }}
+                                        onClick={() => handleToggleStatus(false)}
                                         secondary={true}
+                                        disabled={isUpdating}
                                     />
                                 ) : isNonaktif ? (
                                     <ButtonComponent
                                         label="Aktifkan Akun"
-                                        onClick={() => { /* Pending endpoint */ }}
+                                        onClick={() => handleToggleStatus(true)}
+                                        disabled={isUpdating}
                                     />
                                 ) : null}
                             </div>

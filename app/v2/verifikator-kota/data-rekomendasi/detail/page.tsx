@@ -1,29 +1,26 @@
 "use client";
 
-import React, { Suspense, useMemo } from "react";
+import React, { Suspense } from "react";
 import VerifikatorKotaLayout from "@/components/v2/nav/VerifikatorKotaLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import { Plus, ArrowLeft, Search } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { useOutgoingRecommendationData } from "@/hooks/useVerification";
 import dayjs from "dayjs";
 
 const DetailRekomendasiContent = () => {
     const router = useRouter();
-
-    // DUMMY DATA: Pure static data for UI presentation
-    const dummyTransactions: any[] = [
-        {
-            id: "k7qXLPMTN",
-            title: "Penelaahan SPBU Shell",
-            due_at: "2026-04-30T00:00:00Z",
-            total_data: 50,
-            accepted_data: 48,
-            rejected_data: 2,
-        }
-    ];
-
-    const recommendationTitle = "SR-VRK-BDG-002"; 
+    const searchParams = useSearchParams();
+    const id = searchParams.get("id") || "";
+    const { token } = useAuth();
+    
+    const { data: response, isLoading } = useOutgoingRecommendationData(token, id);
+    
+    // Metadata rekomendasi ada di key "0" berdasarkan struktur API
+    const recommendationInfo = response ? (response as any)["0"] : null;
+    const transactions = response?.data || [];
 
     const columns: ColumnDef<any>[] = [
         {
@@ -83,7 +80,7 @@ const DetailRekomendasiContent = () => {
                     <button
                         onClick={() =>
                             router.push(
-                                `/v2/verifikator-kota/data-rekomendasi/detail/toponyms`
+                                `/v2/verifikator-kota/data-penelaahan/detail?id=${row.id}`
                             )
                         }
                         className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
@@ -124,22 +121,22 @@ const DetailRekomendasiContent = () => {
                         onClick={() =>
                             router.push("/v2/verifikator-kota/data-rekomendasi")
                         }
-                        className="p-1 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
+                        className="p-1 hover:bg-gray-100 rounded-md transition-colors cursor-pointer border border-gray-200"
                     >
                         <ArrowLeft size={20} className="text-gray-900" />
                     </button>
                     <h2 className="text-xl font-bold text-navy-900">
-                        {recommendationTitle}
+                        {isLoading ? "Memuat..." : (recommendationInfo?.ref_number || "-")}
                     </h2>
                 </div>
             </div>
 
-            {/* Table Section - Identical to Main Page */}
+            {/* Table Section */}
             <div className="bg-white rounded-xl shadow-none">
                 <DataTable
                     columns={columns}
-                    data={dummyTransactions}
-                    isLoading={false}
+                    data={transactions}
+                    isLoading={isLoading}
                     showSearch={true}
                     showFilter={true}
                     emptyMessage="Tidak ada transaksi ditemukan dalam rekomendasi ini"

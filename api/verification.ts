@@ -177,3 +177,27 @@ export const getIncomingRecommendations = async (token: string | null) => {
     });
     return response.json();
 };
+
+export const getIncomingRecommendationDetail = async (token: string | null, id: string) => {
+    if (!token) return { error: true, message: "No token provided" };
+    const response = await fetch(`${API_URL}/verifications/recommendation/incoming/${id}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return response.json();
+};
+
+export const acceptIncomingRecommendation = async (token: string | null, id: string, data: { transaction_ids: string[]; is_sesuai: boolean; alasan?: string }) => {
+    if (!token) return { error: true, message: "No token provided" };
+    // Menggunakan endpoint outgoing/{id}/accept sesuai instruksi user
+    const response = await fetch(`${API_URL}/verifications/recommendation/outgoing/${id}/accept`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+    return response.json();
+};

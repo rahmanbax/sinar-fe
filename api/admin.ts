@@ -182,3 +182,30 @@ export const approveAdminRegistration = async (
 
     return res.json();
 };
+
+export const updateAdminStatus = async (
+    token: string | null,
+    id: string,
+    status: boolean
+) => {
+    if (!token) return { error: true, message: "No token provided" };
+
+    const formData = new FormData();
+    formData.append("status_account", status ? "1" : "0");
+    formData.append("_method", "PATCH");
+    
+    const res = await fetch(`${API_URL}/admin/users/${id}/status-account`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to update admin status');
+    }
+
+    return res.json();
+};

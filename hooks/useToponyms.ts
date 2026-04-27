@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSpatialToponyms, getToponymDetail, getPublicToponyms, getToponymById, createToponym, updateToponym } from "@/api/toponym";
+import { getSpatialToponyms, getToponymDetail, getPublicToponyms, getToponymById, createToponym, updateToponym, getToponymsByBoundingBox } from "@/api/toponym";
 
 export interface SpatialToponym {
     id: string;
@@ -259,6 +259,20 @@ export const usePublicToponyms = (params: {
     return useQuery<PublicToponymResponse>({
         queryKey: ["toponyms", "public", params],
         queryFn: () => getPublicToponyms(params),
+        retry: false,
+    });
+};
+
+export const useSurveyBoundingBox = (token: string | null) => {
+    return useQuery<SpatialToponymResponse>({
+        queryKey: ["toponyms", "survey", "bounding-box", token],
+        queryFn: () => getToponymsByBoundingBox(token, {
+            min_lat: -12,
+            max_lat: 12,
+            min_lng: 91,
+            max_lng: 142,
+        }),
+        enabled: !!token,
         retry: false,
     });
 };

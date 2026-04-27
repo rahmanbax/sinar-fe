@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, User } from 'lucide-react';
+import { LayoutGrid, User, X } from 'lucide-react';
 
 const navItems = [
     {
@@ -19,13 +19,28 @@ const navItems = [
     },
 ];
 
-const AdminNav = () => {
+interface AdminNavProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+}
+
+const AdminNav = ({ isOpen = false, onClose }: AdminNavProps) => {
     const pathname = usePathname();
 
     return (
-        <aside className="w-[240px] h-screen bg-white border-r border-gray-100 flex flex-col py-4 shrink-0">
-            {/* Logo */}
-            <div className="px-4 mb-6">
+        <>
+            {/* Mobile Backdrop */}
+            {isOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={onClose}
+                />
+            )}
+
+            {/* Sidebar Container */}
+            <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[240px] md:w-[240px] bg-white border-r border-gray-100 flex flex-col py-4 shrink-0 transition-transform duration-300 md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                {/* Logo & Close Button */}
+                <div className="px-4 mb-6 flex items-center justify-between">
                 <Link href="/v2" className="block w-fit">
                     <Image
                         src="/sinar-logo.png"
@@ -36,6 +51,10 @@ const AdminNav = () => {
                         priority
                     />
                 </Link>
+                {/* Tutup Modal Khusus Mobile */}
+                <button onClick={onClose} className="md:hidden text-gray-500 hover:text-gray-800 hidden-if-not-mobile">
+                    <X size={24} />
+                </button>
             </div>
 
             {/* Navigation Links */}
@@ -50,6 +69,7 @@ const AdminNav = () => {
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={() => onClose?.()}
                             className={`flex items-center transition-colors p-3 gap-2 font-semibold ${isActive
                                 ? 'bg-slate-200/50 border-l-4 border-navy-800 text-navy-900 rounded-lg'
                                 : 'border-l-4 border-transparent text-gray-600 hover:bg-gray-100 rounded-lg'
@@ -66,6 +86,7 @@ const AdminNav = () => {
                 })}
             </nav>
         </aside>
+        </>
     )
 }
 

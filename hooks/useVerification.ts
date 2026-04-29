@@ -9,7 +9,17 @@ import {
     getOutgoingRecommendationData,
     getVerificationTransactionToponyms,
     getVerificationToponymDetail,
+    getAllVerificationToponyms,
 } from "@/api/verification";
+
+export const useAllVerificationToponyms = (token: string | null, params: { page: number; per_page: number }) => {
+    return useQuery({
+        queryKey: ["all-verification-toponyms", params],
+        queryFn: () => getAllVerificationToponyms(token, params),
+        enabled: !!token,
+        retry: false,
+    });
+};
 
 // ... existing interfaces
 

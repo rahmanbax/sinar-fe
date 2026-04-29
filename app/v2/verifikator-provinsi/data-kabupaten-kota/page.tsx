@@ -21,22 +21,13 @@ const DataKabupatenKotaPage = () => {
             className: "text-center w-10",
         },
         {
-            header: "Tanggal Masuk",
+            header: "Tanggal Pengajuan",
             cell: (row) => (
                 <div className="text-gray-900">
                     {row.created_at ? dayjs(row.created_at).format("DD/MM/YYYY") : "-"}
                 </div>
             ),
             className: "min-w-[150px]",
-        },
-        {
-            header: "Asal Kabupaten/Kota",
-            cell: (row) => (
-                <div className="font-semibold text-navy-900 capitalize">
-                    {row.source_region_name || "-"}
-                </div>
-            ),
-            className: "min-w-[200px]",
         },
         {
             header: "No. Surat Rekomendasi",
@@ -57,27 +48,42 @@ const DataKabupatenKotaPage = () => {
             className: "text-center w-32",
         },
         {
+            header: "Kab/ Kota",
+            cell: (row) => (
+                <div className="text-gray-900 capitalize text-center">
+                    {row.source_region_name || "-"}
+                </div>
+            ),
+            className: "min-w-[150px] text-center",
+        },
+        {
             header: "Status",
             cell: (row) => {
-                const status = row.status?.toLowerCase() || "diajukan";
-                const isSelesai = status === "selesai" || status === "completed";
-                const isDitolak = status === "ditolak" || status === "rejected";
+                const statusLower = (row.status || "").toLowerCase();
+                
+                const isSelesai = statusLower === "sesuai" || statusLower === "selesai" || statusLower === "completed";
+                const isDitolak = statusLower === "tidak sesuai" || statusLower === "ditolak" || statusLower === "rejected";
+                const isButuh = !isSelesai && !isDitolak;
+
+                let displayStatus = "Butuh Rekomendasi";
+                if (isSelesai) displayStatus = "Sesuai";
+                if (isDitolak) displayStatus = "Tidak Sesuai";
                 
                 return (
                     <div className="flex justify-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        <span className={`px-4 py-1 rounded-full text-xs font-semibold ${
                             isSelesai 
-                            ? "bg-green-100 text-green-600" 
+                            ? "bg-green-50 text-green-500 border border-green-100" 
                             : isDitolak
-                            ? "bg-red-100 text-red-600"
-                            : "bg-blue-100 text-blue-600"
+                            ? "bg-red-50 text-red-500 border border-red-100"
+                            : "bg-gray-50 text-gray-500 border border-gray-200"
                         }`}>
-                            {row.status || "Diajukan"}
+                            {displayStatus}
                         </span>
                     </div>
                 );
             },
-            className: "text-center w-32",
+            className: "text-center w-40",
         },
         {
             header: "Aksi",
@@ -85,9 +91,9 @@ const DataKabupatenKotaPage = () => {
                 <div className="flex justify-center">
                     <Link 
                         href={`/v2/verifikator-provinsi/data-kabupaten-kota/${row.id}`}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-navy-900"
+                        className="p-1.5 hover:bg-gray-100 rounded transition-colors text-navy-900"
                     >
-                        <Search size={18} />
+                        <Search size={18} strokeWidth={3} />
                     </Link>
                 </div>
             ),

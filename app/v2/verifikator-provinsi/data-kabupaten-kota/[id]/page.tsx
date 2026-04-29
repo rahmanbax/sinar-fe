@@ -18,36 +18,25 @@ import {
 } from "@/hooks/useVerificationTransactions";
 import { useParams, useRouter } from "next/navigation";
 
-// --- STATIC DUMMY DATA ---
-const DUMMY_DETAIL = {
-    id: "1",
-    ref_number: "SR-VRK-BDG-001",
-    source_region_name: "BANDUNG",
-    toponyms_count: 1,
-    document_name: "Surat Rekomendasi No. SR-VRK-BDG-001.pdf",
-    recommendation_doc_url: "#",
-    review_transactions: [
-        {
-            id: "tx-1",
-            ref_number: "1005/XX/XXX/2026",
-            title: "Penelaahan Kota Bandung",
-            total_data: 1,
-        }
-    ]
-};
-
 const IncomingRecommendationDetailPage = () => {
     const params = useParams();
     const router = useRouter();
     const id = params?.id as string;
 
-    // API Hooks (Keep for future use)
+    // API Hooks
     const { data: detailRes, isLoading: isApiLoading } = useIncomingRecommendationDetail(id);
     const acceptMutation = useAcceptIncomingRecommendation();
 
-    // FORCE STATIC DATA
-    const recommendation = DUMMY_DETAIL;
-    const transactions = recommendation.review_transactions;
+    // Map Real Data from API Response
+    // The JSON object has metadata inside the key "0" and the transactions array inside "data"
+    const recommendation = detailRes?.["0"] || {};
+    const transactions = detailRes?.data || [];
+
+    // Calculate total data from all transactions
+    const totalDataCount = useMemo(() => {
+        if (!transactions.length) return 0;
+        return transactions.reduce((acc: number, curr: any) => acc + (curr.total_data || 0), 0);
+    }, [transactions]);
 
     // States
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -59,7 +48,7 @@ const IncomingRecommendationDetailPage = () => {
         if (transactions.length > 0 && selectedIds.length === 0) {
             setSelectedIds(transactions.map((t: any) => String(t.id)));
         }
-    }, [transactions]);
+    }, [transactions, selectedIds.length]);
 
     // Toggle selection
     const toggleSelect = (txId: string) => {
@@ -79,17 +68,8 @@ const IncomingRecommendationDetailPage = () => {
     };
 
     const handleSubmit = async () => {
-        // Simulation for now since we are in static mode
         if (acceptMutation.isPending) return;
         
-        console.log("Submitting with dummy data:", {
-            id,
-            selectedIds,
-            isSesuai,
-            alasan
-        });
-
-        // Still using the real mutation if you want to test it
         acceptMutation.mutate({
             id: id,
             data: {
@@ -100,15 +80,15 @@ const IncomingRecommendationDetailPage = () => {
         }, {
             onSuccess: (res) => {
                 if (!res.error) {
-                    alert("Rekomendasi berhasil diberikan (Mode Statis)");
+                    alert("Rekomendasi berhasil diberikan");
                     router.push("/v2/verifikator-provinsi/data-kabupaten-kota");
                 } else {
                     alert(res.message || "Gagal memberikan rekomendasi");
                 }
             },
-            onError: () => {
-                alert("Simulasi berhasil: Data telah diproses.");
-                router.push("/v2/verifikator-provinsi/data-kabupaten-kota");
+            onError: (err) => {
+                alert("Terjadi kesalahan koneksi");
+                console.error(err);
             }
         });
     };
@@ -140,9 +120,9 @@ const IncomingRecommendationDetailPage = () => {
         { header: "No", cell: (_, idx) => idx + 1, className: "w-12 text-center text-gray-500" },
         { 
             header: "No. BA", 
-            cell: (row) => (
+            cell: () => (
                 <div className="font-medium text-navy-900">
-                    {row.ref_number || "-"}
+                    -
                 </div>
             ), 
             className: "w-48" 
@@ -184,6 +164,7 @@ const IncomingRecommendationDetailPage = () => {
     ];
 
     const currentRefNumber = recommendation.ref_number || "-";
+    const documentName = `Surat Rekomendasi No. ${currentRefNumber}.pdf`;
 
     return (
         <VerifikatorProvinsiLayout>
@@ -194,7 +175,7 @@ const IncomingRecommendationDetailPage = () => {
                         <h1 className="text-2xl font-bold text-navy-900 tracking-tight">Data Kabupaten/ Kota</h1>
                         <div className="flex items-center gap-2 text-blue-600 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 shadow-sm">
                             <MapPin size={16} className="fill-blue-600" />
-                            <span className="text-sm font-bold tracking-wide">{recommendation.source_region_name}</span>
+                            <span className="text-sm font-bold tracking-wide">{recommendation.source_region?.name || "-"}</span>
                         </div>
                     </div>
                     
@@ -222,6 +203,7 @@ const IncomingRecommendationDetailPage = () => {
                                 showSearch={false} 
                                 showFilter={false} 
                                 emptyMessage="Tidak ada transaksi dalam rekomendasi ini"
+                                isLoading={isApiLoading}
                             />
                         </div>
                     </div>
@@ -233,7 +215,7 @@ const IncomingRecommendationDetailPage = () => {
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Jumlah Data</label>
                                     <div className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-xl text-navy-900 font-bold text-lg">
-                                        {recommendation.toponyms_count}
+                                        {totalDataCount}
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-2">
@@ -251,14 +233,15 @@ const IncomingRecommendationDetailPage = () => {
                                         <FileIcon size={28} />
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <p className="text-xs font-bold text-navy-900 max-w-[180px] leading-relaxed line-clamp-1">
-                                            {recommendation.document_name}
+                                        <p className="text-xs font-bold text-navy-900 max-w-[180px] leading-relaxed line-clamp-1" title={documentName}>
+                                            {documentName}
                                         </p>
-                                        <p className="text-[10px] text-gray-400 font-medium tracking-tight">PDF Document • 2.4 MB</p>
+                                        <p className="text-[10px] text-gray-400 font-medium tracking-tight">PDF Document</p>
                                     </div>
                                     <a 
-                                        href={recommendation.recommendation_doc_url} 
-                                        onClick={(e) => e.preventDefault()}
+                                        href={recommendation.recommendation_doc_url || "#"} 
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="text-white text-xs font-bold bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-full transition-all shadow-lg shadow-blue-600/20 active:scale-95"
                                     >
                                         Lihat

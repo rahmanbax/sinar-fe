@@ -6,73 +6,9 @@ import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Plus, Search, SlidersHorizontal, Check, FileText } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-
-// --- DUMMY DATA ---
-const DUMMY_TRANSACTIONS = [
-    {
-        id: "1",
-        title: "Penelaahan Februari",
-        status: "issued", // Proses Penelaahan
-        due_at: "2026-02-28T00:00:00Z",
-        element_count: 5,
-        district_count: 2,
-        total_data: 20,
-        handled_data: 15,
-        accepted_data: 10,
-        rejected_data: 5,
-        verificator_count: 2,
-    },
-    {
-        id: "2",
-        title: "Penelaahan Februari",
-        status: "completed", // Cetak BA
-        due_at: "2026-02-28T00:00:00Z",
-        element_count: 5,
-        district_count: 2,
-        total_data: 20,
-        handled_data: 20,
-        accepted_data: 15,
-        rejected_data: 5,
-        verificator_count: 2,
-    },
-    {
-        id: "3",
-        title: "Penelaahan Februari",
-        status: "recommended", // Selesai
-        due_at: "2026-02-28T00:00:00Z",
-        element_count: 5,
-        district_count: 2,
-        total_data: 20,
-        handled_data: 20,
-        accepted_data: 15,
-        rejected_data: 5,
-        verificator_count: 2,
-    },
-    {
-        id: "4",
-        title: "Penelaahan Februari",
-        status: "recommended", // Selesai
-        due_at: "2026-02-28T00:00:00Z",
-        element_count: 5,
-        district_count: 2,
-        total_data: 20,
-        handled_data: 20,
-        accepted_data: 15,
-        rejected_data: 5,
-        verificator_count: 2,
-    }
-];
-
-const DUMMY_TOPONYMS = Array.from({ length: 15 }).map((_, idx) => ({
-    id: `tp-${idx}`,
-    no: idx + 1,
-    date: "05/02/2026",
-    element: idx % 2 === 0 ? "Candi" : "Gunung",
-    name: idx % 2 === 0 ? "Candi Borobudur" : "Gunung Merapi",
-    surveyor: "John Doe",
-    status: idx % 3 === 0 ? "Disetujui" : idx % 3 === 1 ? "Ditolak" : "Belum Ditelaah",
-    transactionId: "1"
-}));
+import { useAuth } from '@/contexts/AuthContext';
+import { useVerificationTransactions, useAllVerificationToponyms } from '@/hooks/useVerification';
+import Link from 'next/link';
 
 // Components matches the Verifikator Kota style
 const ReviewCard = ({ item, viewMode }: { item: any; viewMode: string }) => {
@@ -119,7 +55,7 @@ const ReviewCard = ({ item, viewMode }: { item: any; viewMode: string }) => {
                     <span className="text-gray-500 text-xs text-nowrap">Data Ditelaah</span>
                 </div>
                 <div className="flex items-baseline gap-1.5 font-semibold col-span-2">
-                    <span className="text-gray-900">{item.verificator_count}</span>
+                    <span className="text-gray-900">{item.verificator_count || 0}</span>
                     <span className="text-gray-500 text-xs">Verifikator</span>
                 </div>
             </div>
@@ -188,13 +124,28 @@ const ReviewCard = ({ item, viewMode }: { item: any; viewMode: string }) => {
 
 const VerifikatorProvinsiDataPenelaahanContent = () => {
     const router = useRouter();
+    const { token } = useAuth();
     const searchParams = useSearchParams();
+    const [mounted, setMounted] = useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const viewFromUrl = searchParams.get('view') as 'grid' | 'table' | null;
     const viewMode = viewFromUrl || 'grid';
 
     const [activeTab, setActiveTab] = useState<'semua' | 'toponim'>('semua');
     const [searchText, setSearchText] = useState("");
+    const [toponymPage, setToponymPage] = useState(1);
+
+    // API Hooks
+    const { data: transactionsRes, isLoading: isLoadingTransactions } = useVerificationTransactions(token);
+    const { data: toponymsRes, isLoading: isLoadingToponyms } = useAllVerificationToponyms(token, { page: toponymPage, per_page: 10 });
+
+    const transactions = useMemo(() => transactionsRes?.data ?? [], [transactionsRes]);
+    const toponyms = useMemo(() => toponymsRes?.data ?? [], [toponymsRes]);
+    const toponymPagination = useMemo(() => toponymsRes?.pagination, [toponymsRes]);
 
     const setViewMode = (mode: 'grid' | 'table') => {
         const params = new URLSearchParams(searchParams.toString());
@@ -203,17 +154,18 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
     };
 
     const filteredTransactions = useMemo(() => {
-        if (!searchText) return DUMMY_TRANSACTIONS;
-        return DUMMY_TRANSACTIONS.filter(t => t.title.toLowerCase().includes(searchText.toLowerCase()));
-    }, [searchText]);
+        if (!searchText) return transactions;
+        return transactions.filter((t: any) => t.title.toLowerCase().includes(searchText.toLowerCase()));
+    }, [searchText, transactions]);
 
     const filteredToponyms = useMemo(() => {
-        if (!searchText) return DUMMY_TOPONYMS;
-        return DUMMY_TOPONYMS.filter(t => 
-            t.name.toLowerCase().includes(searchText.toLowerCase()) || 
-            t.element.toLowerCase().includes(searchText.toLowerCase())
+        // Since API doesn't have search, we filter locally for the current page
+        if (!searchText) return toponyms;
+        return toponyms.filter((t: any) => 
+            t.name?.toLowerCase().includes(searchText.toLowerCase()) || 
+            t.element_name?.toLowerCase().includes(searchText.toLowerCase())
         );
-    }, [searchText]);
+    }, [searchText, toponyms]);
 
     const transactionColumns: ColumnDef<any>[] = [
         { header: "No", cell: (_, idx) => idx + 1, className: "w-12 text-center" },
@@ -249,18 +201,18 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
     ];
 
     const toponymColumns: ColumnDef<any>[] = [
-        { header: "No", accessorKey: "no", className: "w-12 text-center" },
-        { header: "Tanggal", accessorKey: "date", className: "w-32" },
-        { header: "Jenis Unsur", accessorKey: "element" },
+        { header: "No", cell: (_, idx) => (toponymPage - 1) * 10 + idx + 1, className: "w-12 text-center" },
+        { header: "Tanggal", cell: (row) => row.created_at ? new Date(row.created_at).toLocaleDateString("id-ID") : "-", className: "w-32" },
+        { header: "Jenis Unsur", accessorKey: "element_name" },
         { header: "Nama Rupabumi", accessorKey: "name", className: "font-bold" },
-        { header: "Surveyor", accessorKey: "surveyor" },
+        { header: "Surveyor", accessorKey: "surveyor_name" },
         {
             header: "Status", cell: (row) => (
                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                    row.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-700' : 
-                    row.status === 'Ditolak' ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-700'
+                    row.status_num === 1 ? 'bg-emerald-100 text-emerald-700' : 
+                    row.status_num === 2 ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-700'
                 }`}>
-                    {row.status}
+                    {row.status_label || (row.status_num === 1 ? "Disetujui" : row.status_num === 2 ? "Ditolak" : "Belum Ditelaah")}
                 </span>
             )
         },
@@ -280,6 +232,17 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
         }
     ];
 
+    if (!mounted) return (
+        <div className="flex flex-col gap-6">
+            <div className="h-10 w-48 bg-gray-200 rounded animate-pulse mb-4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="h-64 bg-gray-100 rounded-2xl animate-pulse"></div>
+                ))}
+            </div>
+        </div>
+    );
+
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
@@ -288,17 +251,17 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
                     label="Buat Penelaahan" 
                     icon={<Plus size={18} />} 
                     className="bg-navy-900 hover:bg-navy-800"
-                    onClick={() => {}} 
+                    onClick={() => router.push('/v2/verifikator-provinsi/data-penelaahan/buat')} 
                 />
             </div>
 
             {/* Tabs per Design */}
             <div className="flex items-center border-b border-gray-100">
                 <button onClick={() => setActiveTab('semua')} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'semua' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'}`}>
-                    Semua Penelaahan ({DUMMY_TRANSACTIONS.length})
+                    Semua Penelaahan ({transactions.length})
                 </button>
                 <button onClick={() => { setActiveTab('toponim'); setSearchText(""); }} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'toponim' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'}`}>
-                    Semua Toponim ({DUMMY_TOPONYMS.length})
+                    Semua Toponim ({toponymPagination?.total || 0})
                 </button>
             </div>
 
@@ -330,21 +293,44 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
                         </div>
                     </div>
                     
-                    {viewMode === 'grid' ? (
+                    {isLoadingTransactions ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
-                            {filteredTransactions.map((item) => (
-                                <ReviewCard key={item.id} item={item} viewMode={viewMode} />
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm h-64 animate-pulse">
+                                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+                                    <div className="space-y-3">
+                                        <div className="h-4 bg-gray-100 rounded w-full"></div>
+                                        <div className="h-4 bg-gray-100 rounded w-5/6"></div>
+                                        <div className="h-4 bg-gray-100 rounded w-4/6"></div>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="pb-12">
-                            <DataTable columns={transactionColumns} data={filteredTransactions} isLoading={false} showSearch={false} showFilter={false} />
-                        </div>
+                        viewMode === 'grid' ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
+                                {filteredTransactions.map((item: any) => (
+                                    <ReviewCard key={item.id} item={item} viewMode={viewMode} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="pb-12">
+                                <DataTable columns={transactionColumns} data={filteredTransactions} isLoading={isLoadingTransactions} showSearch={false} showFilter={false} />
+                            </div>
+                        )
                     )}
                 </>
             ) : (
                 <div className="pb-12">
-                     <DataTable columns={toponymColumns} data={filteredToponyms} isLoading={false} showSearch={true} showFilter={true} />
+                     <DataTable 
+                        columns={toponymColumns} 
+                        data={filteredToponyms} 
+                        isLoading={isLoadingToponyms} 
+                        showSearch={true} 
+                        showFilter={true}
+                        pagination={toponymPagination}
+                        onPageChange={setToponymPage}
+                    />
                 </div>
             )}
         </div>

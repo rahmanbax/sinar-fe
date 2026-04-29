@@ -7,6 +7,8 @@ import {
     rejectVerificationToponym,
     updateVerificationToponym,
     getOutgoingRecommendationData,
+    getVerificationTransactionToponyms,
+    getVerificationToponymDetail,
 } from "@/api/verification";
 
 // ... existing interfaces
@@ -16,6 +18,24 @@ export const useOutgoingRecommendationData = (token: string | null, id: string) 
         queryKey: ["outgoing-recommendation-data", id],
         queryFn: () => getOutgoingRecommendationData(token, id),
         enabled: !!token && !!id,
+        retry: false,
+    });
+};
+
+export const useVerificationTransactionToponyms = (token: string | null, transactionId: string, params: { page: number; per_page: number }) => {
+    return useQuery({
+        queryKey: ["verification-transaction-toponyms", transactionId, params],
+        queryFn: () => getVerificationTransactionToponyms(token, transactionId, params),
+        enabled: !!token && !!transactionId,
+        retry: false,
+    });
+};
+
+export const useVerificationToponymDetail = (token: string | null, transactionId: string, toponymId: string) => {
+    return useQuery({
+        queryKey: ["verification-toponym-detail", transactionId, toponymId],
+        queryFn: () => getVerificationToponymDetail(token, transactionId, toponymId),
+        enabled: !!token && !!transactionId && !!toponymId,
         retry: false,
     });
 };

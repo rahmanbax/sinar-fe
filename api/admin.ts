@@ -106,10 +106,14 @@ export const importAdminData = async (
     return res.json();
 };
 
-export const getAdminUsers = async (token: string | null) => {
+export const getAdminUsers = async (token: string | null, page: number = 1, search: string = "") => {
     if (!token) return { error: true, message: "No token provided", data: [], pagination: null };
     
-    const res = await fetch(`${API_URL}/admin/users`, {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    if (search) params.append('search', search);
+
+    const res = await fetch(`${API_URL}/admin/users?${params.toString()}`, {
         headers: {
             Authorization: `Bearer ${token}`
         }

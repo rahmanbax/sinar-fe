@@ -1,4 +1,4 @@
-import { useQuery, useMutation, UseMutationOptions } from "@tanstack/react-query";
+import { useQuery, useMutation, UseMutationOptions, useQueryClient } from "@tanstack/react-query";
 import { getOrganizations, createManualAdmin, importAdminData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration, updateAdminStatus } from "@/api/admin";
 
 
@@ -11,6 +11,8 @@ type UpdateStatusVariables = {
 export const useUpdateAdminStatusMutation = (
     options?: Omit<UseMutationOptions<any, Error, UpdateStatusVariables>, 'mutationFn'>
 ) => {
+    const queryClient = useQueryClient();
+    
     return useMutation({
         mutationFn: async (vars: UpdateStatusVariables) => {
             const result = await updateAdminStatus(vars.token, vars.id, vars.status);
@@ -18,6 +20,12 @@ export const useUpdateAdminStatusMutation = (
             return result;
         },
         ...options,
+        onSuccess: (...args) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+            if (options?.onSuccess) {
+                options.onSuccess(...args);
+            }
+        },
     });
 };
 
@@ -29,10 +37,10 @@ export const useOrganizations = () => {
     });
 };
 
-export const useAdminUsers = (token: string | null) => {
+export const useAdminUsers = (token: string | null, page: number = 1, search: string = "") => {
     return useQuery({
-        queryKey: ["admin", "users"],
-        queryFn: () => getAdminUsers(token),
+        queryKey: ["admin", "users", page, search],
+        queryFn: () => getAdminUsers(token, page, search),
         enabled: !!token,
     });
 };

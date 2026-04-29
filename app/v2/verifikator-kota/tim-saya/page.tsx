@@ -73,7 +73,7 @@ const TimSayaPage = () => {
             <div className="mb-8">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Tim Saya</h1>
-                    <Link href="/v2/surveyor/tim-saya/tambah">
+                    <Link href="/v2/verifikator-kota/tim-saya/tambah">
                         <ButtonComponent
                             icon={<Plus size={16} />}
                             label="Tambah Akun"

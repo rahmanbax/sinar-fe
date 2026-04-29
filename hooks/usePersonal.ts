@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getPersonalPerformance } from "@/api/personal";
+import { getPersonalPerformance, getMyTeams } from "@/api/personal";
 
 export interface PersonalPerformanceResponse {
     error: boolean;
@@ -26,5 +26,13 @@ export const usePersonalPerformance = (token: string | null) => {
         queryFn: () => getPersonalPerformance(token),
         enabled: !!token,
         retry: false,
+    });
+};
+
+export const useMyTeams = (token: string | null, page: number = 1, search: string = "") => {
+    return useQuery({
+        queryKey: ["my-teams", page, search],
+        queryFn: () => getMyTeams(token, page, search),
+        enabled: !!token,
     });
 };

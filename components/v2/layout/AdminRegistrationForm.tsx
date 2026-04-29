@@ -8,6 +8,7 @@ import { useAdminRegistrationStore } from '@/store/useAdminRegistrationStore';
 import { useAuth } from '@/contexts/AuthContext';
 import SelectionButtonComponent from '../buttons/SelectionButtonComponent';
 import { useOrganizations, useCreateManualAdminMutation, useImportAdminMutation } from '@/hooks/useAdmin';
+import { Link } from 'lucide-react';
 
 const AdminRegistrationForm = () => {
     const {
@@ -27,11 +28,11 @@ const AdminRegistrationForm = () => {
         isAdminBig, setIsAdminBig,
     } = useAdminRegistrationStore();
 
-    const [activeTab, setActiveTab] = React.useState<'formulir' | 'xlsx'>('formulir');
+    const [activeTab, setActiveTab] = React.useState<'formulir' | 'xlsx' | 'link'>('formulir');
 
     const { token } = useAuth();
     const { data: organizationResponse } = useOrganizations();
-    
+
     const instansiOptions = React.useMemo(() => {
         if (!organizationResponse?.data) return [];
         return organizationResponse.data.map((org: any) => ({
@@ -115,6 +116,12 @@ const AdminRegistrationForm = () => {
                         className='w-full'
                         selected={activeTab === 'xlsx'}
                     />
+                    {/* <SelectionButtonComponent
+                        label='Buat Link'
+                        onClick={() => setActiveTab('link')}
+                        className='w-full'
+                        selected={activeTab === 'link'}
+                    /> */}
                 </div>
             </div>
             {activeTab === 'formulir' && (
@@ -279,6 +286,20 @@ const AdminRegistrationForm = () => {
                     />
                 </div>
             )}
+            {
+            // activeTab === 'link' && (
+            //     <div className='bg-white shadow-sm rounded-lg p-6 space-y-5'>
+            //         {/* form untuk link */}
+
+            //         <ButtonComponent
+            //             label={isImportPending ? 'Memproses...' : 'Buat Link'}
+            //             onClick={handleImportAdmin}
+            //             className='w-full'
+            //             disabled={isImportPending}
+            //         />
+            //     </div>
+            // )
+            }
         </div>
     )
 }

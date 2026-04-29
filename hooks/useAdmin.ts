@@ -1,5 +1,5 @@
 import { useQuery, useMutation, UseMutationOptions, useQueryClient } from "@tanstack/react-query";
-import { getOrganizations, createManualAdmin, importAdminData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration, updateAdminStatus } from "@/api/admin";
+import { getOrganizations, createManualAdmin, createManualMember, importAdminData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration, updateAdminStatus } from "@/api/admin";
 
 
 type UpdateStatusVariables = {
@@ -81,6 +81,40 @@ export const useCreateManualAdminMutation = (
                 recommendation_file: vars.recommendation_file,
                 ref_number: vars.ref_number,
                 is_admin_big: vars.is_admin_big,
+            });
+            if (result.error) throw new Error(result.message);
+            return result;
+        },
+        ...options,
+    });
+};
+
+type ManualMemberVariables = {
+    token: string | null;
+    name: string;
+    email: string;
+    phone: string;
+    role: string;
+    password: string;
+    password_confirmation: string;
+    recommendation_file: File;
+    ref_number: string;
+};
+
+export const useCreateManualMemberMutation = (
+    options?: Omit<UseMutationOptions<any, Error, ManualMemberVariables>, 'mutationFn'>
+) => {
+    return useMutation({
+        mutationFn: async (vars: ManualMemberVariables) => {
+            const result = await createManualMember(vars.token, {
+                name: vars.name,
+                email: vars.email,
+                phone: vars.phone,
+                role: vars.role,
+                password: vars.password,
+                password_confirmation: vars.password_confirmation,
+                recommendation_file: vars.recommendation_file,
+                ref_number: vars.ref_number,
             });
             if (result.error) throw new Error(result.message);
             return result;

@@ -73,6 +73,47 @@ export const createManualAdmin = async (
     return res.json();
 };
 
+export const createManualMember = async (
+    token: string | null,
+    data: {
+        name: string;
+        email: string;
+        phone: string;
+        role: string;
+        password: string;
+        password_confirmation: string;
+        recommendation_file: File;
+        ref_number: string;
+    }
+) => {
+    if (!token) return { error: true, message: "No token provided" };
+
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('email', data.email);
+    formData.append('phone', data.phone);
+    formData.append('role', data.role);
+    formData.append('password', data.password);
+    formData.append('password_confirmation', data.password_confirmation);
+    formData.append('recommendation_file', data.recommendation_file);
+    formData.append('ref_number', data.ref_number);
+
+    const res = await fetch(`${API_URL}/admin/users/manual/create-member`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: formData
+    });
+
+    if (!res.ok) {
+        const errVal = await res.text();
+        throw new Error(errVal || 'Failed to create manual member');
+    }
+
+    return res.json();
+};
+
 export const importAdminData = async (
     token: string | null,
     data: {

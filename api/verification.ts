@@ -190,16 +190,35 @@ export const getIncomingRecommendationDetail = async (token: string | null, id: 
 
 export const acceptIncomingRecommendation = async (token: string | null, id: string, data: { transaction_ids: string[]; is_sesuai: boolean; alasan?: string }) => {
     if (!token) return { error: true, message: "No token provided" };
-    // Menggunakan endpoint outgoing/{id}/accept sesuai instruksi user
-    const response = await fetch(`${API_URL}/verifications/recommendation/outgoing/${id}/accept`, {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
-    return response.json();
+    
+    try {
+        const response = await fetch(`${API_URL}/verifications/recommendation/incoming/${id}/accept`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
+
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const json = await response.json();
+            // Jika backend Laravel return 404 dengan JSON
+            if (!response.ok) {
+                return { error: true, message: json.message || `Error ${response.status}: API Endpoint not found` };
+            }
+            return json;
+        } else {
+            return { 
+                error: true, 
+                message: `Server Error ${response.status}: Endpoint returned HTML/non-JSON. Route might be missing.` 
+            };
+        }
+    } catch (error: any) {
+        return { error: true, message: error.message || "Network request failed" };
+    }
 };
 export const getOutgoingRecommendationData = async (token: string | null, id: string) => {
     if (!token) return { error: true, message: "No token provided" };

@@ -180,7 +180,7 @@ export const getIncomingRecommendations = async (token: string | null) => {
 
 export const getIncomingRecommendationDetail = async (token: string | null, id: string) => {
     if (!token) return { error: true, message: "No token provided" };
-    const response = await fetch(`${API_URL}/verifications/recommendation/incoming/${id}`, {
+    const response = await fetch(`${API_URL}/verifications/recommendation/incoming/${id}/data`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

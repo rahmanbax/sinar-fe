@@ -17,23 +17,28 @@ interface AdminAkunData {
     email: string;
     no_telp: string;
     role: string;
+    org_name: string;
     status: string;
 }
 
 const AdminAkunPage = () => {
     const router = useRouter();
     const { token } = useAuth();
-    const { data: usersResponse, isLoading } = useAdminUsers(token);
+    const [page, setPage] = React.useState(1);
+    const [search, setSearch] = React.useState("");
+
+    const { data: usersResponse, isLoading } = useAdminUsers(token, page, search);
 
     const usersData = React.useMemo(() => {
         if (!usersResponse?.data) return [];
         return usersResponse.data.map((user: any, index: number) => ({
             id: user.id,
-            no: index + 1,
+            no: (usersResponse.pagination?.from || 1) + index,
             nama: user.name,
             email: user.email,
             no_telp: user.phone,
             role: user.role,
+            org_name: user.organization?.name || '-',
             status: user.status_account_label || user.approval_status_label || (user.status_account === true ? 'Aktif' : user.status_account === false ? 'Nonaktif' : 'Pending'),
         }));
     }, [usersResponse]);
@@ -59,6 +64,10 @@ const AdminAkunPage = () => {
         {
             header: 'Role',
             accessorKey: 'role',
+        },
+        {
+            header: 'Instansi',
+            accessorKey: 'org_name',
         },
         {
             header: 'Status',
@@ -111,8 +120,14 @@ const AdminAkunPage = () => {
                 <DataTable
                     columns={columns}
                     data={usersData}
+                    isLoading={isLoading}
                     showSearch={true}
                     showFilter={true}
+                    onSearch={(val) => {
+                        setSearch(val);
+                        setPage(1);
+                    }}
+                    onPageChange={(newPage) => setPage(newPage)}
                     pagination={usersResponse?.pagination}
                 />
             </div>

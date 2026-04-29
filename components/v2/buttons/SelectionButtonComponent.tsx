@@ -19,7 +19,7 @@ const SelectionButtonComponent = ({
         <button
             onClick={onClick}
             disabled={disabled}
-            className={`bg-white px-4 py-2 rounded-lg border font-medium w-full cursor-pointer ${selected ? 'border-navy-500 text-navy-500' : ''}`}
+            className={`bg-white px-4 py-2 rounded-lg border font-medium w-full hover:bg-gray-100 cursor-pointer ${selected ? 'border-navy-500 text-navy-500' : ''}`}
         >
             {label}
         </button>

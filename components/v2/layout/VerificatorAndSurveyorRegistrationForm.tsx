@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import TextInput from '../inputs/TextInput';
 import FileInput from '../inputs/FileInput';
 import PasswordInput from '../inputs/PasswordInput';
+import DropdownInput from '../inputs/DropdownInput';
 import ButtonComponent from '../buttons/ButtonComponent';
 import { useCreateManualMemberMutation } from '@/hooks/useAdmin';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +16,7 @@ interface FormValues {
     nama: string;
     email: string;
     no_telepon: string;
+    role: string;
     password: string;
     konfirmasi_password: string;
     no_surat: string;
@@ -24,12 +26,13 @@ interface FormValues {
 const VerificatorAndSurveyorRegistrationForm = () => {
     const router = useRouter();
     const { token, user } = useAuth();
-    
+
     const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
         defaultValues: {
             nama: '',
             email: '',
             no_telepon: '',
+            role: user?.role || 'verificator',
             password: '',
             konfirmasi_password: '',
             no_surat: '',
@@ -55,7 +58,7 @@ const VerificatorAndSurveyorRegistrationForm = () => {
             name: data.nama,
             email: data.email,
             phone: data.no_telepon,
-            role: user?.role || "verificator", // Role based on currently logged in user
+            role: data.role,
             password: data.password,
             password_confirmation: data.konfirmasi_password,
             recommendation_file: data.file_surat_permohonan,
@@ -76,9 +79,28 @@ const VerificatorAndSurveyorRegistrationForm = () => {
         <div className="max-w-xl mx-auto space-y-5">
             <div className='space-y-4 bg-white p-6 shadow-sm rounded-lg'>
                 <h1 className='text-xl font-semibold'>Tambah Akun Tim</h1>
-                
+
                 <form onSubmit={handleSubmit(onSubmit)} className='space-y-5'>
                     <div className='space-y-4'>
+
+                        <Controller
+                            name="role"
+                            control={control}
+                            rules={{ required: true }}
+                            render={({ field }) => (
+                                <DropdownInput
+                                    label='Role'
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    options={[
+                                        { label: 'Verifikator', value: 'verificator' },
+                                        { label: 'Surveyor', value: 'surveyor' }
+                                    ]}
+                                    required
+                                />
+                            )}
+                        />
+                        
                         <Controller
                             name="nama"
                             control={control}
@@ -93,7 +115,7 @@ const VerificatorAndSurveyorRegistrationForm = () => {
                                 />
                             )}
                         />
-                        
+
                         <Controller
                             name="email"
                             control={control}

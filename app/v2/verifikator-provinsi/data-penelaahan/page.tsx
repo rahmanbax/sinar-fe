@@ -288,7 +288,7 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
                     label="Buat Penelaahan" 
                     icon={<Plus size={18} />} 
                     className="bg-navy-900 hover:bg-navy-800"
-                    onClick={() => {}} 
+                    onClick={() => router.push('/v2/verifikator-provinsi/data-penelaahan/buat')} 
                 />
             </div>
 

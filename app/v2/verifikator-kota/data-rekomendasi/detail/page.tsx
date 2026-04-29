@@ -42,7 +42,7 @@ const DetailRekomendasiContent = () => {
         {
             header: "Judul Penelaahan",
             cell: (row) => (
-                <div className="font-bold text-navy-900">{row.title || "-"}</div>
+                <div className="text-navy-900">{row.title || "-"}</div>
             ),
             className: "min-w-[200px]",
         },
@@ -80,7 +80,7 @@ const DetailRekomendasiContent = () => {
                     <button
                         onClick={() =>
                             router.push(
-                                `/v2/verifikator-kota/data-penelaahan/detail?id=${row.id}`
+                                `/v2/verifikator-kota/data-rekomendasi/detail/toponyms?transactionId=${row.id}&transactionTitle=${encodeURIComponent(row.title || "Transaksi")}&rekomendasiId=${id}&refNumber=${encodeURIComponent(recommendationInfo?.ref_number || "")}`
                             )
                         }
                         className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"

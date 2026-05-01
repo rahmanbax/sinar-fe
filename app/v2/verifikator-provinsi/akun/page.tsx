@@ -1,11 +1,11 @@
 "use client";
 
 import React from 'react';
-import VerifikatorProvinsiLayout from '@/components/v2/nav/VerifikatorProvinsiLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Plus, Search } from 'lucide-react';
 import Link from 'next/link';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 interface AkunData {
     no: number;
@@ -79,7 +79,7 @@ const AkunPage = () => {
     ];
 
     return (
-        <VerifikatorProvinsiLayout>
+        <DashboardLayout>
             <div className="mb-8">
 
                 <div className="flex justify-between items-center mb-6">
@@ -107,7 +107,7 @@ const AkunPage = () => {
                     }}
                 />
             </div>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     );
 };
 

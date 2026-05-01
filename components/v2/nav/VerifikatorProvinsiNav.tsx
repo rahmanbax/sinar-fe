@@ -27,11 +27,11 @@ const navItems = [
         href: '/v2/verifikator-provinsi/data-kabupaten-kota',
         icon: Database,
     },
-    {
-        name: 'Akun',
-        href: '/v2/verifikator-provinsi/akun',
-        icon: User,
-    },
+    // {
+    //     name: 'Akun',
+    //     href: '/v2/verifikator-provinsi/akun',
+    //     icon: User,
+    // },
     {
         name: 'Tim Saya',
         href: '/v2/verifikator-provinsi/tim-saya',

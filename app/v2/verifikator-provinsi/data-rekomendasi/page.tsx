@@ -1,112 +1,118 @@
 "use client";
 
-import React from 'react';
-import VerifikatorProvinsiLayout from '@/components/v2/nav/VerifikatorProvinsiLayout';
-import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
-import { Search } from 'lucide-react';
-
-interface RekomendasiData {
-    no: number;
-    tanggal_pengajuan: string;
-    no_surat: string;
-    jumlah_data: number;
-    kab_kota: string;
-    status: 'Butuh Rekomendasi' | 'Tidak Sesuai' | 'Sesuai';
-}
+import React from "react";
+import VerifikatorProvinsiLayout from "@/components/v2/nav/VerifikatorProvinsiLayout";
+import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
+import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
+import { Plus, Search } from "lucide-react";    
+import { useRouter } from "next/navigation";
+import { useRecommendations } from "@/hooks/useVerificationTransactions";
+import dayjs from "dayjs";
 
 const DataRekomendasiPage = () => {
-    // Hardcoded dummy data based on Image 3
-    const dummyData: RekomendasiData[] = [
-        { no: 1, tanggal_pengajuan: '05/02/2026', no_surat: 'No. 12/KBI/JTM/2020', jumlah_data: 100, kab_kota: 'Kota Bandung', status: 'Butuh Rekomendasi' },
-        { no: 2, tanggal_pengajuan: '05/02/2026', no_surat: 'No. 12/KBI/JTM/2020', jumlah_data: 100, kab_kota: 'Kota Bandung', status: 'Butuh Rekomendasi' },
-        { no: 3, tanggal_pengajuan: '05/02/2026', no_surat: 'No. 12/KBI/JTM/2020', jumlah_data: 100, kab_kota: 'Kota Bandung', status: 'Butuh Rekomendasi' },
-        { no: 4, tanggal_pengajuan: '05/02/2026', no_surat: 'No. 12/KBI/JTM/2020', jumlah_data: 100, kab_kota: 'Kota Bandung', status: 'Butuh Rekomendasi' },
-        { no: 5, tanggal_pengajuan: '05/02/2026', no_surat: 'No. 12/KBI/JTM/2020', jumlah_data: 100, kab_kota: 'Kota Bandung', status: 'Butuh Rekomendasi' },
-        { no: 6, tanggal_pengajuan: '05/02/2026', no_surat: 'No. 12/KBI/JTM/2020', jumlah_data: 100, kab_kota: 'Kota Bandung', status: 'Butuh Rekomendasi' },
-        { no: 7, tanggal_pengajuan: '05/02/2026', no_surat: 'No. 12/KBI/JTM/2020', jumlah_data: 100, kab_kota: 'Kota Bandung', status: 'Butuh Rekomendasi' },
-        { no: 8, tanggal_pengajuan: '05/02/2026', no_surat: 'No. 12/KBI/JTM/2020', jumlah_data: 100, kab_kota: 'Kota Bandung', status: 'Tidak Sesuai' },
-        { no: 9, tanggal_pengajuan: '05/02/2026', no_surat: 'No. 12/KBI/JTM/2020', jumlah_data: 100, kab_kota: 'Kota Bandung', status: 'Sesuai' },
-        { no: 10, tanggal_pengajuan: '05/02/2026', no_surat: 'No. 12/KBI/JTM/2020', jumlah_data: 100, kab_kota: 'Kota Bandung', status: 'Sesuai' },
-    ];
+    const router = useRouter();
+    const { data: recommendationsRes, isLoading } = useRecommendations();
+    
+    const recommendations = recommendationsRes?.data || [];
 
-    const columns: ColumnDef<RekomendasiData>[] = [
+    const columns: ColumnDef<any>[] = [
         {
-            header: 'No',
-            accessorKey: 'no',
-            className: 'w-12 text-center',
+            header: "No",
+            cell: (_, index) => (
+                <div className="text-gray-900">{index + 1}</div>
+            ),
+            className: "w-14 text-center",
         },
         {
-            header: 'Tanggal Pengajuan',
-            accessorKey: 'tanggal_pengajuan',
-        },
-        {
-            header: 'No. Surat Rekomendasi',
-            accessorKey: 'no_surat',
-        },
-        {
-            header: 'Jumlah Data',
-            accessorKey: 'jumlah_data',
-            className: 'text-center',
-        },
-        {
-            header: 'Kab/ Kota',
-            accessorKey: 'kab_kota',
-        },
-        {
-            header: 'Status',
-            cell: (row) => {
-                const statusStyles = {
-                    'Butuh Rekomendasi': 'bg-gray-100 text-gray-500',
-                    'Tidak Sesuai': 'text-red-500 font-bold',
-                    'Sesuai': 'bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-semibold'
-                };
-                
-                if (row.status === 'Tidak Sesuai') {
-                    return <span className={statusStyles[row.status]}>{row.status}</span>;
-                }
-
-                if (row.status === 'Butuh Rekomendasi') {
-                    return (
-                        <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-xs font-semibold">
-                            {row.status}
-                        </span>
-                    );
-                }
-
-                return <span className={statusStyles[row.status]}>{row.status}</span>;
-            },
-            className: 'text-center',
-        },
-        {
-            header: 'Aksi',
-            cell: () => (
-                <div className="flex justify-center">
-                    <Search size={18} className="text-navy-900 cursor-pointer hover:text-navy-700 transition-colors" />
+            header: "Tanggal Pengajuan",
+            cell: (row) => (
+                <div className="text-gray-900">
+                    {row.created_at ? dayjs(row.created_at).format("DD/MM/YYYY") : "-"}
                 </div>
             ),
-            className: 'w-20 text-center',
+            className: "min-w-[150px]",
+        },
+        {
+            header: "No. Surat Rekomendasi",
+            cell: (row) => (
+                <div className="text-gray-900">
+                    {row.ref_number || "-"}
+                </div>
+            ),
+            className: "min-w-[250px]",
+        },
+        {
+            header: "Jumlah Data",
+            cell: (row) => (
+                <div className="text-gray-900 text-center">
+                    {row.toponyms_count ?? row.total_data ?? "-"}
+                </div>
+            ),
+            className: "text-center w-32",
+        },
+        {
+            header: "Status",
+            cell: (row) => {
+                const isDiajukan = row.status === "Diajukan" || row.status === "diajukan" || !row.status;
+                const isSelesai = row.status === "Selesai" || row.status === "selesai";
+                
+                return (
+                    <div className="flex justify-center">
+                        <span className={`px-4 py-1 rounded-full text-[13px] font-semibold ${
+                            isDiajukan 
+                            ? "bg-blue-100/80 text-blue-600" 
+                            : isSelesai 
+                            ? "bg-green-100/80 text-green-600" 
+                            : "bg-gray-100 text-gray-600"
+                        }`}>
+                            {row.status || "Diajukan"}
+                        </span>
+                    </div>
+                );
+            },
+            className: "text-center w-32",
+        },
+        {
+            header: "Aksi",
+            cell: (row) => (
+                <div className="flex justify-center">
+                    <button 
+                        onClick={() => router.push(`/v2/verifikator-provinsi/data-rekomendasi/detail?id=${row.id}`)}
+                        className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                    >
+                        <Search size={18} className="text-gray-900" strokeWidth={3} />
+                    </button>
+                </div>
+            ),
+            className: "w-24 text-center",
         },
     ];
 
     return (
         <VerifikatorProvinsiLayout>
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-navy-900 mb-6">Data Rekomendasi</h1>
-                
-                <DataTable 
-                    columns={columns} 
-                    data={dummyData}
-                    showSearch={true}
-                    showFilter={true}
-                    pagination={{
-                        total: 100,
-                        per_page: 10,
-                        current_page: 1,
-                        last_page: 10,
-                        from: 1,
-                        to: 10
-                    }}
-                />
+            <div className="flex flex-col gap-8">
+                {/* Header Section */}
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-bold text-gray-900">Data Rekomendasi</h1>
+                    <ButtonComponent
+                        label="Ajukan Rekomendasi"
+                        onClick={() => router.push("/v2/verifikator-provinsi/data-rekomendasi/ajukan-rekomendasi")}
+                        icon={<Plus size={18} />}
+                        className="bg-navy-900 hover:bg-navy-800 rounded-md scale-95"
+                    />
+                </div>
+
+                {/* Table Section */}
+                <div className="bg-white rounded-xl shadow-none">
+                    <DataTable
+                        columns={columns}
+                        data={recommendations}
+                        isLoading={isLoading}
+                        showSearch={true}
+                        showFilter={true}
+                        emptyMessage="Belum ada data rekomendasi"
+                    />
+                </div>
             </div>
         </VerifikatorProvinsiLayout>
     );

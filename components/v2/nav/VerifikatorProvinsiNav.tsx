@@ -13,8 +13,8 @@ const navItems = [
         icon: LayoutGrid,
     },
     {
-        name: 'Data Penelaahan',
-        href: '/v2/verifikator-provinsi/data-penelaahan',
+        name: 'Data Kabupaten/ Kota',
+        href: '/v2/verifikator-provinsi/data-kabupaten-kota',
         icon: Database,
     },
     {
@@ -23,8 +23,8 @@ const navItems = [
         icon: Database,
     },
     {
-        name: 'Data Kabupaten/ Kota',
-        href: '/v2/verifikator-provinsi/data-kabupaten-kota',
+        name: 'Data Penelaahan',
+        href: '/v2/verifikator-provinsi/data-penelaahan',
         icon: Database,
     },
     // {

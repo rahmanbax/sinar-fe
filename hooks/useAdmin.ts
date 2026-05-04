@@ -29,10 +29,10 @@ export const useUpdateAdminStatusMutation = (
     });
 };
 
-export const useOrganizations = () => {
+export const useOrganizations = (regionLevel?: string) => {
     return useQuery({
-        queryKey: ["admin", "organizations"],
-        queryFn: () => getOrganizations(),
+        queryKey: ["admin", "organizations", regionLevel],
+        queryFn: () => getOrganizations(regionLevel),
         staleTime: Infinity,
     });
 };

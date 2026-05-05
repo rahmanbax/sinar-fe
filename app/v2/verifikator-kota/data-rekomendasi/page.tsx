@@ -38,7 +38,7 @@ const DataRekomendasiPage = () => {
             header: "No. Surat Rekomendasi",
             cell: (row) => (
                 <div className="text-gray-900">
-                    {row.ref_number || "-"}
+                    {row.recommendation?.ref_number || row.ref_number || "-"}
                 </div>
             ),
             className: "min-w-[250px]",

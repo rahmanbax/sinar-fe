@@ -29,7 +29,9 @@ const IncomingRecommendationDetailPage = () => {
 
     // Map Real Data from API Response
     // The JSON object has metadata inside the key "0" and the transactions array inside "data"
-    const recommendation = detailRes?.["0"] || {};
+    const recommendation = detailRes?.recommendation || 
+                           (Array.isArray(detailRes?.["0"]) ? detailRes?.["0"]?.[0] : (detailRes?.["0"]?.recommendation || detailRes?.["0"])) || 
+                           {};
     const transactions = detailRes?.data || [];
 
     // Calculate total data from all transactions

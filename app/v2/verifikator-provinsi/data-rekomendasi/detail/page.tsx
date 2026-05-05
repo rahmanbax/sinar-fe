@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense } from "react";
+import VerifikatorProvinsiLayout from "@/components/v2/nav/VerifikatorProvinsiLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import { Plus, ArrowLeft, Search } from "lucide-react";
@@ -8,7 +9,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOutgoingRecommendationData } from "@/hooks/useVerification";
 import dayjs from "dayjs";
-import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 const DetailRekomendasiContent = () => {
     const router = useRouter();
@@ -82,7 +82,7 @@ const DetailRekomendasiContent = () => {
                     <button
                         onClick={() =>
                             router.push(
-                                `/v2/verifikator-kota/data-rekomendasi/detail/toponyms?transactionId=${row.id}&transactionTitle=${encodeURIComponent(row.title || "Transaksi")}&rekomendasiId=${id}&refNumber=${encodeURIComponent(recommendationInfo?.ref_number || "")}`
+                                `/v2/verifikator-provinsi/data-rekomendasi/detail/toponyms?transactionId=${row.id}&transactionTitle=${encodeURIComponent(row.title || "Transaksi")}&rekomendasiId=${id}&refNumber=${encodeURIComponent(recommendationInfo?.ref_number || "")}`
                             )
                         }
                         className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
@@ -108,7 +108,7 @@ const DetailRekomendasiContent = () => {
                     label="Ajukan Rekomendasi"
                     onClick={() =>
                         router.push(
-                            "/v2/verifikator-kota/data-rekomendasi/ajukan-rekomendasi"
+                            "/v2/verifikator-provinsi/data-rekomendasi/ajukan-rekomendasi"
                         )
                     }
                     icon={<Plus size={18} />}
@@ -121,7 +121,7 @@ const DetailRekomendasiContent = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() =>
-                            router.push("/v2/verifikator-kota/data-rekomendasi")
+                            router.push("/v2/verifikator-provinsi/data-rekomendasi")
                         }
                         className="p-1 hover:bg-gray-100 rounded-md transition-colors cursor-pointer border border-gray-200"
                     >
@@ -150,7 +150,7 @@ const DetailRekomendasiContent = () => {
 
 const DetailRekomendasiPage = () => {
     return (
-        <DashboardLayout>
+        <VerifikatorProvinsiLayout>
             <Suspense
                 fallback={
                     <div className="flex items-center justify-center h-64">
@@ -162,7 +162,7 @@ const DetailRekomendasiPage = () => {
             >
                 <DetailRekomendasiContent />
             </Suspense>
-        </DashboardLayout>
+        </VerifikatorProvinsiLayout>
     );
 };
 

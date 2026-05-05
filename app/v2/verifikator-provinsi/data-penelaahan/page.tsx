@@ -1,18 +1,30 @@
 "use client";
 
 import React, { useState, useMemo, Suspense } from 'react';
-import VerifikatorProvinsiLayout from '@/components/v2/nav/VerifikatorProvinsiLayout';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Plus, Search, SlidersHorizontal, Check, FileText } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useVerificationTransactions, useAllVerificationToponyms } from '@/hooks/useVerification';
+import { useVerificationTransactions, useAllVerificationToponyms, useFinishVerificationTransaction } from '@/hooks/useVerification';
 import Link from 'next/link';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 // Components matches the Verifikator Kota style
-const ReviewCard = ({ item, viewMode }: { item: any; viewMode: string }) => {
+const ReviewCard = ({ 
+    item, 
+    token,
+    onRefresh,
+    viewMode 
+}: { 
+    item: any; 
+    token: string | null;
+    onRefresh: () => void;
+    viewMode: string 
+}) => {
     const router = useRouter();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const finishMutation = useFinishVerificationTransaction();
 
     const isCompleted = item.status === 'completed';
     const isRecommended = item.status === 'recommended';
@@ -21,6 +33,25 @@ const ReviewCard = ({ item, viewMode }: { item: any; viewMode: string }) => {
 
     const progressPercent = Math.round(((item.handled_data || 0) / (item.total_data || 1)) * 100);
 
+    const handleFinish = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isSubmitting) return;
+
+        if (!confirm(`Apakah Anda yakin ingin menandai penelaahan "${item.title}" sebagai selesai? Data yang sudah selesai tidak dapat diubah lagi.`)) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await finishMutation.mutateAsync({ token, transactionId: item.id });
+            onRefresh();
+        } catch (err) {
+            alert("Gagal menyelesaikan penelaahan. Terjadi kesalahan koneksi.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div
             className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full cursor-pointer group"
@@ -28,10 +59,11 @@ const ReviewCard = ({ item, viewMode }: { item: any; viewMode: string }) => {
         >
             <div className="flex items-start justify-between mb-4">
                 <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-blue-600 transition-colors">{item.title}</h3>
-                <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${isRecommended ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
-                    isCompleted ? 'text-orange-500 bg-orange-50 border-orange-200' :
-                        isIssued ? 'text-blue-600 bg-blue-50 border-blue-200' :
-                            'text-gray-500 bg-gray-50 border-gray-100'
+                <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${
+                    isRecommended ? 'text-emerald-600 bg-white border-emerald-400' :
+                    isCompleted ? 'text-orange-500 bg-white border-orange-400' :
+                    isIssued ? 'text-blue-600 bg-white border-blue-400' :
+                        'text-gray-500 bg-gray-50 border-gray-100'
                     }`}>
                     {isRecommended ? 'Selesai' : isCompleted ? 'Cetak BA' : isIssued ? 'Proses Penelaahan' : item.status}
                 </span>
@@ -61,22 +93,22 @@ const ReviewCard = ({ item, viewMode }: { item: any; viewMode: string }) => {
             </div>
 
             <div className="flex items-center gap-6 mb-8 mt-auto">
-                <div className="relative w-24 h-24 shrink-0">
+                <div className="relative w-22 h-22 shrink-0">
                     <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-100" />
+                        <circle cx="44" cy="44" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-100" />
                         {/* Red Part (Rejected) */}
-                        <circle cx="48" cy="48" r="40" stroke="#EF4444" strokeWidth="8" fill="transparent" 
-                            strokeDasharray={251.2} 
-                            strokeDashoffset={251.2 - (251.2 * (item.accepted_data + item.rejected_data)) / (item.total_data || 1)} 
+                        <circle cx="44" cy="44" r="36" stroke="#EF4444" strokeWidth="8" fill="transparent" 
+                            strokeDasharray={226.2} 
+                            strokeDashoffset={226.2 - (226.2 * (item.accepted_data + item.rejected_data)) / (item.total_data || 1)} 
                             strokeLinecap="round" />
                         {/* Green Part (Accepted) */}
-                        <circle cx="48" cy="48" r="40" stroke="#10B981" strokeWidth="8" fill="transparent" 
-                            strokeDasharray={251.2} 
-                            strokeDashoffset={251.2 - (251.2 * item.accepted_data) / (item.total_data || 1)} 
+                        <circle cx="44" cy="44" r="36" stroke="#10B981" strokeWidth="8" fill="transparent" 
+                            strokeDasharray={226.2} 
+                            strokeDashoffset={226.2 - (226.2 * item.accepted_data) / (item.total_data || 1)} 
                             strokeLinecap="round" />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xl font-bold text-gray-900">{progressPercent}%</span>
+                        <span className="text-lg font-bold text-gray-900">{progressPercent}%</span>
                     </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -90,30 +122,23 @@ const ReviewCard = ({ item, viewMode }: { item: any; viewMode: string }) => {
                         <span className="text-[11px] text-gray-900 w-4">{item.rejected_data}</span>
                         <span className="text-[11px] text-gray-400">Data Ditolak</span>
                     </div>
-                    {item.total_data - item.handled_data > 0 && (
-                         <div className="flex items-center gap-2 font-semibold">
-                         <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                         <span className="text-[11px] text-gray-900 w-4">{item.total_data - item.handled_data}</span>
-                         <span className="text-[11px] text-gray-400">Data Belum Ditelaah</span>
-                     </div>
-                    )}
                 </div>
             </div>
 
             {isRecommended ? (
                 <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2" 
-                    onClick={(e) => { e.stopPropagation(); }}>
-                    Lihat Berita Acara
+                    onClick={(e) => { e.stopPropagation(); router.push(`/v2/verifikator-provinsi/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
+                    <FileText size={16} /> Lihat Berita Acara
                 </button>
             ) : isCompleted ? (
                 <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-navy-900 hover:bg-navy-800 text-white transition-all flex items-center justify-center gap-2" 
-                    onClick={(e) => { e.stopPropagation(); }}>
-                    Cetak Berita Acara
+                    onClick={(e) => { e.stopPropagation(); router.push(`/v2/verifikator-provinsi/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
+                    <FileText size={16} /> Cetak Berita Acara
                 </button>
             ) : isVerificationDone ? (
                 <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-all flex items-center justify-center gap-2" 
-                    onClick={(e) => { e.stopPropagation(); }}>
-                    <Check size={16} /> Tandai Selesai
+                    onClick={handleFinish} disabled={isSubmitting}>
+                    <Check size={16} /> {isSubmitting ? "Memproses..." : "Tandai Selesai"}
                 </button>
             ) : (
                 <div className="h-[42px]"></div> // Placeholder if no action
@@ -140,7 +165,7 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
     const [toponymPage, setToponymPage] = useState(1);
 
     // API Hooks
-    const { data: transactionsRes, isLoading: isLoadingTransactions } = useVerificationTransactions(token);
+    const { data: transactionsRes, isLoading: isLoadingTransactions, refetch: refetchTransactions } = useVerificationTransactions(token);
     const { data: toponymsRes, isLoading: isLoadingToponyms } = useAllVerificationToponyms(token, { page: toponymPage, per_page: 10 });
 
     const transactions = useMemo(() => transactionsRes?.data ?? [], [transactionsRes]);
@@ -310,7 +335,7 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
                         viewMode === 'grid' ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
                                 {filteredTransactions.map((item: any) => (
-                                    <ReviewCard key={item.id} item={item} viewMode={viewMode} />
+                                    <ReviewCard key={item.id} item={item} token={token} onRefresh={refetchTransactions} viewMode={viewMode} />
                                 ))}
                             </div>
                         ) : (
@@ -339,7 +364,7 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
 
 const VerifikatorProvinsiDataPenelaahan = () => {
     return (
-        <VerifikatorProvinsiLayout>
+        <DashboardLayout>
             <Suspense fallback={
                 <div className="flex items-center justify-center h-64">
                     <p className="text-gray-400 animate-pulse font-medium">Memuat halaman penelaahan...</p>
@@ -347,7 +372,7 @@ const VerifikatorProvinsiDataPenelaahan = () => {
             }>
                 <VerifikatorProvinsiDataPenelaahanContent />
             </Suspense>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     );
 };
 

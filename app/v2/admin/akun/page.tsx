@@ -1,14 +1,14 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import AdminLayout from '@/components/v2/nav/AdminLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Plus, Search } from 'lucide-react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAdminUsers } from '@/hooks/useAdmin';
+import { useAdminUsers, useOrganizations } from '@/hooks/useAdmin';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
+import FilterModal, { FilterField, FilterState } from '@/components/v2/modals/FilterModal';
 
 interface AdminAkunData {
     id: string;
@@ -22,16 +22,59 @@ interface AdminAkunData {
 }
 
 const AdminAkunPage = () => {
-    const router = useRouter();
     const { token } = useAuth();
-    const [page, setPage] = React.useState(1);
-    const [search, setSearch] = React.useState("");
+    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState("");
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [filters, setFilters] = useState<FilterState>({});
 
-    const { data: usersResponse, isLoading } = useAdminUsers(token, page, search);
+    const { data: usersResponse, isLoading, refetch } = useAdminUsers(token, page, search, filters.role, filters.instansi);
+    const { data: organizationResponse } = useOrganizations();
 
-    const usersData = React.useMemo(() => {
+    const instansiOptions = organizationResponse?.data?.map((org: any) => ({
+        label: org.name,
+        value: String(org.id)
+    })) || [];
+
+    const filterFields: FilterField[] = [
+        {
+            id: 'role',
+            label: 'Role',
+            options: [
+                { label: 'Semua Role', value: '' },
+                { label: 'Admin', value: 'admin' },
+                { label: 'Verifikator', value: 'verificator' },
+                { label: 'Surveyor', value: 'surveyor' },
+            ],
+        },
+        {
+            id: 'instansi',
+            label: 'Instansi',
+            options: [
+                { label: 'Semua Instansi', value: '' },
+                ...instansiOptions
+            ],
+            searchable: true,
+        },
+        {
+            id: 'status',
+            label: 'Status',
+            options: [
+                { label: 'Semua Status', value: '' },
+                { label: 'Aktif', value: 'aktif' },
+                { label: 'Nonaktif', value: 'nonaktif' },
+                { label: 'Pending', value: 'pending' },
+            ],
+        }
+    ];
+
+    useEffect(() => {
+        refetch();
+    }, [refetch]);
+
+    const usersData = useMemo(() => {
         if (!usersResponse?.data) return [];
-        return usersResponse.data.map((user: any, index: number) => ({
+        let data = usersResponse.data.map((user: any, index: number) => ({
             id: user.id,
             no: (usersResponse.pagination?.from || 1) + index,
             nama: user.name,
@@ -39,9 +82,16 @@ const AdminAkunPage = () => {
             no_telp: user.phone,
             role: user.role,
             org_name: user.organization?.name || '-',
+            org_id: String(user.organization?.id || ''),
             status: user.status_account_label || user.approval_status_label || (user.status_account === true ? 'Aktif' : user.status_account === false ? 'Nonaktif' : 'Pending'),
         }));
-    }, [usersResponse]);
+
+        if (filters.status) {
+            data = data.filter((user: any) => user.status.toLowerCase() === filters.status.toLowerCase());
+        }
+
+        return data;
+    }, [usersResponse, filters]);
 
     const columns: ColumnDef<AdminAkunData>[] = [
         {
@@ -74,7 +124,7 @@ const AdminAkunPage = () => {
             cell: (row) => {
                 let badgeStyle = '';
                 const status = String(row.status || '').toLowerCase();
-                
+
                 if (status === 'aktif') {
                     badgeStyle = 'bg-green-50 text-green-600';
                 } else if (status === 'nonaktif' || status === 'tidak aktif') {
@@ -96,7 +146,7 @@ const AdminAkunPage = () => {
             cell: (row) => (
                 <div className="flex justify-center">
                     <Link href={`/v2/admin/akun/${row.id}`}>
-                        <Search size={18} className="text-navy-900 cursor-pointer hover:text-navy-700 transition-colors" />
+                        <Search size={18} className="cursor-pointer transition-colors" />
                     </Link>
                 </div>
             ),
@@ -105,24 +155,24 @@ const AdminAkunPage = () => {
     ];
 
     return (
-        <AdminLayout>
+        <DashboardLayout>
             <div className="mb-8">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Akun</h1>
                     <div className='flex gap-2'>
-                    <Link href="/v2/admin/akun/tambah">
-                        <ButtonComponent
-                            icon={<Plus size={16} />}
-                            label="Tambah Akun Admin"
-                        />
-                    </Link>
-                    <Link href="/v2/admin/akun/tambah-verifikator-surveyor">
-                        <ButtonComponent
-                            icon={<Plus size={16} />}
-                            secondary={true}
-                            label="Verifikator/Surveyor"
-                        />
-                    </Link>
+                        <Link href="/v2/admin/akun/tambah">
+                            <ButtonComponent
+                                icon={<Plus size={16} />}
+                                label="Tambah Akun Admin"
+                            />
+                        </Link>
+                        <Link href="/v2/admin/akun/tambah-verifikator-surveyor">
+                            <ButtonComponent
+                                icon={<Plus size={16} />}
+                                secondary={true}
+                                label="Verifikator/Surveyor"
+                            />
+                        </Link>
                     </div>
                 </div>
 
@@ -136,11 +186,20 @@ const AdminAkunPage = () => {
                         setSearch(val);
                         setPage(1);
                     }}
+                    onFilter={() => setIsFilterModalOpen(true)}
                     onPageChange={(newPage) => setPage(newPage)}
                     pagination={usersResponse?.pagination}
                 />
             </div>
-        </AdminLayout>
+
+            <FilterModal
+                isOpen={isFilterModalOpen}
+                onClose={() => setIsFilterModalOpen(false)}
+                fields={filterFields}
+                initialFilters={filters}
+                onApply={(newFilters) => setFilters(newFilters)}
+            />
+        </DashboardLayout>
     );
 };
 

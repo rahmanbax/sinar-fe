@@ -16,12 +16,16 @@ export interface Organization {
     } | null;
 }
 
-export const getOrganizations = async (): Promise<{
+export const getOrganizations = async (regionLevel?: string): Promise<{
     error: boolean;
     message: string;
     data: Organization[];
 }> => {
-    const res = await fetch(`${API_URL}/admin/organizations`);
+    const url = regionLevel 
+        ? `${API_URL}/admin/organizations?region_level=${regionLevel}`
+        : `${API_URL}/admin/organizations`;
+        
+    const res = await fetch(url);
     
     if (!res.ok) {
         throw new Error('Failed to fetch organizations data');
@@ -47,7 +51,9 @@ export const createManualAdmin = async (
     if (!token) return { error: true, message: "No token provided" };
 
     const formData = new FormData();
-    formData.append('org_id', data.org_id);
+    if (data.org_id) {
+        formData.append('org_id', data.org_id);
+    }
     formData.append('name', data.name);
     formData.append('email', data.email);
     formData.append('phone', data.phone);
@@ -55,7 +61,7 @@ export const createManualAdmin = async (
     formData.append('password_confirmation', data.password_confirmation);
     formData.append('recommendation_file', data.recommendation_file);
     formData.append('ref_number', data.ref_number);
-    formData.append('is_admin_big', String(data.is_admin_big));
+    formData.append('is_admin_big', data.is_admin_big ? '1' : '0');
 
     const res = await fetch(`${API_URL}/admin/users/manual/create-admin`, {
         method: 'POST',
@@ -121,15 +127,19 @@ export const importAdminData = async (
         user_file: File;
         recommendation_file: File;
         ref_number: string;
+        is_admin_big: boolean;
     }
 ) => {
     if (!token) return { error: true, message: "No token provided" };
 
     const formData = new FormData();
-    formData.append('org_id', data.org_id);
+    if (data.org_id) {
+        formData.append('org_id', data.org_id);
+    }
     formData.append('user_file', data.user_file);
     formData.append('recommendation_file', data.recommendation_file);
     formData.append('ref_number', data.ref_number);
+    formData.append('is_admin_big', data.is_admin_big ? '1' : '0');
 
     const res = await fetch(`${API_URL}/admin/users/imports/admin-imports`, {
         method: 'POST',
@@ -143,16 +153,51 @@ export const importAdminData = async (
         const errVal = await res.text();
         throw new Error(errVal || 'Failed to import admin data');
     }
+    return res.json();
+};
+
+export const generateAdminRegistrationToken = async (
+    token: string | null,
+    data: {
+        institution_type: string;
+        org_id: string;
+        expires_in_day: string;
+        max_uses: string;
+    }
+) => {
+    if (!token) return { error: true, message: "No token provided" };
+
+    const res = await fetch(`${API_URL}/admin/registrations/generate/token`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+    });
+
+    if (!res.ok) {
+        const errVal = await res.text();
+        throw new Error(errVal || 'Failed to generate token');
+    }
 
     return res.json();
 };
 
-export const getAdminUsers = async (token: string | null, page: number = 1, search: string = "") => {
+export const getAdminUsers = async (
+    token: string | null, 
+    page: number = 1, 
+    search: string = "",
+    role: string = "",
+    org_id: string = ""
+) => {
     if (!token) return { error: true, message: "No token provided", data: [], pagination: null };
     
     const params = new URLSearchParams();
     params.append('page', page.toString());
     if (search) params.append('search', search);
+    if (role) params.append('role', role);
+    if (org_id) params.append('org_id', org_id);
 
     const res = await fetch(`${API_URL}/admin/users?${params.toString()}`, {
         headers: {

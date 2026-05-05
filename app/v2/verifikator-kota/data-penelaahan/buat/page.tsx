@@ -2,11 +2,11 @@
 
 import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart'
 import BuatPenelaahanForm from '@/components/v2/layout/BuatPenelaahanForm'
-import VerifikatorKotaLayout from '@/components/v2/nav/VerifikatorKotaLayout'
 import React from 'react'
 import { useVerificationCandidates, useCreateVerificationTransaction } from '@/hooks/useVerification'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import DashboardLayout from '@/components/v2/nav/DashboardLayout'
 
 const BuatPenelaahanPage = () => {
   const { token } = useAuth()
@@ -62,7 +62,7 @@ const BuatPenelaahanPage = () => {
   }
 
   return (
-    <VerifikatorKotaLayout showNav={false} tightMargin={true}>
+    <DashboardLayout showNav={false} tightMargin={true}>
       <div className='mt-6 mx-5 lg:mx-auto max-w-7xl space-y-5'>
         <p className='text-gray-500'>Dashboard / Data Penelaahan / Buat Penelaahan</p>
         <h1 className='text-2xl font-bold'>Buat Penelaahan</h1>
@@ -81,7 +81,7 @@ const BuatPenelaahanPage = () => {
           />
         </div>
       </div>
-    </VerifikatorKotaLayout>
+    </DashboardLayout>
   )
 }
 

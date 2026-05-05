@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
-import VerifikatorKotaLayout from '@/components/v2/nav/VerifikatorKotaLayout';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Plus, Search, SlidersHorizontal, Check, FileText } from 'lucide-react';
@@ -13,6 +12,7 @@ import {
     VerificationTransaction
 } from '@/api/verification';
 import { useRouter, useSearchParams } from 'next/navigation';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 // Sub-component for individual review cards
 const ReviewCard = ({
@@ -271,7 +271,7 @@ const DataPenelaahanVerifikatorContent = () => {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-navy-900">Data Penelaahan</h1>
+                <h1 className="text-2xl font-bold">Data Penelaahan</h1>
                 <ButtonComponent label="Buat Penelaahan" icon={<Plus size={18} />} onClick={() => router.push('/v2/verifikator-kota/data-penelaahan/buat')} />
             </div>
 
@@ -322,7 +322,7 @@ const DataPenelaahanVerifikatorContent = () => {
 
 const DataPenelaahanVerifikator = () => {
     return (
-        <VerifikatorKotaLayout>
+        <DashboardLayout>
             <Suspense fallback={
                 <div className="flex items-center justify-center h-64">
                     <p className="text-gray-400 animate-pulse font-medium">Memuat halaman penelaahan...</p>
@@ -330,7 +330,7 @@ const DataPenelaahanVerifikator = () => {
             }>
                 <DataPenelaahanVerifikatorContent />
             </Suspense>
-        </VerifikatorKotaLayout>
+        </DashboardLayout>
     );
 };
 

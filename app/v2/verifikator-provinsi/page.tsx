@@ -1,13 +1,13 @@
 "use client";
 
-import VerifikatorProvinsiLayout from '@/components/v2/nav/VerifikatorProvinsiLayout'
 import { Database } from 'lucide-react';
 import React from 'react'
 import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 const VerifikatorProvinsiPage = () => {
     return (
-        <VerifikatorProvinsiLayout>
+        <DashboardLayout>
             {/* Header Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
@@ -80,7 +80,7 @@ const VerifikatorProvinsiPage = () => {
                    <MiniIndonesiaMap />
                 </div>
             </div>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     )
 }
 

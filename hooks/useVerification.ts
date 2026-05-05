@@ -10,6 +10,7 @@ import {
     getVerificationTransactionToponyms,
     getVerificationToponymDetail,
     getAllVerificationToponyms,
+    finishVerificationTransaction,
 } from "@/api/verification";
 
 export const useAllVerificationToponyms = (token: string | null, params: { page: number; per_page: number }) => {
@@ -146,6 +147,21 @@ export const useUpdateVerificationToponym = () => {
             toponymId: string;
             payload: any;
         }) => updateVerificationToponym(token, transactionId, toponymId, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
+        },
+    });
+};
+export const useFinishVerificationTransaction = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            token,
+            transactionId,
+        }: {
+            token: string | null;
+            transactionId: string;
+        }) => finishVerificationTransaction(token, transactionId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
         },

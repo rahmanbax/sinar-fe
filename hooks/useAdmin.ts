@@ -1,5 +1,5 @@
 import { useQuery, useMutation, UseMutationOptions, useQueryClient } from "@tanstack/react-query";
-import { getOrganizations, createManualAdmin, createManualMember, importAdminData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration, updateAdminStatus } from "@/api/admin";
+import { getOrganizations, createManualAdmin, createManualMember, importAdminData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration, updateAdminStatus, generateAdminRegistrationToken } from "@/api/admin";
 
 
 type UpdateStatusVariables = {
@@ -29,19 +29,20 @@ export const useUpdateAdminStatusMutation = (
     });
 };
 
-export const useOrganizations = () => {
+export const useOrganizations = (regionLevel?: string) => {
     return useQuery({
-        queryKey: ["admin", "organizations"],
-        queryFn: () => getOrganizations(),
+        queryKey: ["admin", "organizations", regionLevel],
+        queryFn: () => getOrganizations(regionLevel),
         staleTime: Infinity,
     });
 };
 
-export const useAdminUsers = (token: string | null, page: number = 1, search: string = "") => {
+export const useAdminUsers = (token: string | null, page: number = 1, search: string = "", role: string = "", org_id: string = "") => {
     return useQuery({
-        queryKey: ["admin", "users", page, search],
-        queryFn: () => getAdminUsers(token, page, search),
+        queryKey: ["admin", "users", page, search, role, org_id],
+        queryFn: () => getAdminUsers(token, page, search, role, org_id),
         enabled: !!token,
+        retry: false,
     });
 };
 
@@ -129,6 +130,7 @@ type ImportAdminVariables = {
     user_file: File;
     recommendation_file: File;
     ref_number: string;
+    is_admin_big: boolean;
 };
 
 export const useImportAdminMutation = (
@@ -141,11 +143,38 @@ export const useImportAdminMutation = (
                 user_file: vars.user_file,
                 recommendation_file: vars.recommendation_file,
                 ref_number: vars.ref_number,
+                is_admin_big: vars.is_admin_big,
             });
             if (result.error) throw new Error(result.message);
             return result;
         },
         ...options,
+    });
+};
+
+type GenerateAdminTokenVariables = {
+    token: string | null;
+    institution_type: string;
+    org_id: string;
+    expires_in_day: string;
+    max_uses: string;
+};
+
+export const useGenerateAdminTokenMutation = (
+    options?: Omit<UseMutationOptions<any, Error, GenerateAdminTokenVariables>, 'mutationFn'>
+) => {
+    return useMutation({
+        mutationFn: async (vars: GenerateAdminTokenVariables) => {
+            const result = await generateAdminRegistrationToken(vars.token, {
+                institution_type: vars.institution_type,
+                org_id: vars.org_id,
+                expires_in_day: vars.expires_in_day,
+                max_uses: vars.max_uses,
+            });
+            if (result.error) throw new Error(result.message);
+            return result;
+        },
+        ...options
     });
 };
 

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import AdminLayout from '@/components/v2/nav/AdminLayout';
 import TextInput from '@/components/v2/inputs/TextInput';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { FileText, ChevronRight } from 'lucide-react';
@@ -10,6 +9,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminUser, useRejectRegistrationMutation, useApproveRegistrationMutation, useUpdateAdminStatusMutation } from '@/hooks/useAdmin';
 import RejectionModal from '@/components/v2/modals/RejectionModal';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 
 const DetailAkunPage = () => {
@@ -66,7 +66,7 @@ const DetailAkunPage = () => {
 
     const rawStatus = userData?.status_account_label || userData?.approval_status_label || (userData?.status_account === true ? 'Aktif' : userData?.status_account === false ? 'Nonaktif' : '');
     const currentStatus = String(rawStatus || '').toLowerCase();
-    
+
     const isAktif = currentStatus === 'aktif' || currentStatus === 'disetujui';
     const isNonaktif = currentStatus === 'nonaktif' || currentStatus === 'tidak aktif';
     const isPending = !isAktif && !isNonaktif;
@@ -74,7 +74,7 @@ const DetailAkunPage = () => {
     const statusDisplay = isAktif ? 'Aktif' : isNonaktif ? 'Nonaktif' : '-';
 
     return (
-        <AdminLayout showNav={false}>
+        <DashboardLayout showNav={false}>
             <div className="max-w-5xl mx-auto">
                 <nav className="flex items-center text-sm text-gray-500 mb-5 gap-2">
                     <Link href="/v2/admin" className="hover:text-black transition-colors">Dashboard</Link>
@@ -224,7 +224,7 @@ const DetailAkunPage = () => {
                     setIsRejectionModalOpen(false);
                 }}
             />
-        </AdminLayout>
+        </DashboardLayout>
     );
 };
 

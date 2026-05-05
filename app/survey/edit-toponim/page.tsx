@@ -26,6 +26,7 @@ import { getElements } from "@/api/classification";
 import { uploadImage, uploadAudio, uploadVideo, uploadDocs } from "@/api/media";
 import { getToponymById, updateToponym } from "@/api/toponym";
 import PhotoPreviewModal from "@/components/PhotoPreviewModal";
+import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 interface Province {
     id: number;
@@ -1077,12 +1078,12 @@ const EditToponimContent = () => {
 
     if (loading)
         return (
-            <SurveyorLayout>
+            <DashboardLayout>
                 <div className="flex h-screen items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                     <p className="ml-2">Memuat data...</p>
                 </div>
-            </SurveyorLayout>
+            </DashboardLayout>
         );
 
     return (

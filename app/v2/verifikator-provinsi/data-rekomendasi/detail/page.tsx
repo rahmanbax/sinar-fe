@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Suspense } from "react";
-import VerifikatorProvinsiLayout from "@/components/v2/nav/VerifikatorProvinsiLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import { Plus, ArrowLeft, Search } from "lucide-react";
@@ -9,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOutgoingRecommendationData } from "@/hooks/useVerification";
 import dayjs from "dayjs";
+import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 const DetailRekomendasiContent = () => {
     const router = useRouter();
@@ -150,7 +150,7 @@ const DetailRekomendasiContent = () => {
 
 const DetailRekomendasiPage = () => {
     return (
-        <VerifikatorProvinsiLayout>
+        <DashboardLayout>
             <Suspense
                 fallback={
                     <div className="flex items-center justify-center h-64">
@@ -162,7 +162,7 @@ const DetailRekomendasiPage = () => {
             >
                 <DetailRekomendasiContent />
             </Suspense>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     );
 };
 

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Suspense, useState, useMemo } from "react";
-import VerifikatorProvinsiLayout from "@/components/v2/nav/VerifikatorProvinsiLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import { ArrowLeft, Search, Plus } from "lucide-react";
@@ -10,6 +9,7 @@ import { useVerificationTransactionToponyms } from "@/hooks/useVerification";
 import { useProvinces, useCities } from "@/hooks/useRegions";
 import { useAuth } from "@/contexts/AuthContext";
 import dayjs from "dayjs";
+import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 const TransactionToponymsContent = () => {
     const router = useRouter();
@@ -168,7 +168,7 @@ const TransactionToponymsContent = () => {
 
 const TransactionToponymsPage = () => {
     return (
-        <VerifikatorProvinsiLayout>
+        <DashboardLayout>
             <Suspense
                 fallback={
                     <div className="flex items-center justify-center h-64">
@@ -180,7 +180,7 @@ const TransactionToponymsPage = () => {
             >
                 <TransactionToponymsContent />
             </Suspense>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     );
 };
 

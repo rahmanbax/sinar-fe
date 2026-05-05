@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import VerifikatorProvinsiLayout from "@/components/v2/nav/VerifikatorProvinsiLayout";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import TextInput from "@/components/v2/inputs/TextInput";
 import FileInput from "@/components/v2/inputs/FileInput";
@@ -13,6 +12,7 @@ import { useCompletedVerificationTransactions, useCreateRecommendationMutation }
 import { VerificationTransaction } from "@/api/verification";
 import { uploadDocs } from "@/api/media";
 import { useAuth } from "@/contexts/AuthContext";
+import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 const AjukanRekomendasiPage = () => {
     const router = useRouter();
@@ -83,7 +83,7 @@ const AjukanRekomendasiPage = () => {
     };
 
     return (
-        <VerifikatorProvinsiLayout showNav={false}>
+        <DashboardLayout showNav={false}>
             <div className="w-full flex flex-col gap-8 py-4 md:px-12 lg:px-20">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-2 text-sm text-gray-400">
@@ -207,7 +207,7 @@ const AjukanRekomendasiPage = () => {
 
                 </div>
             </div>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     );
 };
 

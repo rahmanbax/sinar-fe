@@ -1,13 +1,13 @@
 'use client'
 
 import ToponymDetailLayout from '@/components/v2/layout/ToponymDetailLayout'
-import VerifikatorProvinsiLayout from '@/components/v2/nav/VerifikatorProvinsiLayout'
 import { useToponymDetail } from '@/hooks/useToponyms'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAcceptVerificationToponym, useRejectVerificationToponym, useUpdateVerificationToponym } from '@/hooks/useVerification'
 import { uploadImage, uploadAudio, uploadVideo, uploadDocs } from '@/api/media'
 import React, { useState } from 'react'
+import DashboardLayout from '@/components/v2/nav/DashboardLayout'
 
 const buildGeometry = (geometry: any) => {
     const { drawType, drawnPoint, drawnLine, drawnPolygon } = geometry;
@@ -177,7 +177,7 @@ const ToponymDetailPage = () => {
     }
 
     return (
-        <VerifikatorProvinsiLayout showNav={false} tightMargin={true}>
+        <DashboardLayout showNav={false} tightMargin={true}>
             {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                     <p className="text-sm text-gray-500">Memuat data toponim...</p>
@@ -193,7 +193,7 @@ const ToponymDetailPage = () => {
                     isSubmitting={isUpdating}
                 />
             )}
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     )
 }
 

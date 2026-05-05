@@ -1,11 +1,11 @@
 "use client";
 
 import React, { Suspense } from "react";
-import VerifikatorProvinsiLayout from "@/components/v2/nav/VerifikatorProvinsiLayout";
 import ToponymDetailLayout from "@/components/v2/layout/ToponymDetailLayout";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToponymDetail } from "@/hooks/useToponyms";
+import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 const RecommendationToponymDetailContent = () => {
     const params = useParams();
@@ -58,7 +58,7 @@ const RecommendationToponymDetailContent = () => {
 
 const RecommendationToponymDetailPage = () => {
     return (
-        <VerifikatorProvinsiLayout showNav={false} tightMargin={true}>
+        <DashboardLayout showNav={false} tightMargin={true}>
             <Suspense
                 fallback={
                     <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">
@@ -70,7 +70,7 @@ const RecommendationToponymDetailPage = () => {
             >
                 <RecommendationToponymDetailContent />
             </Suspense>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     );
 };
 

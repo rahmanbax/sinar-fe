@@ -1,13 +1,13 @@
 "use client";
 
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
-import VerifikatorKotaLayout from '@/components/v2/nav/VerifikatorKotaLayout'
 import { Database, MapPin, Plus } from 'lucide-react';
 import React, { useMemo } from 'react'
 import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap';
 import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationCandidates } from '@/hooks/useVerification';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 const VerifikatorKotaPage = () => {
     const { token } = useAuth();
@@ -25,7 +25,7 @@ const VerifikatorKotaPage = () => {
         })).slice(0, 5); // Just show top 5
     }, [candidatesRes]);
     return (
-        <VerifikatorKotaLayout>
+        <DashboardLayout>
             {/* Header Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
@@ -76,7 +76,7 @@ const VerifikatorKotaPage = () => {
                     <MiniIndonesiaMap />
                 </div>
             </div>
-        </VerifikatorKotaLayout>
+        </DashboardLayout>
     )
 }
 

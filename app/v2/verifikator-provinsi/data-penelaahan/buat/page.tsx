@@ -2,13 +2,13 @@
 
 import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart'
 import BuatPenelaahanProvinsiForm from '@/components/v2/layout/BuatPenelaahanProvinsiForm'
-import VerifikatorProvinsiLayout from '@/components/v2/nav/VerifikatorProvinsiLayout'
 import React from 'react'
 import { useVerificationCandidates, useCreateVerificationTransaction } from '@/hooks/useVerification'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 
 import Link from 'next/link'
+import DashboardLayout from '@/components/v2/nav/DashboardLayout'
 
 const BuatPenelaahanProvinsiPage = () => {
   const { token } = useAuth()
@@ -78,7 +78,7 @@ const BuatPenelaahanProvinsiPage = () => {
   }
 
   return (
-    <VerifikatorProvinsiLayout>
+    <DashboardLayout>
       <div className='mt-6 mx-5 lg:mx-auto max-w-7xl space-y-6 mb-12'>
         <p className='text-gray-400 font-medium text-sm'>
           Dashboard / <Link href="/v2/verifikator-provinsi/data-penelaahan" className="hover:text-navy-600 transition-colors">Data Penelaahan</Link> / <span className='text-navy-900'>Buat Penelaahan</span>
@@ -103,7 +103,7 @@ const BuatPenelaahanProvinsiPage = () => {
           </div>
         </div>
       </div>
-    </VerifikatorProvinsiLayout>
+    </DashboardLayout>
   )
 }
 

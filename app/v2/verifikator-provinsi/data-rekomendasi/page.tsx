@@ -1,9 +1,9 @@
 "use client";
 
 import React from 'react';
-import VerifikatorProvinsiLayout from '@/components/v2/nav/VerifikatorProvinsiLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Search } from 'lucide-react';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 interface RekomendasiData {
     no: number;
@@ -89,7 +89,7 @@ const DataRekomendasiPage = () => {
     ];
 
     return (
-        <VerifikatorProvinsiLayout>
+        <DashboardLayout>
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-navy-900 mb-6">Data Rekomendasi</h1>
                 
@@ -108,7 +108,7 @@ const DataRekomendasiPage = () => {
                     }}
                 />
             </div>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     );
 };
 

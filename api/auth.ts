@@ -68,6 +68,7 @@ export const registerAdmin = async (data: {
     password_confirmation: string;
     recommendation_file: File;
     ref_number: string;
+    invite_token?: string | null;
 }) => {
     const formData = new FormData();
     formData.append("institution_type", data.institution_type);
@@ -79,6 +80,9 @@ export const registerAdmin = async (data: {
     formData.append("password_confirmation", data.password_confirmation);
     formData.append("recommendation_file", data.recommendation_file);
     formData.append("ref_number", data.ref_number);
+    if (data.invite_token) {
+        formData.append("invite_token", data.invite_token);
+    }
 
     const res = await fetch(`${API_URL}/auth/admin/register`, {
         method: "POST",

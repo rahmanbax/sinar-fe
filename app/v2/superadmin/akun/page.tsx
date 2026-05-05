@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Plus, Search } from 'lucide-react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminUsers, useOrganizations } from '@/hooks/useAdmin';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
@@ -145,7 +146,7 @@ const AdminAkunPage = () => {
             header: 'Aksi',
             cell: (row) => (
                 <div className="flex justify-center">
-                    <Link href={`/v2/admin/akun/${row.id}`}>
+                    <Link href={`/v2/superadmin/akun/${row.id}`}>
                         <Search size={18} className="cursor-pointer transition-colors" />
                     </Link>
                 </div>
@@ -160,17 +161,10 @@ const AdminAkunPage = () => {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Akun</h1>
                     <div className='flex gap-2'>
-                        <Link href="/v2/admin/akun/tambah">
+                        <Link href="/v2/superadmin/akun/tambah">
                             <ButtonComponent
                                 icon={<Plus size={16} />}
                                 label="Tambah Akun Admin"
-                            />
-                        </Link>
-                        <Link href="/v2/admin/akun/tambah-verifikator-surveyor">
-                            <ButtonComponent
-                                icon={<Plus size={16} />}
-                                secondary={true}
-                                label="Verifikator/Surveyor"
                             />
                         </Link>
                     </div>

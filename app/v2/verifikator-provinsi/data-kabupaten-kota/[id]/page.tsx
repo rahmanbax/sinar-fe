@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import VerifikatorProvinsiLayout from "@/components/v2/nav/VerifikatorProvinsiLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import { 
     ArrowLeft, 
@@ -17,6 +16,7 @@ import {
     useAcceptIncomingRecommendation 
 } from "@/hooks/useVerificationTransactions";
 import { useParams, useRouter } from "next/navigation";
+import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 const IncomingRecommendationDetailPage = () => {
     const params = useParams();
@@ -167,7 +167,7 @@ const IncomingRecommendationDetailPage = () => {
     const documentName = `Surat Rekomendasi No. ${currentRefNumber}.pdf`;
 
     return (
-        <VerifikatorProvinsiLayout>
+        <DashboardLayout>
             <div className="flex flex-col gap-6">
                 {/* Header */}
                 <div className="flex flex-col gap-4">
@@ -293,7 +293,7 @@ const IncomingRecommendationDetailPage = () => {
                     </div>
                 </div>
             </div>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     );
 };
 

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo, Suspense } from 'react';
-import VerifikatorProvinsiLayout from '@/components/v2/nav/VerifikatorProvinsiLayout';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Plus, Search, SlidersHorizontal, Check, FileText } from 'lucide-react';
@@ -9,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationTransactions, useAllVerificationToponyms } from '@/hooks/useVerification';
 import Link from 'next/link';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 // Components matches the Verifikator Kota style
 const ReviewCard = ({ item, viewMode }: { item: any; viewMode: string }) => {
@@ -339,7 +339,7 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
 
 const VerifikatorProvinsiDataPenelaahan = () => {
     return (
-        <VerifikatorProvinsiLayout>
+        <DashboardLayout>
             <Suspense fallback={
                 <div className="flex items-center justify-center h-64">
                     <p className="text-gray-400 animate-pulse font-medium">Memuat halaman penelaahan...</p>
@@ -347,7 +347,7 @@ const VerifikatorProvinsiDataPenelaahan = () => {
             }>
                 <VerifikatorProvinsiDataPenelaahanContent />
             </Suspense>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     );
 };
 

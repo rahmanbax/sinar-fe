@@ -6,15 +6,16 @@ import FileInput from '@/components/v2/inputs/FileInput'
 import PasswordInput from '@/components/v2/inputs/PasswordInput'
 import TextInput from '@/components/v2/inputs/TextInput'
 import PublicLayout from '@/components/v2/nav/PublicLayout'
-import React, { useMemo } from 'react'
-import { useProvinces, useCities } from '@/hooks/useRegions'
+import React, { useMemo, Suspense } from 'react'
 import { useOrganizations } from '@/hooks/useAdmin'
 import { useForm, Controller } from 'react-hook-form'
 import { useRegisterAdminMutation } from '@/hooks/useAuth'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 type AdminRegistrationFormData = {
   instansi: string;
+  provinsi: string;
+  kabupaten: string;
   noTelepon: string;
   emailInstansi: string;
   nama: string;
@@ -24,11 +25,16 @@ type AdminRegistrationFormData = {
   suratPermohonan: File | null;
 }
 
-const DaftarAkunAdminPage = () => {
+const DaftarAkunAdminForm = () => {
   const router = useRouter();
-  const { control, handleSubmit, formState: { errors } } = useForm<AdminRegistrationFormData>({
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
+
+  const { control, handleSubmit, watch, formState: { errors } } = useForm<AdminRegistrationFormData>({
     defaultValues: {
       instansi: '',
+      provinsi: '',
+      kabupaten: '',
       noTelepon: '',
       emailInstansi: '',
       nama: '',
@@ -39,34 +45,34 @@ const DaftarAkunAdminPage = () => {
     }
   });
 
-  const { data: organizationResponse } = useOrganizations();
+  const instansi = watch('instansi');
 
-  const realInstansiOptions = useMemo(() => {
-    if (!organizationResponse?.data) return [];
-    return organizationResponse.data.map((org: any) => ({
-      label: org.name,
-      value: org.id,
-    }));
-  }, [organizationResponse]);
+  const { data: provResponse } = useOrganizations('PROVINCE');
+  const { data: kabResponse } = useOrganizations('CITY');
 
-  // const selectedProvincePath = useMemo(() => {
-  //   if (!provinsi) return null;
-  //   return realProvinsiOptions.find((p) => p.value === provinsi)?.path ?? null;
-  // }, [provinsi, realProvinsiOptions]);
+  const realProvinsiOptions = useMemo(() => {
+    return provResponse?.data?.map((org: any) => ({
+        label: org.region?.name || org.name,
+        value: String(org.id)
+    })) || [];
+  }, [provResponse]);
 
-  // const { data: citiesData } = useCities();
+  const realKabupatenOptions = useMemo(() => {
+    return kabResponse?.data?.map((org: any) => ({
+        label: org.region?.name || org.name,
+        value: String(org.id)
+    })) || [];
+  }, [kabResponse]);
 
-  // const realKabupatenOptions = useMemo(() => {
-  //   return (citiesData?.data || []).map((city) => ({
-  //     label: city.name,
-  //     value: city.code,
-  //   }));
-  // }, [citiesData]);
+  const linkInstansiOptions = [
+    { label: 'Provinsi', value: 'admin_provinsi' },
+    { label: 'Kab/Kota', value: 'admin_kab_kota' }
+  ];
 
   const { mutate: registerAdmin, isPending } = useRegisterAdminMutation({
     onSuccess: () => {
-      alert('Pendaftaran admin berhasil dikirim dan menunggu persetujuan.');
-      router.push('/');
+      alert('Pendaftaran admin berhasil dikirim, menunggu persetujuan dari Admin.');
+      router.push('/v2');
     },
     onError: (err) => {
       alert(`Gagal mendaftar: ${err.message}`);
@@ -83,9 +89,21 @@ const DaftarAkunAdminPage = () => {
       return;
     }
 
+    let finalOrgId = '';
+    if (data.instansi === 'admin_provinsi') {
+        finalOrgId = data.provinsi;
+    } else if (data.instansi === 'admin_kab_kota') {
+        finalOrgId = data.kabupaten;
+    }
+
+    if (!finalOrgId) {
+        alert('Silakan pilih instansi dengan benar');
+        return;
+    }
+
     registerAdmin({
-      institution_type: 'admin_kabkota', // hard code
-      org_id: data.instansi,
+      institution_type: data.instansi,
+      org_id: finalOrgId,
       name: data.nama,
       email: data.emailInstansi,
       phone: data.noTelepon,
@@ -93,6 +111,7 @@ const DaftarAkunAdminPage = () => {
       password_confirmation: data.konfirmasiPassword,
       recommendation_file: data.suratPermohonan,
       ref_number: data.noSurat,
+      invite_token: token,
     });
   };
 
@@ -112,11 +131,49 @@ const DaftarAkunAdminPage = () => {
                   placeholder='Pilih Instansi'
                   onChange={field.onChange}
                   value={field.value}
-                  options={realInstansiOptions}
+                  options={linkInstansiOptions}
                   required
                 />
               )}
             />
+
+            {instansi === 'admin_provinsi' && (
+              <Controller
+                  name="provinsi"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                      <DropdownInput
+                          label='Provinsi'
+                          placeholder='Pilih Provinsi'
+                          onChange={field.onChange}
+                          value={field.value}
+                          options={realProvinsiOptions}
+                          searchable={true}
+                          required
+                      />
+                  )}
+              />
+            )}
+            
+            {instansi === 'admin_kab_kota' && (
+              <Controller
+                  name="kabupaten"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                      <DropdownInput
+                          label='Kabupaten/ Kota'
+                          placeholder='Pilih Kabupaten/ Kota'
+                          onChange={field.onChange}
+                          value={field.value}
+                          options={realKabupatenOptions}
+                          searchable={true}
+                          required
+                      />
+                  )}
+              />
+            )}
 
             <Controller
               name="noTelepon"
@@ -226,14 +283,28 @@ const DaftarAkunAdminPage = () => {
           </div>
           <ButtonComponent
             label={isPending ? 'Mendaftar...' : 'Daftar Akun'}
-            onClick={handleSubmit(onSubmit)}
             className='w-full'
             disabled={isPending}
+            type='submit'
           />
         </form>
       </div>
     </PublicLayout>
   )
+}
+
+const DaftarAkunAdminPage = () => {
+    return (
+        <Suspense fallback={
+            <PublicLayout>
+                <div className="h-full py-12 px-5 bg-gray-50 flex items-center justify-center">
+                    <p className="text-gray-500 animate-pulse">Memuat formulir...</p>
+                </div>
+            </PublicLayout>
+        }>
+            <DaftarAkunAdminForm />
+        </Suspense>
+    )
 }
 
 export default DaftarAkunAdminPage

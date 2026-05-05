@@ -3,9 +3,10 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import ButtonComponent from '../buttons/ButtonComponent'
-import { Menu, X, ChevronDown, LogOut } from 'lucide-react'
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, User } from 'lucide-react'
 import AuthModal from '../modals/AuthModal'
 import { useAuth } from '@/contexts/AuthContext'
+import { getRoleDefaultRoute } from '@/types/User'
 
 const PublicNavbar = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -19,6 +20,15 @@ const PublicNavbar = () => {
     { label: 'Gazeter', href: '/v2/gazeter' },
     { label: 'Bantuan', href: '/v2/bantuan' },
   ]
+
+  const getProfileRoute = () => {
+    if (user?.role === 'verificator') {
+      return (user?.permission_level === 2 || user?.name?.toLowerCase().includes('provinsi'))
+        ? 'verifikator-provinsi'
+        : 'verifikator-kota';
+    }
+    return user?.role || 'admin';
+  };
 
   const toggleMenu = () => setIsOpen(!isOpen)
   const openAuthModal = () => setIsAuthModalOpen(true)
@@ -72,12 +82,22 @@ const PublicNavbar = () => {
 
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 shadow-xl rounded-xl overflow-hidden py-2 z-50">
+                      <Link href={`/v2/${getProfileRoute()}/profil-saya`} className="w-full px-4 py-3 text-left flex items-center gap-3 text-sm font-medium hover:bg-gray-100 transition-colors cursor-pointer">
+                        <User size={16} strokeWidth={2} /> Profil Saya
+                      </Link>
+                      <Link
+                        href={getRoleDefaultRoute(user)}
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="w-full px-4 py-3 text-left flex items-center gap-3 text-sm font-medium hover:bg-gray-100 transition-colors cursor-pointer"
+                      >
+                        <LayoutDashboard size={16} strokeWidth={2} /> Dashboard
+                      </Link>
                       <button
                         onClick={() => {
                           logout();
                           setIsDropdownOpen(false);
                         }}
-                        className="w-full px-4 py-2.5 text-left flex items-center gap-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        className="w-full px-4 py-3 text-left flex items-center gap-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                       >
                         <LogOut size={16} strokeWidth={2} /> Keluar
                       </button>
@@ -111,10 +131,9 @@ const PublicNavbar = () => {
 
         {/* Mobile Menu Panel Layer */}
         <div className="md:hidden absolute top-full left-0 w-full overflow-hidden">
-          <div 
-            className={`w-full bg-white border-b border-gray-100 shadow-xl transition-transform duration-300 ease-in-out ${
-              isOpen ? 'translate-y-0 pointer-events-auto' : '-translate-y-full pointer-events-none'
-            }`}
+          <div
+            className={`w-full bg-white border-b border-gray-100 shadow-xl transition-transform duration-300 ease-in-out ${isOpen ? 'translate-y-0 pointer-events-auto' : '-translate-y-full pointer-events-none'
+              }`}
           >
             <div className="px-5 py-6 flex flex-col gap-6">
               <ul className="flex flex-col gap-5">

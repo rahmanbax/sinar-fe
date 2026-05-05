@@ -24,7 +24,7 @@ const DetailAkunPage = () => {
     const { mutate: rejectRegistration, isPending: isRejecting } = useRejectRegistrationMutation({
         onSuccess: () => {
             alert('Berhasil menolak pendaftaran!');
-            router.push('/v2/admin/akun');
+            router.push('/v2/superadmin/akun');
         },
         onError: (err) => {
             alert(`Gagal menolak pendaftaran: ${err.message}`);
@@ -77,9 +77,9 @@ const DetailAkunPage = () => {
         <DashboardLayout showNav={false}>
             <div className="max-w-5xl mx-auto">
                 <nav className="flex items-center text-sm text-gray-500 mb-5 gap-2">
-                    <Link href="/v2/admin" className="hover:text-black transition-colors">Dashboard</Link>
+                    <Link href="/v2/superadmin" className="hover:text-black transition-colors">Dashboard</Link>
                     <ChevronRight size={14} />
-                    <Link href="/v2/admin/akun" className="hover:text-black transition-colors">Akun</Link>
+                    <Link href="/v2/superadmin/akun" className="hover:text-black transition-colors">Akun</Link>
                     <ChevronRight size={14} />
                     <span className="text-black">Detail Akun</span>
                 </nav>

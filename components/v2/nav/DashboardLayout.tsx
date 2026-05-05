@@ -4,13 +4,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import SurveyorNav from './SurveyorNav';
 import VerifikatorKotaNav from './VerifikatorKotaNav';
 import VerifikatorProvinsiNav from './VerifikatorProvinsiNav';
-import { ChevronDown, LogOut, Menu } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-
 import Link from 'next/link';
 import Image from 'next/image';
 import AdminNav from './AdminNav';
 import BigNav from './BigNav';
+import SuperadminNav from './SuperadminNav';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -33,6 +33,25 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
         if (isDropdownOpen) document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isDropdownOpen]);
+
+    const getProfileRoute = () => {
+        if (user?.role === 'verificator') {
+            return (user?.permission_level === 2 || user?.name?.toLowerCase().includes('provinsi'))
+                ? 'verifikator-provinsi'
+                : 'verifikator-kota';
+        }
+        return user?.role || 'admin';
+    };
+
+    const getDisplayRole = () => {
+        if (user?.role === 'verificator') {
+            return (user?.permission_level === 2 || user?.name?.toLowerCase().includes('provinsi'))
+                ? 'Verifikator Provinsi'
+                : 'Verifikator Kota';
+        }
+        return user?.role || 'Role';
+    };
+
     return (
         <div className="flex h-screen bg-slate-50/50 overflow-hidden">
             {/* Sidebar Navigation */}
@@ -50,6 +69,9 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
                     )}
                     {user?.role === 'admin' && (
                         <AdminNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+                    )}
+                    {user?.role === 'superadmin' && (
+                        <SuperadminNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                     )}
                     {user?.role === 'big' && (
                         <BigNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
@@ -87,19 +109,22 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
                         <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex font-medium items-center gap-2 cursor-pointer">
                             <div className='flex flex-col text-right items-end max-w-[120px] sm:max-w-[200px]'>
                                 <span className='text-sm truncate w-full block'>{user?.name || 'User'}</span>
-                                <span className='text-xs capitalize text-gray-500 truncate w-full block'>{user?.role || 'Role'}</span>
+                                <span className='text-xs capitalize text-gray-500 truncate w-full block'>{getDisplayRole()}</span>
                             </div>
                             <ChevronDown size={16} />
                         </button>
 
                         {isDropdownOpen && (
                             <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 shadow-xl rounded-xl overflow-hidden py-2 z-30">
+                                <Link href={`/v2/${getProfileRoute()}/profil-saya`} className="w-full px-4 py-3 text-left flex items-center gap-3 text-sm font-medium hover:bg-gray-100 transition-colors cursor-pointer">
+                                    <User size={16} strokeWidth={2} /> Profil Saya
+                                </Link>
                                 <button
                                     onClick={() => {
                                         logout();
                                         setIsDropdownOpen(false);
                                     }}
-                                    className="w-full px-4 py-2.5 text-left flex items-center gap-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                    className="w-full px-4 py-3 text-left flex items-center gap-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                                 >
                                     <LogOut size={16} strokeWidth={2} /> Keluar
                                 </button>

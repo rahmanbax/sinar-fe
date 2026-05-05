@@ -9,22 +9,22 @@ import { LayoutGrid, User, X } from 'lucide-react';
 const navItems = [
     {
         name: 'Dashboard',
-        href: '/v2/admin',
+        href: '/v2/superadmin',
         icon: LayoutGrid,
     },
     {
         name: 'Akun',
-        href: '/v2/admin/akun',
+        href: '/v2/superadmin/akun',
         icon: User,
     },
 ];
 
-interface AdminNavProps {
+interface SuperadminNavProps {
     isOpen?: boolean;
     onClose?: () => void;
 }
 
-const AdminNav = ({ isOpen = false, onClose }: AdminNavProps) => {
+const SuperadminNav = ({ isOpen = false, onClose }: SuperadminNavProps) => {
     const pathname = usePathname();
 
     return (
@@ -60,7 +60,7 @@ const AdminNav = ({ isOpen = false, onClose }: AdminNavProps) => {
                 {/* Navigation Links */}
                 <nav className="flex flex-col gap-2 m-4 space-y-1">
                     {navItems.map((item) => {
-                        const isActive = item.href === '/v2/admin'
+                        const isActive = item.href === '/v2/superadmin'
                             ? pathname === item.href
                             : pathname.startsWith(item.href);
                         const Icon = item.icon;
@@ -90,4 +90,4 @@ const AdminNav = ({ isOpen = false, onClose }: AdminNavProps) => {
     )
 }
 
-export default AdminNav;
+export default SuperadminNav;

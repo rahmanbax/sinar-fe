@@ -60,6 +60,7 @@ type RegisterAdminVariables = {
     password_confirmation: string;
     recommendation_file: File;
     ref_number: string;
+    invite_token?: string | null;
 };
 
 export const useRegisterAdminMutation = (

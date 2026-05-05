@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import VerifikatorProvinsiLayout from "@/components/v2/nav/VerifikatorProvinsiLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import { Search } from "lucide-react";
 import { useIncomingRecommendations } from "@/hooks/useVerificationTransactions";
 import dayjs from "dayjs";
 import Link from "next/link";
+import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 const DataKabupatenKotaPage = () => {
     const { data: incomingRes, isLoading } = useIncomingRecommendations();
@@ -102,7 +102,7 @@ const DataKabupatenKotaPage = () => {
     ];
 
     return (
-        <VerifikatorProvinsiLayout>
+        <DashboardLayout>
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-1">
                     <h1 className="text-2xl font-bold text-navy-900">Data Kabupaten/ Kota</h1>
@@ -119,7 +119,7 @@ const DataKabupatenKotaPage = () => {
                     />
                 </div>
             </div>
-        </VerifikatorProvinsiLayout>
+        </DashboardLayout>
     );
 };
 

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
-import VerifikatorKotaLayout from '@/components/v2/nav/VerifikatorKotaLayout';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { ChevronLeft, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +11,7 @@ import {
 } from '@/api/verification';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dayjs from 'dayjs';
+import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 const TransactionDetailContent = () => {
     const router = useRouter();
@@ -173,7 +173,7 @@ const TransactionDetailContent = () => {
 
 const TransactionDetailPage = () => {
     return (
-        <VerifikatorKotaLayout>
+        <DashboardLayout>
             <Suspense fallback={
                 <div className="flex items-center justify-center h-64">
                     <p className="text-gray-400 animate-pulse font-medium">Menyesuaikan data penelaahan...</p>
@@ -181,7 +181,7 @@ const TransactionDetailPage = () => {
             }>
                 <TransactionDetailContent />
             </Suspense>
-        </VerifikatorKotaLayout>
+        </DashboardLayout>
     );
 };
 

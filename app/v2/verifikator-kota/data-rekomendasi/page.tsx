@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import VerifikatorKotaLayout from "@/components/v2/nav/VerifikatorKotaLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import { Plus, Search } from "lucide-react";    
@@ -10,6 +9,7 @@ import { useRouter } from "next/navigation";
 
 import { useRecommendations } from "@/hooks/useVerificationTransactions";
 import dayjs from "dayjs";
+import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 const DataRekomendasiPage = () => {
     const router = useRouter();
@@ -91,7 +91,7 @@ const DataRekomendasiPage = () => {
     ];
 
     return (
-        <VerifikatorKotaLayout>
+        <DashboardLayout>
             <div className="flex flex-col gap-8">
                 {/* Header Section */}
                 <div className="flex items-center justify-between">
@@ -100,7 +100,6 @@ const DataRekomendasiPage = () => {
                         label="Ajukan Rekomendasi"
                         onClick={() => router.push("/v2/verifikator-kota/data-rekomendasi/ajukan-rekomendasi")}
                         icon={<Plus size={18} />}
-                        className="bg-navy-900 hover:bg-navy-800 rounded-md scale-95"
                     />
                 </div>
 
@@ -116,7 +115,7 @@ const DataRekomendasiPage = () => {
                     />
                 </div>
             </div>
-        </VerifikatorKotaLayout>
+        </DashboardLayout>
     );
 };
 

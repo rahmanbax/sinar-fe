@@ -1,13 +1,13 @@
 "use client";
 
 import React from "react";
-import VerifikatorProvinsiLayout from "@/components/v2/nav/VerifikatorProvinsiLayout";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import { Plus, Search } from "lucide-react";    
 import { useRouter } from "next/navigation";
 import { useRecommendations } from "@/hooks/useVerificationTransactions";
 import dayjs from "dayjs";
+import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 const DataRekomendasiPage = () => {
     const router = useRouter();
@@ -89,7 +89,7 @@ const DataRekomendasiPage = () => {
     ];
 
     return (
-        <VerifikatorProvinsiLayout>
+        <DashboardLayout>
             <div className="flex flex-col gap-8">
                 {/* Header Section */}
                 <div className="flex items-center justify-between">

@@ -19,7 +19,9 @@ const DetailRekomendasiContent = () => {
     const { data: response, isLoading } = useOutgoingRecommendationData(token, id);
     
     // Metadata rekomendasi ada di key "0" berdasarkan struktur API
-    const recommendationInfo = response ? (response as any)["0"] : null;
+    const recommendationInfo = response?.recommendation || 
+                               (Array.isArray((response as any)?.["0"]) ? (response as any)?.["0"]?.[0] : ((response as any)?.["0"]?.recommendation || (response as any)?.["0"])) || 
+                               null;
     const transactions = response?.data || [];
 
     const columns: ColumnDef<any>[] = [

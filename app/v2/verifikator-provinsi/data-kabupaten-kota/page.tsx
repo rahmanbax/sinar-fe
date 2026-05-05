@@ -33,7 +33,7 @@ const DataKabupatenKotaPage = () => {
             header: "No. Surat Rekomendasi",
             cell: (row) => (
                 <div className="text-gray-900">
-                    {row.ref_number || row.recommendation_number || row.number || row.id || "-"}
+                    {row.recommendation?.ref_number || row.ref_number || row.recommendation_number || row.number || row.id || "-"}
                 </div>
             ),
             className: "min-w-[220px]",
@@ -51,7 +51,7 @@ const DataKabupatenKotaPage = () => {
             header: "Kab/ Kota",
             cell: (row) => (
                 <div className="text-gray-900 capitalize text-center">
-                    {row.source_region_name || "-"}
+                    {row.recommendation?.source_region?.name || row.source_region_name || "-"}
                 </div>
             ),
             className: "min-w-[150px] text-center",

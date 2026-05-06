@@ -82,7 +82,8 @@ const AdminRegistrationForm = () => {
 
     const linkInstansiOptions = [
         { label: 'Provinsi', value: 'admin_provinsi' },
-        { label: 'Kab/Kota', value: 'admin_kab_kota' }
+        { label: 'Kab/Kota', value: 'admin_kabkota' },
+        { label: 'BIG', value: 'big' }
     ];
 
     const { mutate: createManualAdmin, isPending } = useCreateManualAdminMutation({

@@ -14,6 +14,11 @@ export interface VerificationTransaction {
     element_count: number;
     district_count: number;
     verificator_count: number;
+    news?: {
+        id: string;
+        news_number: string;
+        file_url: string;
+    };
 }
 
 export interface VerificationPagination {
@@ -226,6 +231,38 @@ export const getOutgoingRecommendationData = async (token: string | null, id: st
         headers: {
             Authorization: `Bearer ${token}`,
         },
+    });
+    return response.json();
+};
+
+export const getBeritaAcaraData = async (token: string | null, transactionId: string) => {
+    if (!token) return { error: true, message: "No token provided" };
+    const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/news`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return response.json();
+};
+
+export const submitBeritaAcara = async (
+    token: string | null, 
+    transactionId: string, 
+    data: { 
+        news_number: string; 
+        news_opener_name: string; 
+        news_opener_position: string; 
+        file_url: string; 
+    }
+) => {
+    if (!token) return { error: true, message: "No token provided" };
+    const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/news`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
     });
     return response.json();
 };

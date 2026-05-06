@@ -122,9 +122,9 @@ const IncomingRecommendationDetailPage = () => {
         { header: "No", cell: (_, idx) => idx + 1, className: "w-12 text-center text-gray-500" },
         { 
             header: "No. BA", 
-            cell: () => (
+            cell: (row) => (
                 <div className="font-medium text-navy-900">
-                    -
+                    {row.news_number || "-"}
                 </div>
             ), 
             className: "w-48" 
@@ -132,7 +132,7 @@ const IncomingRecommendationDetailPage = () => {
         { 
             header: "Judul Penelaahan", 
             cell: (row) => (
-                <div className="font-bold text-navy-900">
+                <div className="font-medium text-navy-900">
                     {row.title || "-"}
                 </div>
             )
@@ -149,12 +149,21 @@ const IncomingRecommendationDetailPage = () => {
         {
             header: "Aksi",
             className: "w-28 text-center",
-            cell: () => (
+            cell: (row) => (
                 <div className="flex items-center justify-center gap-2">
-                    <button className="p-1.5 hover:bg-gray-100 rounded text-gray-400 hover:text-navy-900 transition-colors">
+                    <button 
+                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail?transactionId=${row.id}`)}
+                        className="p-1.5 hover:bg-gray-100 rounded text-gray-400 hover:text-navy-900 transition-colors"
+                        title="Lihat Detail Transaksi"
+                    >
                         <Search size={16} />
                     </button>
-                    <button className="p-1.5 hover:bg-gray-100 rounded text-gray-400 hover:text-navy-900 transition-colors">
+                    <button 
+                        onClick={() => row.ba_file_url && window.open(row.ba_file_url, '_blank')}
+                        disabled={!row.ba_file_url}
+                        className={`p-1.5 rounded transition-colors ${row.ba_file_url ? 'hover:bg-gray-100 text-gray-400 hover:text-navy-900' : 'text-gray-200 cursor-not-allowed'}`}
+                        title="Lihat Berita Acara"
+                    >
                         <FileText size={16} />
                     </button>
                     <button className="p-1.5 hover:bg-gray-100 rounded text-gray-400 hover:text-navy-900 transition-colors">

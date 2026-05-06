@@ -7,6 +7,7 @@ import { Plus, Search, SlidersHorizontal, Check, FileText } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationTransactions, useAllVerificationToponyms, useFinishVerificationTransaction } from '@/hooks/useVerification';
+import { useBeritaAcaraData } from '@/hooks/useBeritaAcara';
 import Link from 'next/link';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
@@ -27,9 +28,14 @@ const ReviewCard = ({
     const finishMutation = useFinishVerificationTransaction();
 
     const isCompleted = item.status === 'completed';
-    const isRecommended = item.status === 'recommended';
     const isIssued = item.status === 'issued';
     const isVerificationDone = item.total_data > 0 && item.total_data === item.handled_data;
+
+    // Check if BA exists for completed transactions
+    const { data: baData } = useBeritaAcaraData(token, isCompleted ? item.id : null);
+    const hasBA = !!baData?.ba_file_url;
+    
+    const isRecommended = item.status === 'recommended' || hasBA;
 
     const progressPercent = Math.round(((item.handled_data || 0) / (item.total_data || 1)) * 100);
 
@@ -126,8 +132,17 @@ const ReviewCard = ({
             </div>
 
             {isRecommended ? (
-                <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2" 
-                    onClick={(e) => { e.stopPropagation(); router.push(`/v2/verifikator-provinsi/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
+                <button 
+                    className="w-full py-2.5 rounded-xl text-sm font-bold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2" 
+                    onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (baData?.ba_file_url) {
+                            window.open(baData.ba_file_url, '_blank');
+                        } else {
+                            router.push(`/v2/verifikator-provinsi/data-penelaahan/cetak-ba?transactionId=${item.id}`); 
+                        }
+                    }}
+                >
                     <FileText size={16} /> Lihat Berita Acara
                 </button>
             ) : isCompleted ? (
@@ -200,14 +215,17 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
         { header: "Jumlah Disetujui", accessorKey: "accepted_data", className: "text-center w-28" },
         { header: "Jumlah Ditolak", accessorKey: "rejected_data", className: "text-center w-28" },
         {
-            header: "Status", cell: (row) => (
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                    row.status === 'recommended' ? 'bg-emerald-100 text-emerald-700' : 
-                    row.status === 'completed' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-600'
-                }`}>
-                    {row.status === 'recommended' ? 'Selesai' : row.status === 'completed' ? 'Cetak BA' : 'Proses Penelaahan'}
-                </span>
-            )
+            header: "Status", cell: (row) => {
+                const isRecommended = row.status === 'recommended' || !!row.news;
+                return (
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                        isRecommended ? 'bg-emerald-100 text-emerald-700' : 
+                        row.status === 'completed' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-600'
+                    }`}>
+                        {isRecommended ? 'Selesai' : row.status === 'completed' ? 'Cetak BA' : 'Proses Penelaahan'}
+                    </span>
+                );
+            }
         },
         {
             header: "Aksi",

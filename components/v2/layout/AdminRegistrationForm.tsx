@@ -109,7 +109,7 @@ const AdminRegistrationForm = () => {
         let finalOrgId = '';
 
         if (!isAdminBig) {
-            finalOrgId = data.instansi === 'admin_provinsi' ? data.provinsi : (data.instansi === 'admin_kab_kota' ? data.kabupaten : data.instansi);
+            finalOrgId = data.instansi === 'admin_provinsi' ? data.provinsi : (data.instansi === 'admin_kabkota' ? data.kabupaten : data.instansi);
             if (!finalOrgId) {
                 alert('Silakan pilih instansi dengan benar');
                 return;
@@ -148,7 +148,7 @@ const AdminRegistrationForm = () => {
         let finalOrgId = '';
 
         if (!isAdminBig) {
-            finalOrgId = data.instansi === 'admin_provinsi' ? data.provinsi : (data.instansi === 'admin_kab_kota' ? data.kabupaten : data.instansi);
+            finalOrgId = data.instansi === 'admin_provinsi' ? data.provinsi : (data.instansi === 'admin_kabkota' ? data.kabupaten : data.instansi);
             if (!finalOrgId) {
                 alert('Silakan pilih instansi dengan benar');
                 return;
@@ -176,7 +176,7 @@ const AdminRegistrationForm = () => {
     });
 
     const handleGenerateLink = (data: FormValues) => {
-        let finalOrgId = data.instansi === 'admin_provinsi' ? data.provinsi : (data.instansi === 'admin_kab_kota' ? data.kabupaten : data.instansi);
+        let finalOrgId = data.instansi === 'admin_provinsi' ? data.provinsi : (data.instansi === 'admin_kabkota' ? data.kabupaten : data.instansi);
         if (!finalOrgId) {
             alert('Silakan pilih instansi dengan benar');
             return;
@@ -276,7 +276,7 @@ const AdminRegistrationForm = () => {
                                 />
                             )}
                             {/* Conditional Dropdown: Kabupaten/Kota */}
-                            {instansi === 'admin_kab_kota' && (
+                            {instansi === 'admin_kabkota' && (
                                 <Controller
                                     name="kabupaten"
                                     control={control}
@@ -440,7 +440,7 @@ const AdminRegistrationForm = () => {
                                 )}
                             />
                         )}
-                        {instansi === 'admin_kab_kota' && (
+                        {instansi === 'admin_kabkota' && (
                             <Controller
                                 name="kabupaten"
                                 control={control}
@@ -580,7 +580,7 @@ const AdminRegistrationForm = () => {
                                     )}
                                 />
                             )}
-                            {instansi === 'admin_kab_kota' && (
+                            {instansi === 'admin_kabkota' && (
                                 <Controller
                                     name="kabupaten"
                                     control={control}

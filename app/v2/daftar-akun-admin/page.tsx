@@ -52,15 +52,15 @@ const DaftarAkunAdminForm = () => {
 
   const realProvinsiOptions = useMemo(() => {
     return provResponse?.data?.map((org: any) => ({
-        label: org.region?.name || org.name,
-        value: String(org.id)
+      label: org.region?.name || org.name,
+      value: String(org.id)
     })) || [];
   }, [provResponse]);
 
   const realKabupatenOptions = useMemo(() => {
     return kabResponse?.data?.map((org: any) => ({
-        label: org.region?.name || org.name,
-        value: String(org.id)
+      label: org.region?.name || org.name,
+      value: String(org.id)
     })) || [];
   }, [kabResponse]);
 
@@ -92,14 +92,14 @@ const DaftarAkunAdminForm = () => {
 
     let finalOrgId = '';
     if (data.instansi === 'admin_provinsi') {
-        finalOrgId = data.provinsi;
-    } else if (data.instansi === 'admin_kab_kota') {
-        finalOrgId = data.kabupaten;
+      finalOrgId = data.provinsi;
+    } else if (data.instansi === 'admin_kabkota') {
+      finalOrgId = data.kabupaten;
     }
 
     if (!finalOrgId) {
-        alert('Silakan pilih instansi dengan benar');
-        return;
+      alert('Silakan pilih instansi dengan benar');
+      return;
     }
 
     registerAdmin({
@@ -140,39 +140,39 @@ const DaftarAkunAdminForm = () => {
 
             {instansi === 'admin_provinsi' && (
               <Controller
-                  name="provinsi"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                      <DropdownInput
-                          label='Provinsi'
-                          placeholder='Pilih Provinsi'
-                          onChange={field.onChange}
-                          value={field.value}
-                          options={realProvinsiOptions}
-                          searchable={true}
-                          required
-                      />
-                  )}
+                name="provinsi"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <DropdownInput
+                    label='Provinsi'
+                    placeholder='Pilih Provinsi'
+                    onChange={field.onChange}
+                    value={field.value}
+                    options={realProvinsiOptions}
+                    searchable={true}
+                    required
+                  />
+                )}
               />
             )}
-            
-            {instansi === 'admin_kab_kota' && (
+
+            {instansi === 'admin_kabkota' && (
               <Controller
-                  name="kabupaten"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                      <DropdownInput
-                          label='Kabupaten/ Kota'
-                          placeholder='Pilih Kabupaten/ Kota'
-                          onChange={field.onChange}
-                          value={field.value}
-                          options={realKabupatenOptions}
-                          searchable={true}
-                          required
-                      />
-                  )}
+                name="kabupaten"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <DropdownInput
+                    label='Kabupaten/ Kota'
+                    placeholder='Pilih Kabupaten/ Kota'
+                    onChange={field.onChange}
+                    value={field.value}
+                    options={realKabupatenOptions}
+                    searchable={true}
+                    required
+                  />
+                )}
               />
             )}
 
@@ -190,7 +190,7 @@ const DaftarAkunAdminForm = () => {
                 />
               )}
             />
-            
+
             <Controller
               name="emailInstansi"
               control={control}
@@ -205,7 +205,7 @@ const DaftarAkunAdminForm = () => {
                 />
               )}
             />
-            
+
             <Controller
               name="nama"
               control={control}
@@ -220,7 +220,7 @@ const DaftarAkunAdminForm = () => {
                 />
               )}
             />
-            
+
             <Controller
               name="password"
               control={control}
@@ -235,7 +235,7 @@ const DaftarAkunAdminForm = () => {
                 />
               )}
             />
-            
+
             <Controller
               name="konfirmasiPassword"
               control={control}
@@ -250,7 +250,7 @@ const DaftarAkunAdminForm = () => {
                 />
               )}
             />
-            
+
             <Controller
               name="noSurat"
               control={control}
@@ -265,7 +265,7 @@ const DaftarAkunAdminForm = () => {
                 />
               )}
             />
-            
+
             <Controller
               name="suratPermohonan"
               control={control}
@@ -295,17 +295,17 @@ const DaftarAkunAdminForm = () => {
 }
 
 const DaftarAkunAdminPage = () => {
-    return (
-        <Suspense fallback={
-            <PublicLayout>
-                <div className="h-full py-12 px-5 bg-gray-50 flex items-center justify-center">
-                    <p className="text-gray-500 animate-pulse">Memuat formulir...</p>
-                </div>
-            </PublicLayout>
-        }>
-            <DaftarAkunAdminForm />
-        </Suspense>
-    )
+  return (
+    <Suspense fallback={
+      <PublicLayout>
+        <div className="h-full py-12 px-5 bg-gray-50 flex items-center justify-center">
+          <p className="text-gray-500 animate-pulse">Memuat formulir...</p>
+        </div>
+      </PublicLayout>
+    }>
+      <DaftarAkunAdminForm />
+    </Suspense>
+  )
 }
 
 export default DaftarAkunAdminPage

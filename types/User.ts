@@ -11,6 +11,7 @@ export type UserType = {
     updated_at?: string
     organization_name?: string
     region_name?: string
+    level?: string
 }
 
 export type UserSignIn = {
@@ -28,7 +29,7 @@ export enum Role {
 }
 
 // Role redirect mapping
-export const getRoleDefaultRoute = (user: { role: Role | string; permission_level?: number | null; name?: string }): string => {
+export const getRoleDefaultRoute = (user: { role: Role | string; permission_level?: number | null; name?: string; level?: string }): string => {
     switch (user.role) {
         case Role.SUPERADMIN:
             return '/v2/superadmin'
@@ -37,13 +38,10 @@ export const getRoleDefaultRoute = (user: { role: Role | string; permission_leve
         case Role.BIG:
             return '/v2/big'
         case Role.VERIFICATOR:
-            // Check user role
-            // Check by permission_level first
-            if (user.permission_level === 2) return '/v2/verifikator-provinsi'
-            if (user.permission_level === 0 || user.permission_level === 3) return '/v2/verifikator-provinsi'
-
+            if (user.level === 'PROVINCE') return '/v2/verifikator-provinsi'
             return '/v2/verifikator-kota'
         case Role.SURVEYOR:
+            return '/v2/surveyor'
         case Role.CONTRIBUTOR:
             return '/v2/surveyor'
         default:

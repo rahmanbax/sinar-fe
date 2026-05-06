@@ -65,8 +65,14 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
             </label>
 
             <div
-                className={`relative w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center transition-all ${disabled ? 'bg-gray-50 opacity-60 cursor-not-allowed' : 'hover:border-navy-300 bg-white cursor-pointer'}`}
-                onClick={() => !disabled && inputRef.current?.click()}
+                className={`relative w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center transition-all ${disabled ? (initialUrl ? 'bg-gray-50 hover:bg-gray-100 cursor-pointer' : 'bg-gray-50 opacity-60 cursor-not-allowed') : 'hover:border-navy-300 bg-white cursor-pointer'}`}
+                onClick={() => {
+                    if (!disabled) {
+                        inputRef.current?.click();
+                    } else if (initialUrl) {
+                        window.open(initialUrl, '_blank', 'noopener,noreferrer');
+                    }
+                }}
             >
                 <input
                     type="file"
@@ -104,7 +110,7 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
                             {icon ? icon : <FileIcon size={16} className='text-gray-500' />}
                             <div className="ml-4 truncate text-left">
                                 <p className="text-sm font-medium truncate">{existingFileName}</p>
-                                <p className="text-xs text-gray-500">Klik untuk ganti</p>
+                                <p className="text-xs text-gray-500">{disabled ? 'Klik untuk membuka dokumen' : 'Klik untuk ganti'}</p>
                             </div>
                         </div>
                         <a

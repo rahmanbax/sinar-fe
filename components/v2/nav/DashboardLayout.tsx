@@ -36,7 +36,7 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
 
     const getProfileRoute = () => {
         if (user?.role === 'verificator') {
-            return (user?.permission_level === 0 || user?.permission_level === 3)
+            return (user?.level === 'PROVINCE')
                 ? 'verifikator-provinsi'
                 : 'verifikator-kota';
         }
@@ -52,7 +52,7 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
         const regionName = formatRegionName(user?.region_name);
 
         if (user?.role === 'verificator') {
-            return (user?.permission_level === 0 || user?.permission_level === 3)
+            return (user?.level === 'PROVINCE')
                 ? `Verifikator Provinsi ${regionName}`.trim()
                 : `Verifikator Kota ${regionName}`.trim();
         }
@@ -74,7 +74,7 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
                         <SurveyorNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                     )}
                     {user?.role === 'verificator' && (
-                        (user?.permission_level === 0 || user?.permission_level === 3) ? (
+                        (user?.level === 'PROVINCE') ? (
                             <VerifikatorProvinsiNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                         ) : (
                             <VerifikatorKotaNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />

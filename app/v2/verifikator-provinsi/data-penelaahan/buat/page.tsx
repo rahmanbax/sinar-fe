@@ -78,7 +78,7 @@ const BuatPenelaahanProvinsiPage = () => {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout showNav={false}>
       <div className='mt-6 mx-5 lg:mx-auto max-w-7xl space-y-6 mb-12'>
         <p className='text-gray-400 font-medium text-sm'>
           Dashboard / <Link href="/v2/verifikator-provinsi/data-penelaahan" className="hover:text-navy-600 transition-colors">Data Penelaahan</Link> / <span className='text-navy-900'>Buat Penelaahan</span>

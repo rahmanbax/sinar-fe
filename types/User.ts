@@ -6,9 +6,11 @@ export type UserType = {
     org_id: number
     role: Role
     permission_level: number | null
-    email_verified_at: string
-    created_at: string
-    updated_at: string
+    email_verified_at?: string
+    created_at?: string
+    updated_at?: string
+    organization_name?: string
+    region_name?: string
 }
 
 export type UserSignIn = {
@@ -35,12 +37,10 @@ export const getRoleDefaultRoute = (user: { role: Role | string; permission_leve
         case Role.BIG:
             return '/v2/big'
         case Role.VERIFICATOR:
+            // Check user role
             // Check by permission_level first
             if (user.permission_level === 2) return '/v2/verifikator-provinsi'
-            if (user.permission_level === 3) return '/v2/verifikator-pusat'
-
-            // Fallback: check if 'Provinsi' is in the name (common in this system)
-            if (user.name?.toLowerCase().includes('provinsi')) return '/v2/verifikator-provinsi'
+            if (user.permission_level === 0 || user.permission_level === 3) return '/v2/verifikator-provinsi'
 
             return '/v2/verifikator-kota'
         case Role.SURVEYOR:

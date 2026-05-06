@@ -14,7 +14,7 @@ const TambahAkunVerifikatorSurveyorPage = () => {
         <ChevronRight size={14} />
         <Link href="/v2/admin/akun" className="hover:text-black transition-colors">Akun</Link>
         <ChevronRight size={14} />
-        <span className="text-black">Tambah Akun Verifikator & Surveyor</span>
+        <span className="text-black">Tambah Verifikator/ Surveyor</span>
       </nav>
       <VerificatorAndSurveyorRegistrationForm />
     </DashboardLayout>

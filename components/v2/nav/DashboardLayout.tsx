@@ -36,20 +36,33 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
 
     const getProfileRoute = () => {
         if (user?.role === 'verificator') {
-            return (user?.permission_level === 2 || user?.name?.toLowerCase().includes('provinsi'))
+            return (user?.permission_level === 0 || user?.permission_level === 3)
                 ? 'verifikator-provinsi'
                 : 'verifikator-kota';
         }
         return user?.role || 'admin';
     };
 
+    const formatRegionName = (name?: string) => {
+        if (!name) return '';
+        return name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    };
+
     const getDisplayRole = () => {
+        const regionName = formatRegionName(user?.region_name);
+
         if (user?.role === 'verificator') {
-            return (user?.permission_level === 2 || user?.name?.toLowerCase().includes('provinsi'))
-                ? 'Verifikator Provinsi'
-                : 'Verifikator Kota';
+            return (user?.permission_level === 0 || user?.permission_level === 3)
+                ? `Verifikator Provinsi ${regionName}`.trim()
+                : `Verifikator Kota ${regionName}`.trim();
         }
-        return user?.role || 'Role';
+
+        if (user?.role === 'surveyor' || user?.role === 'admin' || user?.role === 'contributor') {
+            const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+            return `${roleName} ${regionName}`.trim();
+        }
+
+        return user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Role';
     };
 
     return (
@@ -61,7 +74,7 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
                         <SurveyorNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                     )}
                     {user?.role === 'verificator' && (
-                        (user?.permission_level === 2 || user?.name?.toLowerCase().includes('provinsi')) ? (
+                        (user?.permission_level === 0 || user?.permission_level === 3) ? (
                             <VerifikatorProvinsiNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                         ) : (
                             <VerifikatorKotaNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />

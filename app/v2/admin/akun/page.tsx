@@ -36,6 +36,12 @@ const AdminAkunPage = () => {
         value: String(org.id)
     })) || [];
 
+    useEffect(() => {
+        if (token) {
+            refetch();
+        }
+    }, [token, refetch]);
+
     const filterFields: FilterField[] = [
         {
             id: 'role',
@@ -68,9 +74,6 @@ const AdminAkunPage = () => {
         }
     ];
 
-    useEffect(() => {
-        refetch();
-    }, [refetch]);
 
     const usersData = useMemo(() => {
         if (!usersResponse?.data) return [];
@@ -160,17 +163,16 @@ const AdminAkunPage = () => {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Akun</h1>
                     <div className='flex gap-2'>
-                        <Link href="/v2/admin/akun/tambah">
+                        {/* <Link href="/v2/admin/akun/tambah">
                             <ButtonComponent
                                 icon={<Plus size={16} />}
                                 label="Tambah Akun Admin"
                             />
-                        </Link>
+                        </Link> */}
                         <Link href="/v2/admin/akun/tambah-verifikator-surveyor">
                             <ButtonComponent
                                 icon={<Plus size={16} />}
-                                secondary={true}
-                                label="Verifikator/Surveyor"
+                                label="Tambah Verifikator/Surveyor"
                             />
                         </Link>
                     </div>

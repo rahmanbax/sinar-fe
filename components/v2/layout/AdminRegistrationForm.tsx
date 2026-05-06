@@ -10,7 +10,7 @@ import PasswordInput from '../inputs/PasswordInput';
 import { useAuth } from '@/contexts/AuthContext';
 import SelectionButtonComponent from '../buttons/SelectionButtonComponent';
 import { useOrganizations, useCreateManualAdminMutation, useImportAdminMutation, useGenerateAdminTokenMutation } from '@/hooks/useAdmin';
-import { Download, Copy, Check } from 'lucide-react';
+import { Download, Copy, Check, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface FormValues {
@@ -232,9 +232,180 @@ const AdminRegistrationForm = () => {
                 </div>
             </div>
 
-            {activeTab === 'formulir' && (
-                <form onSubmit={handleSubmit(handleCreateAdmin)} className='bg-white shadow-sm rounded-lg p-6 space-y-5'>
-                    <div className='space-y-4'>
+
+            <div className='space-y-4 bg-white p-6 shadow-sm rounded-lg'>
+                {activeTab === 'formulir' && (
+                    <form onSubmit={handleSubmit(handleCreateAdmin)} className='space-y-5'>
+                        <div className='space-y-4'>
+                            <Controller
+                                name="instansi"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <DropdownInput
+                                        label='Instansi'
+                                        placeholder='Pilih Instansi'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        options={instansiOptions}
+                                        required
+                                    />
+                                )}
+                            />
+                            {/* Conditional Dropdown: Provinsi */}
+                            {instansi === 'admin_provinsi' && (
+                                <Controller
+                                    name="provinsi"
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field }) => (
+                                        <DropdownInput
+                                            label='Provinsi'
+                                            placeholder='Pilih Provinsi'
+                                            onChange={(val) => {
+                                                field.onChange(val);
+                                                // Optional: reset kabupaten if needed
+                                            }}
+                                            value={field.value}
+                                            options={realProvinsiOptions}
+                                            searchable={true}
+                                            required
+                                        />
+                                    )}
+                                />
+                            )}
+                            {/* Conditional Dropdown: Kabupaten/Kota */}
+                            {instansi === 'admin_kab_kota' && (
+                                <Controller
+                                    name="kabupaten"
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field }) => (
+                                        <DropdownInput
+                                            label='Kabupaten/ Kota'
+                                            placeholder='Pilih Kabupaten/ Kota'
+                                            onChange={field.onChange}
+                                            value={field.value}
+                                            options={realKabupatenOptions}
+                                            searchable={true}
+                                            required
+                                        />
+                                    )}
+                                />
+                            )}
+                            <Controller
+                                name="noTelepon"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <TextInput
+                                        id='noTelepon'
+                                        label='No Telepon WhatsApp'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        required
+                                    />
+                                )}
+                            />
+                            <Controller
+                                name="emailInstansi"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <TextInput
+                                        id='emailInstansi'
+                                        label='Email Instansi'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        required
+                                    />
+                                )}
+                            />
+                            <Controller
+                                name="nama"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <TextInput
+                                        id='nama'
+                                        label='Nama'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        required
+                                    />
+                                )}
+                            />
+                            <Controller
+                                name="password"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <PasswordInput
+                                        id='password'
+                                        label='Kata Sandi'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        required
+                                    />
+                                )}
+                            />
+                            <Controller
+                                name="konfirmasiPassword"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <PasswordInput
+                                        id='konfirmasiPassword'
+                                        label='Konfirmasi Kata Sandi'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        required
+                                    />
+                                )}
+                            />
+                            <Controller
+                                name="noSurat"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <TextInput
+                                        id='noSurat'
+                                        label='No. Surat'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        required
+                                    />
+                                )}
+                            />
+                            <Controller
+                                name="suratPermohonan"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <FileInput
+                                        id='suratPermohonan'
+                                        label='Surat Permohonan'
+                                        onChange={(file) => field.onChange(file)}
+                                        required
+                                        accept='.pdf'
+                                        maxSizeMB={2}
+                                    />
+                                )}
+                            />
+                        </div>
+                        <ButtonComponent
+                            label={isPending ? 'Memproses...' : 'Tambah Akun'}
+                            icon={isPending ? <Loader2 className="animate-spin" size={16} /> : undefined}
+                            onClick={() => { }}
+                            className='w-full'
+                            disabled={isPending}
+                            type="submit"
+                        />
+                    </form>
+                )}
+
+                {activeTab === 'xlsx' && (
+                    <form onSubmit={handleSubmit(handleImportAdmin)} className='space-y-5'>
                         <Controller
                             name="instansi"
                             control={control}
@@ -250,7 +421,6 @@ const AdminRegistrationForm = () => {
                                 />
                             )}
                         />
-                        {/* Conditional Dropdown: Provinsi */}
                         {instansi === 'admin_provinsi' && (
                             <Controller
                                 name="provinsi"
@@ -260,10 +430,7 @@ const AdminRegistrationForm = () => {
                                     <DropdownInput
                                         label='Provinsi'
                                         placeholder='Pilih Provinsi'
-                                        onChange={(val) => {
-                                            field.onChange(val);
-                                            // Optional: reset kabupaten if needed
-                                        }}
+                                        onChange={field.onChange}
                                         value={field.value}
                                         options={realProvinsiOptions}
                                         searchable={true}
@@ -272,7 +439,6 @@ const AdminRegistrationForm = () => {
                                 )}
                             />
                         )}
-                        {/* Conditional Dropdown: Kabupaten/Kota */}
                         {instansi === 'admin_kab_kota' && (
                             <Controller
                                 name="kabupaten"
@@ -292,97 +458,50 @@ const AdminRegistrationForm = () => {
                             />
                         )}
                         <Controller
-                            name="noTelepon"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <TextInput
-                                    id='noTelepon'
-                                    label='No Telepon WhatsApp'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    required
-                                />
-                            )}
-                        />
-                        <Controller
-                            name="emailInstansi"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <TextInput
-                                    id='emailInstansi'
-                                    label='Email Instansi'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    required
-                                />
-                            )}
-                        />
-                        <Controller
-                            name="nama"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <TextInput
-                                    id='nama'
-                                    label='Nama'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    required
-                                />
-                            )}
-                        />
-                        <Controller
-                            name="password"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <PasswordInput
-                                    id='password'
-                                    label='Kata Sandi'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    required
-                                />
-                            )}
-                        />
-                        <Controller
-                            name="konfirmasiPassword"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <PasswordInput
-                                    id='konfirmasiPassword'
-                                    label='Konfirmasi Kata Sandi'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    required
-                                />
-                            )}
-                        />
-                        <Controller
-                            name="noSurat"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <TextInput
-                                    id='noSurat'
-                                    label='No. Surat'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    required
-                                />
-                            )}
-                        />
-                        <Controller
-                            name="suratPermohonan"
+                            name="userFile"
                             control={control}
                             rules={{ required: true }}
                             render={({ field }) => (
                                 <FileInput
-                                    id='suratPermohonan'
-                                    label='Surat Permohonan'
+                                    id='userFile'
+                                    label='File Data User'
+                                    onChange={(file) => field.onChange(file)}
+                                    required
+                                    accept='.xlsx'
+                                    maxSizeMB={5}
+                                />
+                            )}
+                        />
+                        <ButtonComponent
+                            icon={<Download size={16} />}
+                            label='Download Template .xlsx'
+                            className='w-full'
+                            secondary={true}
+                            type='button'
+                            onClick={() => window.open('https://sinardev.com/template_excel/import_users.xlsx', '_blank')}
+                        />
+                        <Controller
+                            name="noSuratRekomendasi"
+                            control={control}
+                            rules={{ required: true }}
+                            render={({ field }) => (
+                                <TextInput
+                                    id='noSuratRekomendasi'
+                                    label='No. Surat Rekomendasi'
+                                    onChange={field.onChange}
+                                    value={field.value}
+                                    required
+                                />
+                            )}
+                        />
+                        <Controller
+                            name="suratRekomendasi"
+                            control={control}
+                            rules={{ required: true }}
+                            render={({ field }) => (
+                                <FileInput
+                                    id='suratRekomendasi'
+                                    label='Surat Rekomendasi'
                                     onChange={(file) => field.onChange(file)}
                                     required
                                     accept='.pdf'
@@ -390,248 +509,135 @@ const AdminRegistrationForm = () => {
                                 />
                             )}
                         />
-                    </div>
-                    <ButtonComponent
-                        label={isPending ? 'Memproses...' : 'Tambah Akun'}
-                        onClick={() => { }}
-                        className='w-full'
-                        disabled={isPending}
-                        type="submit"
-                    />
-                </form>
-            )}
-
-            {activeTab === 'xlsx' && (
-                <form onSubmit={handleSubmit(handleImportAdmin)} className='bg-white shadow-sm rounded-lg p-6 space-y-5'>
-                    <Controller
-                        name="instansi"
-                        control={control}
-                        rules={{ required: true }}
-                        render={({ field }) => (
-                            <DropdownInput
-                                label='Instansi'
-                                placeholder='Pilih Instansi'
-                                onChange={field.onChange}
-                                value={field.value}
-                                options={instansiOptions}
-                                required
-                            />
-                        )}
-                    />
-                    {instansi === 'admin_provinsi' && (
-                        <Controller
-                            name="provinsi"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <DropdownInput
-                                    label='Provinsi'
-                                    placeholder='Pilih Provinsi'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    options={realProvinsiOptions}
-                                    searchable={true}
-                                    required
-                                />
-                            )}
-                        />
-                    )}
-                    {instansi === 'admin_kab_kota' && (
-                        <Controller
-                            name="kabupaten"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <DropdownInput
-                                    label='Kabupaten/ Kota'
-                                    placeholder='Pilih Kabupaten/ Kota'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    options={realKabupatenOptions}
-                                    searchable={true}
-                                    required
-                                />
-                            )}
-                        />
-                    )}
-                    <Controller
-                        name="userFile"
-                        control={control}
-                        rules={{ required: true }}
-                        render={({ field }) => (
-                            <FileInput
-                                id='userFile'
-                                label='File Data User'
-                                onChange={(file) => field.onChange(file)}
-                                required
-                                accept='.xlsx'
-                                maxSizeMB={5}
-                            />
-                        )}
-                    />
-                    <ButtonComponent
-                        icon={<Download size={16} />}
-                        label='Download Template .xlsx'
-                        className='w-full'
-                        secondary={true}
-                    />
-                    <Controller
-                        name="noSuratRekomendasi"
-                        control={control}
-                        rules={{ required: true }}
-                        render={({ field }) => (
-                            <TextInput
-                                id='noSuratRekomendasi'
-                                label='No. Surat Rekomendasi'
-                                onChange={field.onChange}
-                                value={field.value}
-                                required
-                            />
-                        )}
-                    />
-                    <Controller
-                        name="suratRekomendasi"
-                        control={control}
-                        rules={{ required: true }}
-                        render={({ field }) => (
-                            <FileInput
-                                id='suratRekomendasi'
-                                label='Surat Rekomendasi'
-                                onChange={(file) => field.onChange(file)}
-                                required
-                                accept='.pdf'
-                                maxSizeMB={2}
-                            />
-                        )}
-                    />
-                    <ButtonComponent
-                        label={isImportPending ? 'Memproses...' : 'Tambah Akun'}
-                        onClick={() => { }}
-                        className='w-full'
-                        disabled={isImportPending}
-                        type="submit"
-                    />
-                </form>
-            )}
-
-            {activeTab === 'link' && (
-                <div className='space-y-5'>
-                    <form onSubmit={handleSubmit(handleGenerateLink)} className='bg-white shadow-sm rounded-lg p-6 space-y-5'>
-                        {generatedData && (
-                            <div className="bg-navy-50 border border-navy-500 rounded-lg p-4 space-y-4">
-                                <h3 className="font-semibold text-navy-500">Link Berhasil Dibuat!</h3>
-
-                                <div className="space-y-1">
-                                    <p className="font-medium">{generatedData.organization?.name || '-'}</p>
-                                    <div className="flex items-center gap-1 border border-gray-300 bg-white rounded-lg">
-                                        <input
-                                            readOnly
-                                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/v2/daftar-akun-admin?token=${generatedData.token}`}
-                                            className="w-full bg-white truncate rounded-lg px-3 py-2 text-sm outline-none"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleCopy}
-                                            className="p-3 cursor-pointer text-navy-500 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
-                                            title="Salin Link"
-                                        >
-                                            {copied ? <Check size={18} /> : <Copy size={18} />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        <Controller
-                            name="instansi"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <DropdownInput
-                                    label='Instansi'
-                                    placeholder='Pilih Instansi'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    options={linkInstansiOptions}
-                                    required
-                                />
-                            )}
-                        />
-                        {instansi === 'admin_provinsi' && (
-                            <Controller
-                                name="provinsi"
-                                control={control}
-                                rules={{ required: true }}
-                                render={({ field }) => (
-                                    <DropdownInput
-                                        label='Provinsi'
-                                        placeholder='Pilih Provinsi'
-                                        onChange={field.onChange}
-                                        value={field.value}
-                                        options={realProvinsiOptions}
-                                        searchable={true}
-                                        required
-                                    />
-                                )}
-                            />
-                        )}
-                        {instansi === 'admin_kab_kota' && (
-                            <Controller
-                                name="kabupaten"
-                                control={control}
-                                rules={{ required: true }}
-                                render={({ field }) => (
-                                    <DropdownInput
-                                        label='Kabupaten/ Kota'
-                                        placeholder='Pilih Kabupaten/ Kota'
-                                        onChange={field.onChange}
-                                        value={field.value}
-                                        options={realKabupatenOptions}
-                                        searchable={true}
-                                        required
-                                    />
-                                )}
-                            />
-                        )}
-                        <Controller
-                            name="expires_in_day"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <TextInput
-                                    id='expires_in_day'
-                                    label='Berlaku Berapa Hari'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    required
-                                />
-                            )}
-                        />
-                        <Controller
-                            name="max_uses"
-                            control={control}
-                            rules={{ required: true }}
-                            render={({ field }) => (
-                                <TextInput
-                                    id='max_uses'
-                                    label='Maksimal Dipakai'
-                                    onChange={field.onChange}
-                                    value={field.value}
-                                    required
-                                />
-                            )}
-                        />
                         <ButtonComponent
-                            label={isGeneratePending ? 'Memproses...' : 'Generate Link'}
+                            label={isImportPending ? 'Memproses...' : 'Tambah Akun'}
                             onClick={() => { }}
                             className='w-full'
-                            disabled={isGeneratePending}
+                            disabled={isImportPending}
                             type="submit"
                         />
                     </form>
+                )}
+
+                {activeTab === 'link' && (
+                    <div className='space-y-5'>
+                        <form onSubmit={handleSubmit(handleGenerateLink)} className='space-y-5'>
+                            {generatedData && (
+                                <div className="bg-navy-50 border border-navy-500 rounded-lg p-4 space-y-4">
+                                    <h3 className="font-semibold text-navy-500">Link Berhasil Dibuat!</h3>
+
+                                    <div className="space-y-1">
+                                        <p className="font-medium">{generatedData.organization?.name || '-'}</p>
+                                        <div className="flex items-center gap-1 border border-gray-300 bg-white rounded-lg">
+                                            <input
+                                                readOnly
+                                                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/v2/daftar-akun-admin?token=${generatedData.token}`}
+                                                className="w-full bg-white truncate rounded-lg px-3 py-2 text-sm outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleCopy}
+                                                className="p-3 cursor-pointer text-navy-500 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                                                title="Salin Link"
+                                            >
+                                                {copied ? <Check size={18} /> : <Copy size={18} />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <Controller
+                                name="instansi"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <DropdownInput
+                                        label='Instansi'
+                                        placeholder='Pilih Instansi'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        options={linkInstansiOptions}
+                                        required
+                                    />
+                                )}
+                            />
+                            {instansi === 'admin_provinsi' && (
+                                <Controller
+                                    name="provinsi"
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field }) => (
+                                        <DropdownInput
+                                            label='Provinsi'
+                                            placeholder='Pilih Provinsi'
+                                            onChange={field.onChange}
+                                            value={field.value}
+                                            options={realProvinsiOptions}
+                                            searchable={true}
+                                            required
+                                        />
+                                    )}
+                                />
+                            )}
+                            {instansi === 'admin_kab_kota' && (
+                                <Controller
+                                    name="kabupaten"
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field }) => (
+                                        <DropdownInput
+                                            label='Kabupaten/ Kota'
+                                            placeholder='Pilih Kabupaten/ Kota'
+                                            onChange={field.onChange}
+                                            value={field.value}
+                                            options={realKabupatenOptions}
+                                            searchable={true}
+                                            required
+                                        />
+                                    )}
+                                />
+                            )}
+                            <Controller
+                                name="expires_in_day"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <TextInput
+                                        id='expires_in_day'
+                                        label='Berlaku Selama (hari)'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        required
+                                    />
+                                )}
+                            />
+                            <Controller
+                                name="max_uses"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <TextInput
+                                        id='max_uses'
+                                        label='Maksimal Penggunaan'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        required
+                                    />
+                                )}
+                            />
+                            <ButtonComponent
+                                label={isGeneratePending ? 'Memproses...' : 'Buat Tautan'}
+                                onClick={() => { }}
+                                className='w-full'
+                                disabled={isGeneratePending}
+                                type="submit"
+                            />
+                        </form>
 
 
-                </div>
-            )}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

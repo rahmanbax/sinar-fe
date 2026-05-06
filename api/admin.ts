@@ -156,6 +156,38 @@ export const importAdminData = async (
     return res.json();
 };
 
+export const importMemberData = async (
+    token: string | null,
+    data: {
+        role: string;
+        user_file: File;
+        recommendation_file: File;
+        ref_number: string;
+    }
+) => {
+    if (!token) return { error: true, message: "No token provided" };
+
+    const formData = new FormData();
+    formData.append('role', data.role);
+    formData.append('user_file', data.user_file);
+    formData.append('recommendation_file', data.recommendation_file);
+    formData.append('ref_number', data.ref_number);
+
+    const res = await fetch(`${API_URL}/admin/users/imports/user-imports`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        body: formData
+    });
+
+    if (!res.ok) {
+        const errVal = await res.text();
+        throw new Error(errVal || 'Failed to import member data');
+    }
+    return res.json();
+};
+
 export const generateAdminRegistrationToken = async (
     token: string | null,
     data: {

@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminUser, useRejectRegistrationMutation, useApproveRegistrationMutation, useUpdateAdminStatusMutation } from '@/hooks/useAdmin';
 import RejectionModal from '@/components/v2/modals/RejectionModal';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
+import FileInput from '@/components/v2/inputs/FileInput';
 
 
 const DetailAkunPage = () => {
@@ -153,7 +154,16 @@ const DetailAkunPage = () => {
                         />
 
                         {/* Preview Dokumen */}
-                        <div>
+                        <FileInput
+                            id="preview-dokumen"
+                            label="Preview Dokumen"
+                            initialUrl={userData?.recommendation_files?.[0]?.file_url || null}
+                            onChange={() => { }}
+                            required={false}
+                            disabled
+                        />
+
+                        {/* <div>
                             <label className="block text-sm font-semibold text-black mb-2">
                                 Preview Dokumen
                             </label>
@@ -164,7 +174,7 @@ const DetailAkunPage = () => {
                                     Lihat
                                 </Link>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Status Akun */}
                         <div className="flex items-end gap-4">

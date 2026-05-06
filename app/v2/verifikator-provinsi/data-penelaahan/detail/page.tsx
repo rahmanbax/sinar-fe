@@ -136,7 +136,7 @@ const TransactionDetailContent = () => {
         { header: "No", accessorKey: "no", className: "w-12 text-center" },
         { header: "Tanggal Diajukan", accessorKey: "date", className: "w-32" },
         { header: "Jenis Unsur", accessorKey: "element" },
-        { header: "Nama Rupabumi", accessorKey: "name", className: "font-bold" },
+        { header: "Nama Rupabumi", accessorKey: "name", className: "font-medium" },
         { header: "Provinsi", accessorKey: "province_display" },
         { header: "Kabupaten/ Kota", accessorKey: "regency_display" },
         { header: "Surveyor", accessorKey: "surveyor" },

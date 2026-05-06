@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import Image from 'next/image'
 import { useForm } from 'react-hook-form'
 import { Card, CardContent } from "@/components/ui/card"
@@ -233,17 +234,14 @@ const CetakBeritaAcaraForm = ({ backPath, redirectAfterSubmit }: CetakBeritaAcar
         <div className="flex flex-col gap-6">
             {/* Breadcrumbs Placeholder */}
             <div className="text-sm text-gray-500 flex items-center gap-2">
-                <span>Dashboard</span>
+                <Link href={backPath.includes('verifikator-provinsi') ? '/v2/verifikator-provinsi' : '/v2/verifikator-kota'} className="hover:text-navy-900 transition-colors">Dashboard</Link>
                 <span>/</span>
-                <span>Data Penelaahan</span>
+                <Link href={backPath} className="hover:text-navy-900 transition-colors">Data Penelaahan</Link>
                 <span>/</span>
-                <span className="text-navy-900 font-medium">Cetak Berita Acara</span>
+                <span className="text-navy-900 font-bold">Cetak Berita Acara</span>
             </div>
 
             <div className="flex items-center gap-3">
-                <button onClick={() => router.push(backPath)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                    <ChevronLeft size={24} />
-                </button>
                 <h1 className="text-2xl font-bold text-navy-900">Cetak Berita Acara</h1>
             </div>
 

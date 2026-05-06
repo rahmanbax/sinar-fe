@@ -132,7 +132,7 @@ const IncomingRecommendationDetailPage = () => {
         { 
             header: "Judul Penelaahan", 
             cell: (row) => (
-                <div className="font-modium text-navy-900">
+                <div className="font-medium text-navy-900">
                     {row.title || "-"}
                 </div>
             )

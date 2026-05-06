@@ -70,8 +70,10 @@ const AdminAkunPage = () => {
     ];
 
     useEffect(() => {
-        refetch();
-    }, [refetch]);
+        if (token) {
+            refetch();
+        }
+    }, [token, refetch]);
 
     const usersData = useMemo(() => {
         if (!usersResponse?.data) return [];

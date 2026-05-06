@@ -1,5 +1,5 @@
 import { useQuery, useMutation, UseMutationOptions, useQueryClient } from "@tanstack/react-query";
-import { getOrganizations, createManualAdmin, createManualMember, importAdminData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration, updateAdminStatus, generateAdminRegistrationToken } from "@/api/admin";
+import { getOrganizations, createManualAdmin, createManualMember, importAdminData, importMemberData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration, updateAdminStatus, generateAdminRegistrationToken } from "@/api/admin";
 
 
 type UpdateStatusVariables = {
@@ -39,7 +39,7 @@ export const useOrganizations = (regionLevel?: string) => {
 
 export const useAdminUsers = (token: string | null, page: number = 1, search: string = "", role: string = "", org_id: string = "") => {
     return useQuery({
-        queryKey: ["admin", "users", page, search, role, org_id],
+        queryKey: ["admin", "users", token, page, search, role, org_id],
         queryFn: () => getAdminUsers(token, page, search, role, org_id),
         enabled: !!token,
         retry: false,
@@ -48,7 +48,7 @@ export const useAdminUsers = (token: string | null, page: number = 1, search: st
 
 export const useAdminUser = (token: string | null, id: string) => {
     return useQuery({
-        queryKey: ["admin", "users", id],
+        queryKey: ["admin", "users", token, id],
         queryFn: () => getAdminUser(token, id),
         enabled: !!token && !!id,
     });
@@ -151,6 +151,33 @@ export const useImportAdminMutation = (
         ...options,
     });
 };
+
+type ImportMemberVariables = {
+    token: string | null;
+    role: string;
+    user_file: File;
+    recommendation_file: File;
+    ref_number: string;
+};
+
+export const useImportMemberMutation = (
+    options?: Omit<UseMutationOptions<any, Error, ImportMemberVariables>, 'mutationFn'>
+) => {
+    return useMutation({
+        mutationFn: async (vars: ImportMemberVariables) => {
+            const result = await importMemberData(vars.token, {
+                role: vars.role,
+                user_file: vars.user_file,
+                recommendation_file: vars.recommendation_file,
+                ref_number: vars.ref_number,
+            });
+            if (result.error) throw new Error(result.message);
+            return result;
+        },
+        ...options,
+    });
+};
+
 
 type GenerateAdminTokenVariables = {
     token: string | null;

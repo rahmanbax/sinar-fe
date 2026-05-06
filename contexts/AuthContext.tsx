@@ -35,6 +35,21 @@ function getTokenExpiry(token: string): number | null {
   }
 }
 
+function formatUserData(data: any): UserType | null {
+  if (!data) return null;
+  const userObj = data.user || data;
+  if (!userObj || Object.keys(userObj).length === 0) return null;
+
+  return {
+    ...userObj,
+    name: userObj.name,
+    role: userObj.role,
+    permission_level: userObj.verification_permission_level ?? userObj.permission_level,
+    organization_name: data.organization?.name,
+    region_name: data.region?.name
+  } as UserType;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [token, setToken] = useState<string | null>(null)
@@ -54,8 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Update user data if provided
         if (result.data) {
-          setUser(result.data)
-          localStorage.setItem("user", JSON.stringify(result.data))
+          const formattedUser = formatUserData(result.data);
+          if (formattedUser) {
+            setUser(formattedUser)
+            localStorage.setItem("user", JSON.stringify(formattedUser))
+          }
         }
 
         return result.token
@@ -124,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Handle different response structures
-      return result.data?.user || result.data || null
+      return formatUserData(result.data) || formatUserData(result);
     } catch {
       // Network error - use cached user data
       const cachedUser = localStorage.getItem("user")
@@ -184,18 +202,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Update struktur dari respon: token di root, detail properties user ada di result.data.user
     const authToken = result.token
-    const userData = result.data?.user || result.data
+    const formattedUser = formatUserData(result.data) || formatUserData(result)
+
+    if (!formattedUser) {
+      throw new Error("Invalid user data from server")
+    }
 
     setToken(authToken)
-    setUser(userData)
+    setUser(formattedUser)
     localStorage.setItem("token", authToken)
-    localStorage.setItem("user", JSON.stringify(userData))
+    localStorage.setItem("user", JSON.stringify(formattedUser))
 
     // Schedule token refresh
     scheduleRefresh(authToken)
 
     // Redirect berdasarkan role
-    const redirectPath = getRoleDefaultRoute(userData)
+    const redirectPath = getRoleDefaultRoute(formattedUser)
     router.push(redirectPath)
   }
 
@@ -220,22 +242,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Update struktur objek phone dan properti user
     const authToken = result.token || result.authorization?.token || result.data?.authorization?.token;
-    const userData = result.user || result.data?.user || result.data;
+    const formattedUser = formatUserData(result.data) || formatUserData(result) || formatUserData({ user: result.user });
 
-    if (!authToken || !userData) {
+    if (!authToken || !formattedUser) {
       throw new Error("Invalid response from server")
     }
 
     setToken(authToken)
-    setUser(userData)
+    setUser(formattedUser)
     localStorage.setItem("token", authToken)
-    localStorage.setItem("user", JSON.stringify(userData))
+    localStorage.setItem("user", JSON.stringify(formattedUser))
 
     // Schedule token refresh
     scheduleRefresh(authToken)
 
     // Redirect berdasarkan role
-    const redirectPath = getRoleDefaultRoute(userData)
+    const redirectPath = getRoleDefaultRoute(formattedUser)
     router.push(redirectPath)
   }
 

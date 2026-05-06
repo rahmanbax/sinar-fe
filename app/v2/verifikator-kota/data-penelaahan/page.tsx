@@ -6,11 +6,11 @@ import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { Plus, Search, SlidersHorizontal, Check, FileText } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-    getVerificationTransactions,
-    getAllVerificationToponyms,
     finishVerificationTransaction,
     VerificationTransaction
 } from '@/api/verification';
+import { useVerificationTransactions, useAllVerificationToponyms } from '@/hooks/useVerification';
+import { useBeritaAcaraData } from '@/hooks/useBeritaAcara';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
@@ -30,9 +30,14 @@ const ReviewCard = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const isCompleted = item.status === 'completed';
-    const isRecommended = item.status === 'recommended';
     const isIssued = item.status === 'issued';
     const isVerificationDone = item.total_data > 0 && item.total_data === item.handled_data;
+
+    // Check if BA exists for completed transactions
+    const { data: baData } = useBeritaAcaraData(token, isCompleted ? item.id : null);
+    const hasBA = !!baData?.ba_file_url;
+    
+    const isRecommended = item.status === 'recommended' || hasBA;
 
     const handleFinish = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -122,7 +127,17 @@ const ReviewCard = ({
             </div>
 
             {isRecommended ? (
-                <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2" onClick={(e) => { e.stopPropagation(); router.push(`/v2/verifikator-kota/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
+                <button 
+                    className="w-full py-2.5 rounded-xl text-sm font-bold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2" 
+                    onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (baData?.ba_file_url) {
+                            window.open(baData.ba_file_url, '_blank');
+                        } else {
+                            router.push(`/v2/verifikator-kota/data-penelaahan/cetak-ba?transactionId=${item.id}`); 
+                        }
+                    }}
+                >
                     <FileText size={16} /> Lihat Berita Acara
                 </button>
             ) : isCompleted ? (
@@ -150,13 +165,24 @@ const DataPenelaahanVerifikatorContent = () => {
     const [activeTab, setActiveTab] = useState<'semua' | 'toponim'>('semua');
     const [searchText, setSearchText] = useState("");
 
-    // Transactions State
-    const [transactions, setTransactions] = useState<VerificationTransaction[]>([]);
-    const [loadingTransactions, setLoadingTransactions] = useState(true);
+    // API Hooks
+    const { data: transactionsRes, isLoading: loadingTransactions, refetch: refetchTransactions } = useVerificationTransactions(token);
+    const { data: toponymsRes, isLoading: loadingToponyms } = useAllVerificationToponyms(token, { page: 1, per_page: 9999 });
 
-    // Toponyms State
-    const [allToponyms, setAllToponyms] = useState<any[]>([]);
-    const [loadingToponyms, setLoadingToponyms] = useState(false);
+    const transactions = useMemo(() => transactionsRes?.data || [], [transactionsRes]);
+    const allToponyms = useMemo(() => {
+        const data = toponymsRes?.data || [];
+        return data.map((item: any, idx: number) => ({
+            id: item.id,
+            no: idx + 1,
+            date: item.created_at ? new Date(item.created_at).toLocaleDateString("id-ID") : "-",
+            element: item.element?.name || "-",
+            name: item.map_name || item.local_name || "-",
+            surveyor: item.creator?.name || "-",
+            status: item.review_transaction_data?.[0]?.accepted === true ? "Disetujui" : item.review_transaction_data?.[0]?.accepted === false ? "Ditolak" : "Belum Ditelaah",
+            transactionId: item.review_transaction_toponyms?.[0]?.transaction_id || ""
+        }));
+    }, [toponymsRes]);
 
     const setViewMode = (mode: 'grid' | 'table') => {
         const params = new URLSearchParams(searchParams.toString());
@@ -164,57 +190,18 @@ const DataPenelaahanVerifikatorContent = () => {
         router.replace(`/v2/verifikator-kota/data-penelaahan?${params.toString()}`, { scroll: false });
     };
 
-    const fetchTransactions = useCallback(async () => {
-        setLoadingTransactions(true);
-        try {
-            const res = await getVerificationTransactions(token);
-            if (!res.error) {
-                setTransactions(res.data || []);
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoadingTransactions(false);
-        }
-    }, [token]);
-
-    const fetchAllToponyms = useCallback(async () => {
-        setLoadingToponyms(true);
-        try {
-            const res = await getAllVerificationToponyms(token, { page: 1, per_page: 9999 });
-            if (!res.error) {
-                const transformed = res.data?.map((item: any, idx: number) => ({
-                    id: item.id,
-                    no: idx + 1,
-                    date: item.created_at ? new Date(item.created_at).toLocaleDateString("id-ID") : "-",
-                    element: item.element?.name || "-",
-                    name: item.map_name || item.local_name || "-",
-                    surveyor: item.creator?.name || "-",
-                    status: item.review_transaction_data?.[0]?.accepted === true ? "Disetujui" : item.review_transaction_data?.[0]?.accepted === false ? "Ditolak" : "Belum Ditelaah",
-                    transactionId: item.review_transaction_toponyms?.[0]?.transaction_id || ""
-                }));
-                setAllToponyms(transformed || []);
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoadingToponyms(false);
-        }
-    }, [token]);
-
     useEffect(() => {
-        if (activeTab === 'semua') fetchTransactions();
-        else fetchAllToponyms();
-    }, [activeTab, fetchTransactions, fetchAllToponyms]);
+        if (activeTab === 'semua') refetchTransactions();
+    }, [activeTab, refetchTransactions]);
 
     const filteredTransactions = useMemo(() => {
         if (!searchText) return transactions;
-        return transactions.filter(t => t.title.toLowerCase().includes(searchText.toLowerCase()));
+        return transactions.filter((t: VerificationTransaction) => t.title.toLowerCase().includes(searchText.toLowerCase()));
     }, [transactions, searchText]);
 
     const filteredToponyms = useMemo(() => {
         if (!searchText) return allToponyms;
-        return allToponyms.filter(t => t.name.toLowerCase().includes(searchText.toLowerCase()) || t.element.toLowerCase().includes(searchText.toLowerCase()));
+        return allToponyms.filter((t: any) => t.name.toLowerCase().includes(searchText.toLowerCase()) || t.element.toLowerCase().includes(searchText.toLowerCase()));
     }, [allToponyms, searchText]);
 
     const transactionColumns: ColumnDef<VerificationTransaction>[] = [
@@ -225,12 +212,15 @@ const DataPenelaahanVerifikatorContent = () => {
         { header: "Jumlah Disetujui", accessorKey: "accepted_data", className: "text-center w-28" },
         { header: "Jumlah Ditolak", accessorKey: "rejected_data", className: "text-center w-28" },
         {
-            header: "Status", cell: (row) => (
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${row.status === 'recommended' ? 'bg-emerald-100 text-emerald-700' : row.status === 'completed' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-600'
-                    }`}>
-                    {row.status === 'recommended' ? 'Selesai' : row.status === 'completed' ? 'Cetak BA' : 'Proses Penelaahan'}
-                </span>
-            )
+            header: "Status", cell: (row) => {
+                const isRecommended = row.status === 'recommended' || !!row.news;
+                return (
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${isRecommended ? 'bg-emerald-100 text-emerald-700' : row.status === 'completed' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-600'
+                        }`}>
+                        {isRecommended ? 'Selesai' : row.status === 'completed' ? 'Cetak BA' : 'Proses Penelaahan'}
+                    </span>
+                );
+            }
         },
         {
             header: "Aksi", className: "w-16 text-center", cell: (row) => (
@@ -305,8 +295,8 @@ const DataPenelaahanVerifikatorContent = () => {
                         <div className="flex justify-center py-20"><p className="text-gray-400 animate-pulse">Memuat data...</p></div>
                     ) : viewMode === 'grid' ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pb-10">
-                            {filteredTransactions.map((item) => (
-                                <ReviewCard key={item.id} item={item} token={token} onRefresh={fetchTransactions} viewMode={viewMode} />
+                            {filteredTransactions.map((item: VerificationTransaction) => (
+                                <ReviewCard key={item.id} item={item} token={token} onRefresh={refetchTransactions} viewMode={viewMode} />
                             ))}
                         </div>
                     ) : (

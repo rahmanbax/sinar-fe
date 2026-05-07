@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TextInput from '@/components/v2/inputs/TextInput';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { FileText, ChevronRight } from 'lucide-react';
@@ -31,6 +31,12 @@ const DetailAkunPage = () => {
             alert(`Gagal menolak pendaftaran: ${err.message}`);
         }
     });
+
+    useEffect(() => {
+        if (token && id) {
+            refetch();
+        }
+    }, [token, id, refetch]);
 
     const { mutate: approveRegistration, isPending: isApproving } = useApproveRegistrationMutation({
         onSuccess: () => {
@@ -65,12 +71,12 @@ const DetailAkunPage = () => {
         }
     };
 
-    const rawStatus = userData?.status_account_label || userData?.approval_status_label || (userData?.status_account === true ? 'Aktif' : userData?.status_account === false ? 'Nonaktif' : '');
-    const currentStatus = String(rawStatus || '').toLowerCase();
+    const approvalStatus = String(userData?.approval_status_label || '').toLowerCase();
+    const isPending = approvalStatus === 'menunggu';
+    const isDisetujui = approvalStatus === 'disetujui';
 
-    const isAktif = currentStatus === 'aktif' || currentStatus === 'disetujui';
-    const isNonaktif = currentStatus === 'nonaktif' || currentStatus === 'tidak aktif';
-    const isPending = !isAktif && !isNonaktif;
+    const isAktif = userData?.status_account === true;
+    const isNonaktif = userData?.status_account === false;
 
     const statusDisplay = isAktif ? 'Aktif' : isNonaktif ? 'Nonaktif' : '-';
 
@@ -176,6 +182,36 @@ const DetailAkunPage = () => {
                             </div>
                         </div> */}
 
+                        {/* Status Persetujuan */}
+                        <div className='flex items-end gap-4'>
+                            <div className="flex-1">
+                                <TextInput
+                                    id="status_approval"
+                                    label="Status Persetujuan"
+                                    value={userData?.approval_status_label || '-'}
+                                    onChange={() => { }}
+                                    required={false}
+                                    disabled
+                                />
+                            </div>
+                            {isPending ? (
+                                <div className='flex gap-2'>
+                                    <ButtonComponent
+                                        label="Setujui Aktivasi"
+                                        onClick={handleApprove}
+                                        disabled={isApproving}
+                                    />
+                                    <ButtonComponent
+                                        label="Tolak"
+                                        className="text-red-500 border-red-500"
+                                        onClick={() => setIsRejectionModalOpen(true)}
+                                        secondary={true}
+                                        disabled={isRejecting}
+                                    />
+                                </div>
+                            ) : null}
+                        </div>
+
                         {/* Status Akun */}
                         <div className="flex items-end gap-4">
                             <div className="flex-1">
@@ -189,36 +225,23 @@ const DetailAkunPage = () => {
                                 />
                             </div>
                             <div className='flex gap-2'>
-                                {isPending ? (
-                                    <>
+                                {isDisetujui && (
+                                    isAktif ? (
                                         <ButtonComponent
-                                            label="Setujui Aktivasi"
-                                            onClick={handleApprove}
-                                            disabled={isApproving}
-                                        />
-                                        <ButtonComponent
-                                            label="Tolak"
-                                            className="text-red-500 border-red-500"
-                                            onClick={() => setIsRejectionModalOpen(true)}
+                                            label="Nonaktifkan Akun"
+                                            className="text-red-500 border-red-500 hover:bg-red-50"
+                                            onClick={() => handleToggleStatus(false)}
                                             secondary={true}
-                                            disabled={isRejecting}
+                                            disabled={isUpdating}
                                         />
-                                    </>
-                                ) : isAktif ? (
-                                    <ButtonComponent
-                                        label="Nonaktifkan Akun"
-                                        className="text-red-500 border-red-500 hover:bg-red-50"
-                                        onClick={() => handleToggleStatus(false)}
-                                        secondary={true}
-                                        disabled={isUpdating}
-                                    />
-                                ) : isNonaktif ? (
-                                    <ButtonComponent
-                                        label="Aktifkan Akun"
-                                        onClick={() => handleToggleStatus(true)}
-                                        disabled={isUpdating}
-                                    />
-                                ) : null}
+                                    ) : isNonaktif ? (
+                                        <ButtonComponent
+                                            label="Aktifkan Akun"
+                                            onClick={() => handleToggleStatus(true)}
+                                            disabled={isUpdating}
+                                        />
+                                    ) : null
+                                )}
                             </div>
                         </div>
                     </div>
@@ -234,7 +257,7 @@ const DetailAkunPage = () => {
                     setIsRejectionModalOpen(false);
                 }}
             />
-        </DashboardLayout>
+        </DashboardLayout >
     );
 };
 

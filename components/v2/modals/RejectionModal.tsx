@@ -43,7 +43,7 @@ const RejectionModal = ({ isOpen, onClose, onSubmit, title = "Tolak Pendaftaran"
                 <div className="space-y-4">
                     <TextBoxInput
                         id="rejection_note"
-                        label="Catatan Penolakan"
+                        label="Alasan Penolakan"
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
                         required={true}

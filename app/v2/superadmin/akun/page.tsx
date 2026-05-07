@@ -30,12 +30,23 @@ const AdminAkunPage = () => {
     const [filters, setFilters] = useState<FilterState>({});
 
     const { data: usersResponse, isLoading, refetch } = useAdminUsers(token, page, search, filters.role, filters.instansi);
-    const { data: organizationResponse } = useOrganizations();
+    const [instansiOptions, setInstansiOptions] = useState<{label: string, value: string}[]>([]);
 
-    const instansiOptions = organizationResponse?.data?.map((org: any) => ({
-        label: org.name,
-        value: String(org.id)
-    })) || [];
+    useEffect(() => {
+        if (!usersResponse?.data) return;
+        setInstansiOptions(prev => {
+            const optionsMap = new Map(prev.map(opt => [opt.value, opt]));
+            usersResponse.data.forEach((user: any) => {
+                if (user.organization?.id && user.organization?.name) {
+                    optionsMap.set(String(user.organization.id), {
+                        label: user.organization.name,
+                        value: String(user.organization.id)
+                    });
+                }
+            });
+            return Array.from(optionsMap.values());
+        });
+    }, [usersResponse]);
 
     const filterFields: FilterField[] = [
         {

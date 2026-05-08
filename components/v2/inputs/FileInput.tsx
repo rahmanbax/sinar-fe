@@ -88,7 +88,7 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
                 {selectedFile ? (
                     <div className="flex items-center justify-between w-full">
                         <div className="flex items-center flex-1 min-w-0 pr-4">
-                            <FileIcon size={16} className='text-gray-500' />
+                            {icon ? icon : <FileIcon size={16} className='text-gray-500' />}
                             <div className="ml-4 truncate text-left">
                                 <p className="text-sm font-medium text-black truncate">{selectedFile.name}</p>
                                 <p className="text-xs text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>

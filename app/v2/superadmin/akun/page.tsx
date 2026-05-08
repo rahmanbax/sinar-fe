@@ -204,7 +204,10 @@ const AdminAkunPage = () => {
                 onClose={() => setIsFilterModalOpen(false)}
                 fields={filterFields}
                 initialFilters={filters}
-                onApply={(newFilters) => setFilters(newFilters)}
+                onApply={(newFilters) => {
+                    setFilters(newFilters);
+                    setPage(1);
+                }}
             />
         </DashboardLayout>
     );

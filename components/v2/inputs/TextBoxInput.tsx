@@ -15,7 +15,7 @@ const TextBoxInput = ({ id, label, value, onChange, required }: TextBoxInputProp
                 htmlFor={id}
                 className="block text-sm font-semibold text-gray-900 mb-2"
             >
-                {label}
+                {label} {required && <span className="text-red-600">*</span>}
             </label>
             <textarea
                 id={id}

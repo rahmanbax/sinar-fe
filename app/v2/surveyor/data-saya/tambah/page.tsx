@@ -1,7 +1,7 @@
 "use client"
 
 import ToponymDetailLayout from '@/components/v2/layout/ToponymDetailLayout'
-import React from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCreateToponym } from '@/hooks/useToponyms'
@@ -43,7 +43,7 @@ const buildGeometry = (geometry: {
 const TambahDataPage = () => {
     const router = useRouter();
     const { token } = useAuth();
-    const [isUploading, setIsUploading] = React.useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const { mutateAsync: createToponym, isPending } = useCreateToponym();
 
     const handleSubmit = async (data: any) => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export interface HorizontalBarChartItem {
     name: string;
@@ -38,7 +38,7 @@ const HorizontalBarChart = ({
     isLoading = false,
     skeletonRows = 5,
 }: HorizontalBarChartProps) => {
-    const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
+    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const globalMax = items.reduce((acc, item) => Math.max(acc, item.max), 0) || 1;
 
     // Auto-generate 4 evenly spaced labels if none provided

@@ -62,6 +62,10 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
             return `${roleName} ${regionName}`.trim();
         }
 
+        if (user?.role === 'big') {
+            return 'Admin Badan Informasi Geospasial';
+        }
+
         return user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Role';
     };
 

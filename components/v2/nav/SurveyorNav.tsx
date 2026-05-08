@@ -17,11 +17,11 @@ const navItems = [
         href: '/v2/surveyor/data-saya',
         icon: Database,
     },
-    {
-        name: 'Penyampaian Data',
-        href: '/v2/surveyor/penyampaian-data',
-        icon: Database,
-    },
+    // {
+    //     name: 'Penyampaian Data',
+    //     href: '/v2/surveyor/penyampaian-data',
+    //     icon: Database,
+    // },
     {
         name: 'Tim Saya',
         href: '/v2/surveyor/tim-saya',

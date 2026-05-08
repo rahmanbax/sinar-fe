@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import ToponymDetailMap from '../map/ToponymDetailMap'
 import DropdownInput from '../inputs/DropdownInput';
 import TextInput from '../inputs/TextInput';
+import TextBoxInput from '../inputs/TextBoxInput';
 import CalendarInput from '../inputs/CalendarInput';
 import FileInput from '../inputs/FileInput';
 import { Camera, File, MapPin, Mic } from 'lucide-react';
 import ButtonComponent from '../buttons/ButtonComponent';
-import { useToponymFormStore } from '../../../store/useToponymFormStore';
+import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProvinces, useCities, useDistricts, useVillages, useElements, useGenericElements } from '@/hooks/useRegions';
 
@@ -34,7 +35,41 @@ const ToponymDetailLayout = ({
   isVerifikator = false,
 }: ToponymDetailLayoutProps) => {
   const { token } = useAuth();
-  const { formData, setFieldValue, setAllFormData, resetForm } = useToponymFormStore();
+  const { control, handleSubmit: hookFormSubmit, setValue, reset, watch, getValues } = useForm({
+    defaultValues: {
+      elemenGenerik: '',
+      elemenSpesifik: '',
+      namaRupabumi: '',
+      namaLokal: '',
+      namaLain: '',
+      asalBahasa: '',
+      artiNama: '',
+      sejarahNama: '',
+      pelafalan: '',
+      ejaan: '',
+      jenisUnsur: '',
+      provinsi: '',
+      kabupatenKota: '',
+      kecamatan: '',
+      desaKelurahan: '',
+      tanggalSurvey: '',
+      foto: null as File | null,
+      sketsaLokasi: null as File | null,
+      rekamanSuaraPengucapan: null as File | null,
+      rekamanAudioVisual: null as File | null,
+      dokumenPendukung: null as File | null,
+      fotoUrl: null as string | null,
+      sketsaLokasiUrl: null as string | null,
+      rekamanSuaraPengucapanUrl: null as string | null,
+      rekamanAudioVisualUrl: null as string | null,
+      dokumenPendukungUrl: null as string | null,
+    }
+  });
+
+  const formData = watch();
+  const setFieldValue = useCallback((field: any, value: any) => setValue(field, value, { shouldValidate: true, shouldDirty: true }), [setValue]);
+  const setAllFormData = useCallback((data: any) => reset({ ...getValues(), ...data }), [reset, getValues]);
+  const resetForm = useCallback(() => reset(), [reset]);
   const [currentMode, setCurrentMode] = useState<ToponymDetailLayoutProps['mode']>(mode);
   const [isVerifikatorMode, setIsVerifikatorMode] = useState<boolean>(isVerifikator);
 
@@ -240,7 +275,7 @@ const ToponymDetailLayout = ({
     if (combined !== formData.namaRupabumi) {
       setFieldValue('namaRupabumi', combined);
     }
-  }, [formData.elemenGenerik, formData.elemenSpesifik, currentMode, setFieldValue]);
+  }, [formData.elemenGenerik, formData.elemenSpesifik, currentMode, setFieldValue, formData.namaRupabumi]);
 
   // Fetching dynamic regions
   const { data: provincesRes } = useProvinces(token);
@@ -267,11 +302,10 @@ const ToponymDetailLayout = ({
   const elementOptions = getOptions(elementsRes, regionOptions.jenisUnsur);
   const genericElementOptions = getOptions(genericElementsRes, regionOptions.elemenGenerik);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (data: typeof formData) => {
     if (onSubmitAction) {
       onSubmitAction({
-        ...formData,
+        ...data,
         _geometry: {
           drawType,
           drawnPoint,
@@ -280,7 +314,7 @@ const ToponymDetailLayout = ({
         },
       });
     } else {
-      console.log("Form Data:", formData);
+      console.log("Form Data:", data);
     }
   };
 
@@ -307,7 +341,7 @@ const ToponymDetailLayout = ({
         className={`h-full bg-white p-5 overflow-y-auto z-10 shrink-0 shadow-sm space-y-5 ${isResizing ? 'pointer-events-none' : ''}`}
       >
         <h2 className="text-xl font-bold text-gray-900">Data Toponim</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full" noValidate>
+        <form onSubmit={hookFormSubmit(handleSubmit)} className="flex flex-col gap-5 w-full" noValidate>
           <fieldset disabled={isReadOnly} className={`space-y-5 w-full min-w-0`}>
 
             {!isReadOnly && (!isDrawingMode ? (
@@ -508,7 +542,7 @@ const ToponymDetailLayout = ({
               onChange={(e) => setFieldValue('artiNama', e.target.value)}
               required={true}
             />
-            <TextInput
+            <TextBoxInput
               id='sejarah-nama'
               label="Sejarah Nama"
               value={formData.sejarahNama}

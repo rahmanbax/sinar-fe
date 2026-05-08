@@ -1,5 +1,5 @@
 "use client";
-import React from 'react'
+import React, { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import ToponymDetailLayout from '@/components/v2/layout/ToponymDetailLayout'
 import { useSurveyToponymDetail, useUpdateToponym } from '@/hooks/useToponyms'
@@ -45,7 +45,7 @@ const DetailDataPage = () => {
     const id = params.id as string;
     const { token } = useAuth();
     const { data: response, isLoading, isError } = useSurveyToponymDetail(id, token);
-    const [isUploading, setIsUploading] = React.useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const { mutateAsync: updateToponym, isPending } = useUpdateToponym();
 
     const handleSubmit = async (data: any) => {

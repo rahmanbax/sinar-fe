@@ -222,7 +222,7 @@ const AdminRegistrationForm = () => {
                         selected={activeTab === 'xlsx'}
                     />
                     <SelectionButtonComponent
-                        label='Dengan Link'
+                        label='Dengan Tautan'
                         onClick={() => {
                             setActiveTab('link');
                             setGeneratedData(null);
@@ -244,8 +244,8 @@ const AdminRegistrationForm = () => {
                                 rules={{ required: true }}
                                 render={({ field }) => (
                                     <DropdownInput
-                                        label='Instansi'
-                                        placeholder='Pilih Instansi'
+                                        label='Role'
+                                        placeholder='Pilih Role'
                                         onChange={field.onChange}
                                         value={field.value}
                                         options={instansiOptions}
@@ -413,8 +413,8 @@ const AdminRegistrationForm = () => {
                             rules={{ required: true }}
                             render={({ field }) => (
                                 <DropdownInput
-                                    label='Instansi'
-                                    placeholder='Pilih Instansi'
+                                    label='Role'
+                                    placeholder='Pilih Role'
                                     onChange={field.onChange}
                                     value={field.value}
                                     options={instansiOptions}
@@ -553,8 +553,8 @@ const AdminRegistrationForm = () => {
                                 rules={{ required: true }}
                                 render={({ field }) => (
                                     <DropdownInput
-                                        label='Instansi'
-                                        placeholder='Pilih Instansi'
+                                        label='Role'
+                                        placeholder='Pilih Role'
                                         onChange={field.onChange}
                                         value={field.value}
                                         options={linkInstansiOptions}

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Loader2, FileX, Search, SlidersHorizontal, Download, Map as MapIcon, ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface ColumnDef<TData> {
@@ -53,8 +53,8 @@ export function DataTable<TData>({
     onPageChange,
 }: DataTableProps<TData>) {
     const [searchValue, setSearchValue] = useState(initialSearch);
-    const isFirstRender = React.useRef(true);
-    const onSearchRef = React.useRef(onSearch);
+    const isFirstRender = useRef(true);
+    const onSearchRef = useRef(onSearch);
 
     // Keep the ref updated with the latest onSearch prop
     useEffect(() => {

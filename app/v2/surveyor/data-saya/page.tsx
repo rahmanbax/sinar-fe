@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import FilterModal, { FilterState } from '@/components/v2/modals/FilterModal';
@@ -100,7 +100,7 @@ const MyDataPage = () => {
         [citiesData]
     );
 
-    const { data: queryResult, isLoading: loading } = useQuery({
+    const { data: queryResult, isLoading: loading, refetch } = useQuery({
         queryKey: ['survey-toponyms', page, limit, search, filters, token],
         queryFn: async () => {
             const queryParams: Record<string, string> = {
@@ -118,6 +118,12 @@ const MyDataPage = () => {
             return await getToponyms(token, queryParams);
         }
     });
+
+    useEffect(() => {
+        if (token) {
+            refetch();
+        }
+    }, [token, refetch]);
 
     const data = queryResult?.data && Array.isArray(queryResult.data)
         ? queryResult.data.map((item: any, index: number) => ({
@@ -145,7 +151,7 @@ const MyDataPage = () => {
         { header: "Nama Rupabumi", accessorKey: "map_name" },
         { header: "Kabupaten/ Kota", accessorKey: "regency", className: "uppercase whitespace-nowrap" },
         { header: "Provinsi", accessorKey: "province", className: "uppercase whitespace-nowrap" },
-        { header: "Status", cell: (row) => getStatusBadgeV2(row.status) },
+        { header: "Status", cell: (row) => getStatusBadgeV2(row.status), className: "text-center" },
         {
             header: "Aksi",
             className: "w-16 text-center",

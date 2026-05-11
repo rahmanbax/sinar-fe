@@ -12,7 +12,7 @@ import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 import Link from 'next/link';
 
 const SurveyorPage = () => {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const { data: performanceRes, isLoading } = usePersonalPerformance(token);
     const { data: boundingBoxRes } = useSurveyBoundingBox(token);
 
@@ -51,15 +51,9 @@ const SurveyorPage = () => {
             {/* Header Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-navy-900 mb-1">Halo, John Doe</h1>
+                    <h1 className="text-2xl font-bold mb-1">Halo, {user?.name}</h1>
                     <p className="text-gray-500 text-sm">Berikut adalah ringkasan data yang telah anda kumpulkan.</p>
                 </div>
-                <Link href="/v2/surveyor/data-saya/tambah">
-                    <ButtonComponent
-                        label="Tambah Data"
-                        icon={<Plus size={16} />}
-                    />
-                </Link>
             </div>
 
             {/* Stats Cards */}
@@ -72,12 +66,12 @@ const SurveyorPage = () => {
                                 {isLoading ? (
                                     <div className="w-12 h-6 bg-gray-200 rounded animate-pulse mb-1" />
                                 ) : (
-                                    <h3 className="text-2xl font-bold text-navy-900 mb-1">{stat.value}</h3>
+                                    <h3 className="text-2xl font-bold  mb-1">{stat.value}</h3>
                                 )}
                                 <p className="text-sm text-gray-500 font-medium pr-4 leading-tight">{stat.label}</p>
                             </div>
                             <div className="p-2 bg-gray-50 rounded-lg shrink-0">
-                                <Icon size={20} className="text-navy-900" />
+                                <Icon size={20} className="" />
                             </div>
                         </div>
                     );

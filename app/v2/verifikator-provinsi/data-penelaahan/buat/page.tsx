@@ -13,7 +13,7 @@ import DashboardLayout from '@/components/v2/nav/DashboardLayout'
 const BuatPenelaahanProvinsiPage = () => {
   const { token } = useAuth()
   const router = useRouter()
-  
+
   // Use existing hooks
   const { data: candidatesRes, isLoading } = useVerificationCandidates(token)
   const { mutate: createTransaction, isPending } = useCreateVerificationTransaction()
@@ -81,10 +81,10 @@ const BuatPenelaahanProvinsiPage = () => {
     <DashboardLayout showNav={false}>
       <div className='mt-6 mx-5 lg:mx-auto max-w-7xl space-y-6 mb-12'>
         <p className='text-gray-400 font-medium text-sm'>
-          Dashboard / <Link href="/v2/verifikator-provinsi/data-penelaahan" className="hover:text-navy-600 transition-colors">Data Penelaahan</Link> / <span className='text-navy-900'>Buat Penelaahan</span>
+          Dashboard / <Link href="/v2/verifikator-provinsi/data-penelaahan" className="hover:text-navy-600 transition-colors">Data Penelaahan</Link> / <span className=''>Buat Penelaahan</span>
         </p>
-        <h1 className='text-2xl font-bold text-navy-900'>Buat Penelaahan</h1>
-        
+        <h1 className='text-2xl font-bold '>Buat Penelaahan</h1>
+
         <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
           <div className='md:col-span-2 bg-white rounded-2xl border border-gray-100 p-8 shadow-sm flex flex-col justify-center'>
             <HorizontalBarChart

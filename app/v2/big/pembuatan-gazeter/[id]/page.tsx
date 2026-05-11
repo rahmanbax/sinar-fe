@@ -42,7 +42,7 @@ const GazeterDetailPage = () => {
             header: 'Aksi',
             cell: () => (
                 <button className="p-1 hover:bg-gray-100 rounded transition cursor-pointer">
-                    <Search size={18} className="text-navy-900" />
+                    <Search size={18} className="" />
                 </button>
             ),
             className: 'w-16 text-center'
@@ -52,7 +52,7 @@ const GazeterDetailPage = () => {
     return (
         <DashboardLayout>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                <h1 className="text-2xl font-bold text-navy-900">Pembuatan GRI</h1>
+                <h1 className="text-2xl font-bold ">Pembuatan GRI</h1>
                 <ButtonComponent
                     label="Buat Gazeter"
                     icon={<Plus size={18} />}
@@ -61,13 +61,13 @@ const GazeterDetailPage = () => {
             </div>
 
             <div className="flex items-center gap-3 mb-6">
-                <button 
+                <button
                     onClick={() => router.back()}
                     className="p-1 hover:bg-gray-100 rounded-full transition cursor-pointer"
                 >
-                    <ChevronLeft size={24} className="text-navy-900" />
+                    <ChevronLeft size={24} className="" />
                 </button>
-                <h2 className="text-lg font-bold text-navy-900">Gazeter Republic Indonesia 2025</h2>
+                <h2 className="text-lg font-bold ">Gazeter Republic Indonesia 2025</h2>
             </div>
 
             <div className="bg-white rounded-xl border border-gray-200 p-2 md:p-4">

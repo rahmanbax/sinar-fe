@@ -41,7 +41,7 @@ const SurveyorNav = ({ isOpen = false, onClose }: SurveyorNavProps) => {
         <>
             {/* Mobile Backdrop */}
             {isOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/50 z-40 md:hidden"
                     onClick={onClose}
                 />
@@ -67,33 +67,33 @@ const SurveyorNav = ({ isOpen = false, onClose }: SurveyorNavProps) => {
                     </button>
                 </div>
 
-            {/* Navigation Links */}
-            <nav className="flex flex-col gap-2 m-4 space-y-1">
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href || (item.href !== '/v2/surveyor' && pathname.startsWith(item.href));
-                    const Icon = item.icon;
+                {/* Navigation Links */}
+                <nav className="flex flex-col gap-2 m-4 space-y-1">
+                    {navItems.map((item) => {
+                        const isActive = pathname === item.href || (item.href !== '/v2/surveyor' && pathname.startsWith(item.href));
+                        const Icon = item.icon;
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => onClose?.()}
-                            className={`flex items-center transition-colors p-3 gap-2 font-semibold ${isActive
-                                ? 'bg-slate-200/50 border-l-4 border-navy-800 text-navy-900 rounded-lg'
-                                : 'border-l-4 border-transparent text-gray-600 hover:bg-gray-100 rounded-lg'
-                                }`}
-                        >
-                            <Icon
-                                size={20}
-                                className={isActive ? 'text-navy-800' : 'text-gray-500'}
-                                strokeWidth={isActive ? 2.5 : 2}
-                            />
-                            <span className="text-sm">{item.name}</span>
-                        </Link>
-                    )
-                })}
-            </nav>
-        </aside>
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => onClose?.()}
+                                className={`flex items-center transition-colors p-3 gap-2 font-semibold ${isActive
+                                    ? 'bg-slate-200/50 border-l-4 border-navy-500 text-navy-500 rounded-lg'
+                                    : 'border-l-4 border-transparent text-gray-600 hover:bg-gray-100 rounded-lg'
+                                    }`}
+                            >
+                                <Icon
+                                    size={20}
+                                    className={isActive ? 'text-navy-500' : 'text-gray-500'}
+                                    strokeWidth={isActive ? 2.5 : 2.5}
+                                />
+                                <span className="text-sm">{item.name}</span>
+                            </Link>
+                        )
+                    })}
+                </nav>
+            </aside>
         </>
     )
 }

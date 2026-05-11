@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Database, Users, User, X } from 'lucide-react';
+import { LayoutGrid, Database, Users, User, X, Map, FileCheck } from 'lucide-react';
 
 const navItems = [
     {
@@ -20,12 +20,12 @@ const navItems = [
     {
         name: 'Data Kabupaten/ Kota',
         href: '/v2/verifikator-provinsi/data-kabupaten-kota',
-        icon: Database,
+        icon: Map,
     },
     {
         name: 'Data Rekomendasi',
         href: '/v2/verifikator-provinsi/data-rekomendasi',
-        icon: Database,
+        icon: FileCheck,
     },
     // {
     //     name: 'Akun',
@@ -51,7 +51,7 @@ const VerifikatorProvinsiNav = ({ isOpen = false, onClose }: VerifikatorProvinsi
         <>
             {/* Mobile Backdrop */}
             {isOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/50 z-40 md:hidden"
                     onClick={onClose}
                 />
@@ -81,8 +81,8 @@ const VerifikatorProvinsiNav = ({ isOpen = false, onClose }: VerifikatorProvinsi
                 <nav className="flex flex-col gap-2 m-4 space-y-1">
                     {navItems.map((item) => {
                         // Logic to prevent dashboard showing as active on all sub-pages
-                        const isActive = item.href === '/v2/verifikator-provinsi' 
-                            ? pathname === item.href 
+                        const isActive = item.href === '/v2/verifikator-provinsi'
+                            ? pathname === item.href
                             : pathname.startsWith(item.href);
                         const Icon = item.icon;
 
@@ -92,14 +92,14 @@ const VerifikatorProvinsiNav = ({ isOpen = false, onClose }: VerifikatorProvinsi
                                 href={item.href}
                                 onClick={() => onClose?.()}
                                 className={`flex items-center transition-colors p-3 gap-2 font-semibold ${isActive
-                                    ? 'bg-slate-200/50 border-l-4 border-navy-800 text-navy-900 rounded-lg'
+                                    ? 'bg-slate-200/50 border-l-4 border-navy-500 text-navy-500 rounded-lg'
                                     : 'border-l-4 border-transparent text-gray-600 hover:bg-gray-100 rounded-lg'
                                     }`}
                             >
                                 <Icon
                                     size={20}
-                                    className={isActive ? 'text-navy-800' : 'text-gray-500'}
-                                    strokeWidth={isActive ? 2.5 : 2}
+                                    className={isActive ? 'text-navy-500' : 'text-gray-500'}
+                                    strokeWidth={isActive ? 2.5 : 2.5}
                                 />
                                 <span className="text-sm">{item.name}</span>
                             </Link>

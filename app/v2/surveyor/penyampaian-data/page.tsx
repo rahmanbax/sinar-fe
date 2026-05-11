@@ -43,7 +43,7 @@ const DataDeliveryPage = () => {
             cell: () => (
                 <div className="flex justify-center">
                     <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors group">
-                        <Search size={16} className="text-gray-400 group-hover:text-navy-900 transition-colors" />
+                        <Search size={16} className="text-gray-400 group-hover: transition-colors" />
                     </button>
                 </div>
             )
@@ -53,7 +53,7 @@ const DataDeliveryPage = () => {
     return (
         <DashboardLayout>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10">
-                <h1 className="text-2xl font-bold text-navy-900">Data Saya</h1>
+                <h1 className="text-2xl font-bold ">Data Saya</h1>
                 <Link href="/v2/surveyor/penyampaian-data/buat">
                     <ButtonComponent
                         label="Buat Penyampaian Data"

@@ -8,6 +8,7 @@ import Link from 'next/link';
 import React, { useState, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyTeams } from '@/hooks/usePersonal';
+import { formatInstansiName, formatRoleName } from '@/utils/formatters';
 
 interface TeamMember {
     no: number;
@@ -40,10 +41,12 @@ const columns: ColumnDef<TeamMember>[] = [
     {
         header: 'Role',
         accessorKey: 'role',
+        cell: (row) => formatRoleName(row.role),
     },
     {
         header: 'Instansi',
         accessorKey: 'organisasi',
+        cell: (row) => formatInstansiName(row.organisasi),
     },
 ];
 

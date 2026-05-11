@@ -234,15 +234,15 @@ const CetakBeritaAcaraForm = ({ backPath, redirectAfterSubmit }: CetakBeritaAcar
         <div className="flex flex-col gap-6">
             {/* Breadcrumbs Placeholder */}
             <div className="text-sm text-gray-500 flex items-center gap-2">
-                <Link href={backPath.includes('verifikator-provinsi') ? '/v2/verifikator-provinsi' : '/v2/verifikator-kota'} className="hover:text-navy-900 transition-colors">Dashboard</Link>
+                <Link href={backPath.includes('verifikator-provinsi') ? '/v2/verifikator-provinsi' : '/v2/verifikator-kota'} className="hover: transition-colors">Dashboard</Link>
                 <span>/</span>
-                <Link href={backPath} className="hover:text-navy-900 transition-colors">Data Penelaahan</Link>
+                <Link href={backPath} className="hover: transition-colors">Data Penelaahan</Link>
                 <span>/</span>
-                <span className="text-navy-900 font-bold">Cetak Berita Acara</span>
+                <span className=" font-bold">Cetak Berita Acara</span>
             </div>
 
             <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-navy-900">Cetak Berita Acara</h1>
+                <h1 className="text-2xl font-bold ">Cetak Berita Acara</h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -308,7 +308,7 @@ const CetakBeritaAcaraForm = ({ backPath, redirectAfterSubmit }: CetakBeritaAcar
                 {/* Right Side - Preview */}
                 <div className="lg:col-span-7 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-bold text-navy-900">Pratinjau Dokumen</h2>
+                        <h2 className="text-lg font-bold ">Pratinjau Dokumen</h2>
                         <button
                             onClick={() => setShowFullPreview(true)}
                             className="text-sm font-bold text-navy-600 flex items-center gap-2 hover:underline"
@@ -343,7 +343,7 @@ const CetakBeritaAcaraForm = ({ backPath, redirectAfterSubmit }: CetakBeritaAcar
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 md:p-8">
                     <Card className="relative w-full h-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border-none">
                         <div className="flex items-center justify-between p-4 border-b">
-                            <h3 className="font-bold text-lg text-navy-900">Pratinjau Berita Acara</h3>
+                            <h3 className="font-bold text-lg ">Pratinjau Berita Acara</h3>
                             <button onClick={() => setShowFullPreview(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                 <X size={24} />
                             </button>

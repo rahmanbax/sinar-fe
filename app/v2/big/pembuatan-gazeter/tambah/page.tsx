@@ -52,15 +52,15 @@ const BuatGazeterPage = () => {
             <div className="max-w-6xl mx-auto py-4">
                 {/* Breadcrumb */}
                 <div className="flex items-center gap-2 text-sm text-gray-400 mb-8">
-                    <Link href="/v2/big" className="hover:text-navy-900 transition-colors">Dashboard</Link>
+                    <Link href="/v2/big" className="hover: transition-colors">Dashboard</Link>
                     <span>/</span>
-                    <Link href="/v2/big/pembuatan-gazeter" className="hover:text-navy-900 transition-colors">Pembuatan GRI </Link>
+                    <Link href="/v2/big/pembuatan-gazeter" className="hover: transition-colors">Pembuatan GRI </Link>
                     <span>/</span>
                     <span className="text-gray-600">Buat Gazeter</span>
                 </div>
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <h1 className="text-3xl font-bold text-navy-900">Buat Gazeter</h1>
+                    <h1 className="text-3xl font-bold ">Buat Gazeter</h1>
                 </div>
 
                 {/* Stepper */}
@@ -94,10 +94,10 @@ const BuatGazeterPage = () => {
                                 icon={<Camera size={24} className="text-gray-400" />}
                                 instructions="Klik untuk unggah Foto"
                             />
-                            
+
                             <div className="flex items-center gap-4 pt-4">
                                 <Link href="/v2/big/pembuatan-gazeter" className="flex-1">
-                                    <button className="w-full py-3 border border-navy-900 text-navy-900 font-bold rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                                    <button className="w-full py-3 border border-navy-900  font-bold rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
                                         Batalkan
                                     </button>
                                 </Link>
@@ -121,7 +121,7 @@ const BuatGazeterPage = () => {
 
                         {/* Form Section */}
                         <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
-                            <h3 className="text-lg font-bold text-navy-900 mb-6">Gazeter Republik Indonesia 2026</h3>
+                            <h3 className="text-lg font-bold  mb-6">Gazeter Republik Indonesia 2026</h3>
                             <div className="space-y-6">
                                 <DropdownInput
                                     label="Jenis Unsur"
@@ -157,12 +157,12 @@ const BuatGazeterPage = () => {
                                 <div className="flex items-center gap-4 pt-4">
                                     <button
                                         onClick={handlePrev}
-                                        className="flex-1 py-3 border border-navy-900 text-navy-900 font-bold rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                                        className="flex-1 py-3 border border-navy-900  font-bold rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                                     >
                                         Sebelumnya
                                     </button>
                                     <button
-                                        onClick={() => {}}
+                                        onClick={() => { }}
                                         className="flex-1 py-3 bg-navy-900 text-white font-bold rounded-lg hover:bg-navy-800 transition-colors cursor-pointer"
                                     >
                                         Buat Gazeter
@@ -180,9 +180,9 @@ const BuatGazeterPage = () => {
 const CandidateCard = ({ title, items, icon }: { title: string; items: { name: string; count: number }[]; icon: React.ReactNode }) => (
     <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-bold text-navy-900">{title}</h3>
+            <h3 className="text-sm font-bold ">{title}</h3>
             <div className="flex gap-2">
-                <div className="p-1 bg-navy-50 text-navy-900 rounded">{icon}</div>
+                <div className="p-1 bg-navy-50  rounded">{icon}</div>
                 <div className="p-1 bg-gray-50 text-gray-400 rounded"><LayoutGrid size={16} /></div>
             </div>
         </div>
@@ -190,7 +190,7 @@ const CandidateCard = ({ title, items, icon }: { title: string; items: { name: s
             {items.map((item, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50/50 rounded-lg border border-gray-50">
                     <span className="text-sm font-medium text-gray-700">{item.name}</span>
-                    <span className="text-sm font-bold text-navy-900">{item.count}</span>
+                    <span className="text-sm font-bold ">{item.count}</span>
                 </div>
             ))}
         </div>
@@ -199,8 +199,8 @@ const CandidateCard = ({ title, items, icon }: { title: string; items: { name: s
 
 const PlusIcon = () => (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9 3.75V14.25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M3.75 9H14.25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 3.75V14.25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3.75 9H14.25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
 

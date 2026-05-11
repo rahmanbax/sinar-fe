@@ -15,13 +15,13 @@ const DetailRekomendasiContent = () => {
     const searchParams = useSearchParams();
     const id = searchParams.get("id") || "";
     const { token } = useAuth();
-    
+
     const { data: response, isLoading } = useOutgoingRecommendationData(token, id);
-    
+
     // Metadata rekomendasi ada di key "0" berdasarkan struktur API
-    const recommendationInfo = response?.recommendation || 
-                               (Array.isArray((response as any)?.["0"]) ? (response as any)?.["0"]?.[0] : ((response as any)?.["0"]?.recommendation || (response as any)?.["0"])) || 
-                               null;
+    const recommendationInfo = response?.recommendation ||
+        (Array.isArray((response as any)?.["0"]) ? (response as any)?.["0"]?.[0] : ((response as any)?.["0"]?.recommendation || (response as any)?.["0"])) ||
+        null;
     const transactions = response?.data || [];
 
     const columns: ColumnDef<any>[] = [
@@ -44,7 +44,7 @@ const DetailRekomendasiContent = () => {
         {
             header: "Judul Penelaahan",
             cell: (row) => (
-                <div className="text-navy-900">{row.title || "-"}</div>
+                <div className="">{row.title || "-"}</div>
             ),
             className: "min-w-[200px]",
         },
@@ -127,7 +127,7 @@ const DetailRekomendasiContent = () => {
                     >
                         <ArrowLeft size={20} className="text-gray-900" />
                     </button>
-                    <h2 className="text-xl font-bold text-navy-900">
+                    <h2 className="text-xl font-bold ">
                         {isLoading ? "Memuat..." : (recommendationInfo?.ref_number || "-")}
                     </h2>
                 </div>

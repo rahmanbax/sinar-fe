@@ -4,15 +4,17 @@ import { Database } from 'lucide-react';
 import React from 'react'
 import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
 
 const VerifikatorProvinsiPage = () => {
+    const { user } = useAuth();
     return (
         <DashboardLayout>
             {/* Header Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-navy-900 mb-1">Halo, Ryan Doe</h1>
-                    <p className="text-gray-500 text-sm">Berikut adalah ringkasan data yang perlu ditelaah.</p>
+                    <h1 className="text-2xl font-bold mb-1">Halo, {user?.name}</h1>
+                    <p className="text-gray-500 text-sm">Berikut adalah ringkasan data yang telah anda kumpulkan.</p>
                 </div>
             </div>
 
@@ -28,11 +30,11 @@ const VerifikatorProvinsiPage = () => {
                     return (
                         <div key={index} className="bg-white p-5 rounded-xl border border-gray-200 flex items-start justify-between">
                             <div>
-                                <h3 className="text-2xl font-bold text-navy-900 mb-1">{stat.value}</h3>
+                                <h3 className="text-2xl font-bold  mb-1">{stat.value}</h3>
                                 <p className="text-[13px] text-gray-500 font-medium pr-2 leading-tight">{stat.label}</p>
                             </div>
                             <div className="p-2 bg-gray-50 rounded-lg shrink-0">
-                                <Icon size={20} className="text-navy-900" />
+                                <Icon size={20} className="" />
                             </div>
                         </div>
                     );
@@ -41,10 +43,10 @@ const VerifikatorProvinsiPage = () => {
 
             {/* Bottom Content Area */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
-                
+
                 {/* Horizontal Bar Chart (Jenis Unsur) */}
                 <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
-                    <h3 className="text-sm font-bold text-navy-900 mb-8">Jenis Unsur</h3>
+                    <h3 className="text-sm font-bold  mb-8">Jenis Unsur</h3>
 
                     <div className="space-y-6 flex-1 pr-6">
                         {[
@@ -77,7 +79,7 @@ const VerifikatorProvinsiPage = () => {
 
                 {/* Map Preview Area */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden min-h-[350px] relative">
-                   <MiniIndonesiaMap />
+                    <MiniIndonesiaMap />
                 </div>
             </div>
         </DashboardLayout>

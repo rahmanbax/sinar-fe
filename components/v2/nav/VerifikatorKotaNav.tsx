@@ -23,6 +23,11 @@ const navItems = [
         icon: Database,
     },
     {
+        name: 'Data Surveyor',
+        href: '/v2/verifikator-kota/data-surveyor',
+        icon: Database,
+    },
+    {
         name: 'Tim Saya',
         href: '/v2/verifikator-kota/tim-saya',
         icon: Users,

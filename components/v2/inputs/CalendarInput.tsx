@@ -26,16 +26,16 @@ const CalendarInput = ({ id, label, value, onChange, required = false, disabled 
                     value={value || ""}
                     onChange={onChange}
                     name={id}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-300 focus:border-transparent transition-all text-gray-700 
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-300 focus:border-transparent transition-all 
                     [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer 
-                    ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-70' : 'bg-white'}`}
+                    ${disabled ? 'bg-gray-100' : 'bg-white'}`}
                     required={required}
                     disabled={disabled}
                 />
                 {/* Custom Icon Overlay */}
                 <Calendar 
                     size={18} 
-                    className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${disabled ? 'text-gray-300' : 'text-gray-500'}`} 
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors text-gray-500`} 
                 />
             </div>
         </div>

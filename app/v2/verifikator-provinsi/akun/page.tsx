@@ -49,7 +49,7 @@ const AkunPage = () => {
             accessorKey: 'email',
         },
         {
-            header: 'No. Telepon WhatsApp',
+            header: 'No. Telepon',
             accessorKey: 'no_telp',
         },
         {
@@ -71,7 +71,7 @@ const AkunPage = () => {
             header: 'Aksi',
             cell: () => (
                 <div className="flex justify-center">
-                    <Search size={18} className="text-navy-900 cursor-pointer hover:text-navy-700 transition-colors" />
+                    <Search size={18} className=" cursor-pointer hover:text-navy-700 transition-colors" />
                 </div>
             ),
             className: 'w-20 text-center',

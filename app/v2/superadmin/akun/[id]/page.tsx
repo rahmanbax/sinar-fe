@@ -174,9 +174,9 @@ const DetailAkunPage = () => {
                                 Preview Dokumen
                             </label>
                             <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-6 flex flex-col items-center justify-center text-center gap-3">
-                                <FileText size={40} className="text-navy-900" />
+                                <FileText size={40} className="" />
                                 <p className="text-sm font-medium text-gray-700">Surat Permohonan Admin Kab/ Kota.pdf</p>
-                                <Link href="#" className="text-sm font-bold text-navy-600 hover:text-navy-800 underline">
+                                <Link href="#" className="text-sm font-bold text-navy-500 underline">
                                     Lihat
                                 </Link>
                             </div>

@@ -18,18 +18,18 @@ const TransactionToponymsContent = () => {
     const transactionTitle = searchParams.get("transactionTitle") || "Detail Transaksi";
     const rekomendasiId = searchParams.get("rekomendasiId") || "";
     const refNumber = searchParams.get("refNumber") || transactionId;
-    
+
     const { token } = useAuth();
-    
+
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
-    
+
     const { data: response, isLoading } = useVerificationTransactionToponyms(
-        token, 
-        transactionId, 
+        token,
+        transactionId,
         { page, per_page: perPage }
     );
-    
+
     const toponyms = response?.data || [];
     const pagination = response?.pagination;
 
@@ -48,15 +48,15 @@ const TransactionToponymsContent = () => {
 
     const mappedData = useMemo(() => {
         return toponyms.map((item: any, index: number) => {
-            const coordinate = item.location_point?.coordinates 
+            const coordinate = item.location_point?.coordinates
                 ? `${item.location_point.coordinates[0].toFixed(5)}, ${item.location_point.coordinates[1].toFixed(5)}`
                 : "-";
-                
+
             let assignedTo = "-";
             if (item.review_transaction_toponyms && item.review_transaction_toponyms.length > 0) {
                 assignedTo = item.review_transaction_toponyms[0].user?.name || "-";
             }
-                
+
             return {
                 ...item,
                 no: index + 1 + (page - 1) * perPage,
@@ -96,7 +96,7 @@ const TransactionToponymsContent = () => {
                     >
                         <Search
                             size={18}
-                            className="text-navy-900"
+                            className=""
                             strokeWidth={3}
                         />
                     </button>

@@ -175,10 +175,12 @@ const DetailDataPage = () => {
         )
     }
 
+    const isReadOnly = response.data.status === 'penelaahan' || response.data.status === 'ditolak';
+
     return (
         <DashboardLayout showNav={false} tightMargin={true}>
             <ToponymDetailLayout 
-                mode='edit' 
+                mode={isReadOnly ? 'detail' : 'edit'} 
                 initialData={response.data} 
                 onSubmitAction={handleSubmit}
                 isSubmitting={isPending || isUploading}

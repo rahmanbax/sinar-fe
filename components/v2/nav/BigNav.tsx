@@ -80,8 +80,8 @@ const BigNav = ({ isOpen = false, onClose }: BigNavProps) => {
                 {/* Navigation Links */}
                 <nav className="flex flex-col gap-2 m-4 space-y-1">
                     {navItems.map((item) => {
-                        const isActive = item.href === '/v2/big' 
-                            ? pathname === item.href 
+                        const isActive = item.href === '/v2/big'
+                            ? pathname === item.href
                             : pathname.startsWith(item.href);
                         const Icon = item.icon;
 
@@ -91,14 +91,14 @@ const BigNav = ({ isOpen = false, onClose }: BigNavProps) => {
                                 href={item.href}
                                 onClick={() => onClose?.()}
                                 className={`flex items-center transition-colors p-3 gap-2 font-semibold ${isActive
-                                    ? 'bg-slate-200/50 border-l-4 border-navy-800 text-navy-900 rounded-lg'
+                                    ? 'bg-slate-200/50 border-l-4 border-navy-500 text-navy-500 rounded-lg'
                                     : 'border-l-4 border-transparent text-gray-600 hover:bg-gray-100 rounded-lg'
                                     }`}
                             >
                                 <Icon
                                     size={20}
-                                    className={isActive ? 'text-navy-800' : 'text-gray-500'}
-                                    strokeWidth={isActive ? 2.5 : 2}
+                                    className={isActive ? 'text-navy-500' : 'text-gray-500'}
+                                    strokeWidth={isActive ? 2.5 : 2.5}
                                 />
                                 <span className="text-sm">{item.name}</span>
                             </Link>

@@ -10,7 +10,7 @@ import { useVerificationCandidates } from '@/hooks/useVerification';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
 const VerifikatorKotaPage = () => {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const { data: candidatesRes, isLoading } = useVerificationCandidates(token);
 
     const chartData = useMemo(() => {
@@ -29,14 +29,9 @@ const VerifikatorKotaPage = () => {
             {/* Header Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-navy-900 mb-1">Halo, John Doe</h1>
+                    <h1 className="text-2xl font-bold mb-1">Halo, {user?.name}</h1>
                     <p className="text-gray-500 text-sm">Berikut adalah ringkasan data yang telah anda kumpulkan.</p>
                 </div>
-                <ButtonComponent
-                    label="Buat Penelaahan"
-                    onClick={() => { }}
-                    icon={<Plus size={16} />}
-                />
             </div>
 
             {/* Stats Cards */}
@@ -51,11 +46,11 @@ const VerifikatorKotaPage = () => {
                     return (
                         <div key={index} className="bg-white p-5 rounded-xl border border-gray-200 flex items-start justify-between">
                             <div>
-                                <h3 className="text-2xl font-bold text-navy-900 mb-1">{stat.value}</h3>
+                                <h3 className="text-2xl font-bold  mb-1">{stat.value}</h3>
                                 <p className="text-[13px] text-gray-500 font-medium pr-4 leading-tight">{stat.label}</p>
                             </div>
                             <div className="p-2 bg-gray-50 rounded-lg shrink-0">
-                                <Icon size={20} className="text-navy-900" />
+                                <Icon size={20} className="" />
                             </div>
                         </div>
                     );

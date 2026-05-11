@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Map, Marker, type ViewState } from '@vis.gl/react-maplibre';
+import { useState, useRef } from "react";
+import { Map, Marker, type ViewState, MapRef } from '@vis.gl/react-maplibre';
 import { MapPin } from 'lucide-react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -33,10 +33,12 @@ const MiniIndonesiaMap = ({ markers = [] }: MiniIndonesiaMapProps) => {
 
     const [viewState, setViewState] = useState(initialViewState);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+    const mapRef = useRef<MapRef>(null);
 
     return (
         <div className="w-full h-full overflow-hidden relative">
             <Map
+                ref={mapRef}
                 {...viewState}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={mapStyleUrl}
@@ -53,9 +55,17 @@ const MiniIndonesiaMap = ({ markers = [] }: MiniIndonesiaMapProps) => {
                         latitude={marker.latitude}
                     >
                         <div
-                            className="relative cursor-pointer"
+                            className="relative cursor-pointer transition-transform hover:scale-110"
                             onMouseEnter={() => setHoveredIndex(index)}
                             onMouseLeave={() => setHoveredIndex(null)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                mapRef.current?.flyTo({
+                                    center: [marker.longitude, marker.latitude],
+                                    zoom: 12,
+                                    duration: 1200 // smooth 1.2 second animation
+                                });
+                            }}
                         >
                             {hoveredIndex === index && marker.label && (
                                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-white text-gray-800 text-xs font-bold rounded shadow-lg whitespace-nowrap border border-gray-200 pointer-events-none z-50">

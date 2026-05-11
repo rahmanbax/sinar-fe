@@ -41,7 +41,7 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 border-b border-gray-50 bg-white sticky top-0 z-10">
-                        <h2 className="text-base font-bold text-navy-900 truncate pr-4 w-full">
+                        <h2 className="text-base font-bold  truncate pr-4 w-full">
                             {isLoading ? (
                                 <div className="h-5 bg-gray-200 rounded-md w-3/4 animate-pulse"></div>
                             ) : toponym?.map_name || "Detail Toponim"}

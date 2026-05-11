@@ -158,7 +158,7 @@ const MyDataPage = () => {
             cell: (row) => (
                 <div className="flex items-center justify-center">
                     <button
-                        onClick={() => router.push(`/v2/surveyor/data-saya/detail/${row.id}`)}
+                        onClick={() => router.push(`/v2/surveyor/data-saya/${row.id}`)}
                         className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
                         title="Lihat Detail"
                     >
@@ -189,7 +189,6 @@ const MyDataPage = () => {
                 isLoading={loading}
                 showSearch={true}
                 showFilter={true}
-                showDownload={true}
                 showMap={true}
                 onSearch={(val) => {
                     setSearch(val);

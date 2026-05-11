@@ -60,7 +60,7 @@ const DataKabupatenKotaPage = () => {
             header: "Status",
             cell: (row) => {
                 const statusLower = (row.status || "").toLowerCase();
-                
+
                 const isSelesai = statusLower === "sesuai" || statusLower === "selesai" || statusLower === "completed";
                 const isDitolak = statusLower === "tidak sesuai" || statusLower === "ditolak" || statusLower === "rejected";
                 const isButuh = !isSelesai && !isDitolak;
@@ -68,16 +68,15 @@ const DataKabupatenKotaPage = () => {
                 let displayStatus = "Butuh Rekomendasi";
                 if (isSelesai) displayStatus = "Sesuai";
                 if (isDitolak) displayStatus = "Tidak Sesuai";
-                
+
                 return (
                     <div className="flex justify-center">
-                        <span className={`px-4 py-1 rounded-full text-xs font-semibold ${
-                            isSelesai 
-                            ? "bg-green-50 text-green-500 border border-green-100" 
-                            : isDitolak
-                            ? "bg-red-50 text-red-500 border border-red-100"
-                            : "bg-gray-50 text-gray-500 border border-gray-200"
-                        }`}>
+                        <span className={`px-4 py-1 rounded-full text-xs font-semibold ${isSelesai
+                                ? "bg-green-50 text-green-500 border border-green-100"
+                                : isDitolak
+                                    ? "bg-red-50 text-red-500 border border-red-100"
+                                    : "bg-gray-50 text-gray-500 border border-gray-200"
+                            }`}>
                             {displayStatus}
                         </span>
                     </div>
@@ -89,9 +88,9 @@ const DataKabupatenKotaPage = () => {
             header: "Aksi",
             cell: (row) => (
                 <div className="flex justify-center">
-                    <Link 
+                    <Link
                         href={`/v2/verifikator-provinsi/data-kabupaten-kota/${row.id}`}
-                        className="p-1.5 hover:bg-gray-100 rounded transition-colors text-navy-900"
+                        className="p-1.5 hover:bg-gray-100 rounded transition-colors "
                     >
                         <Search size={18} strokeWidth={3} />
                     </Link>
@@ -105,7 +104,7 @@ const DataKabupatenKotaPage = () => {
         <DashboardLayout>
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-bold text-navy-900">Data Kabupaten/ Kota</h1>
+                    <h1 className="text-2xl font-bold ">Data Kabupaten/ Kota</h1>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-none">

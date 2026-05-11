@@ -17,7 +17,7 @@ interface GazeterData {
 
 const PembuatanGazeterPage = () => {
     const router = useRouter();
-    
+
     const dummyData: GazeterData[] = [
         { no: 1, judul: 'Gazeter Republik Indonesia 2025', edisi: '3', totalData: 1000, tanggalPenerbitan: '01/01/2026' },
         { no: 2, judul: 'Gazeter Republik Indonesia 2025', edisi: '2', totalData: 1000, tanggalPenerbitan: '01/07/2026' },
@@ -40,11 +40,11 @@ const PembuatanGazeterPage = () => {
         {
             header: 'Aksi',
             cell: (row) => (
-                <button 
+                <button
                     onClick={() => router.push(`/v2/big/pembuatan-gazeter/${row.no}`)}
                     className="p-1 hover:bg-gray-100 rounded transition cursor-pointer"
                 >
-                    <Search size={18} className="text-navy-900" />
+                    <Search size={18} className="" />
                 </button>
             ),
             className: 'w-16 text-center'
@@ -54,7 +54,7 @@ const PembuatanGazeterPage = () => {
     return (
         <DashboardLayout>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                <h1 className="text-2xl font-bold text-navy-900">Pembuatan GRI</h1>
+                <h1 className="text-2xl font-bold ">Pembuatan GRI</h1>
                 <ButtonComponent
                     label="Buat Gazeter"
                     icon={<Plus size={18} />}

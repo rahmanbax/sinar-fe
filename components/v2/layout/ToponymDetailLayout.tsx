@@ -506,13 +506,14 @@ const ToponymDetailLayout = ({
               value={formData.elemenSpesifik}
               onChange={(e) => setFieldValue('elemenSpesifik', e.target.value)}
               required={true}
+              disabled={isReadOnly}
             />
             <TextInput
               id='nama-rupabumi'
               label="Nama Rupabumi"
               value={formData.namaRupabumi}
               onChange={(e) => setFieldValue('namaRupabumi', e.target.value)}
-              disabled
+              disabled={isReadOnly || true}
             />
             <TextInput
               id='nama-lokal'
@@ -520,6 +521,7 @@ const ToponymDetailLayout = ({
               value={formData.namaLokal}
               onChange={(e) => setFieldValue('namaLokal', e.target.value)}
               required={true}
+              disabled={isReadOnly}
             />
             <TextInput
               id='nama-lain'
@@ -527,6 +529,7 @@ const ToponymDetailLayout = ({
               value={formData.namaLain}
               onChange={(e) => setFieldValue('namaLain', e.target.value)}
               required={true}
+              disabled={isReadOnly}
             />
             <TextInput
               id='asal-bahasa'
@@ -534,6 +537,7 @@ const ToponymDetailLayout = ({
               value={formData.asalBahasa}
               onChange={(e) => setFieldValue('asalBahasa', e.target.value)}
               required={true}
+              disabled={isReadOnly}
             />
             <TextInput
               id='arti-nama'
@@ -541,6 +545,7 @@ const ToponymDetailLayout = ({
               value={formData.artiNama}
               onChange={(e) => setFieldValue('artiNama', e.target.value)}
               required={true}
+              disabled={isReadOnly}
             />
             <TextBoxInput
               id='sejarah-nama'
@@ -548,6 +553,7 @@ const ToponymDetailLayout = ({
               value={formData.sejarahNama}
               onChange={(e) => setFieldValue('sejarahNama', e.target.value)}
               required={true}
+              disabled={isReadOnly}
             />
             <TextInput
               id='pelafalan'
@@ -555,6 +561,7 @@ const ToponymDetailLayout = ({
               value={formData.pelafalan}
               onChange={(e) => setFieldValue('pelafalan', e.target.value)}
               required={true}
+              disabled={isReadOnly}
             />
             <TextInput
               id='ejaan'
@@ -562,6 +569,7 @@ const ToponymDetailLayout = ({
               value={formData.ejaan}
               onChange={(e) => setFieldValue('ejaan', e.target.value)}
               required={true}
+              disabled={isReadOnly}
             />
             <DropdownInput
               label="Jenis Unsur"
@@ -642,6 +650,7 @@ const ToponymDetailLayout = ({
               value={formData.tanggalSurvey}
               onChange={(e) => setFieldValue('tanggalSurvey', e.target.value)}
               required={true}
+              disabled={isReadOnly}
             />
             <FileInput
               id='foto'
@@ -652,6 +661,7 @@ const ToponymDetailLayout = ({
               maxSizeMB={5}
               icon={<Camera size={20} className='text-gray-500' />}
               initialUrl={formData.fotoUrl}
+              disabled={isReadOnly}
             />
             <FileInput
               id='sketsa-lokasi'
@@ -661,6 +671,7 @@ const ToponymDetailLayout = ({
               maxSizeMB={5}
               icon={<MapPin size={20} className='text-gray-500' />}
               initialUrl={formData.sketsaLokasiUrl}
+              disabled={isReadOnly}
             />
             <FileInput
               id='rekaman-suara-pengucapan'
@@ -670,6 +681,7 @@ const ToponymDetailLayout = ({
               maxSizeMB={5}
               icon={<Mic size={20} className='text-gray-500' />}
               initialUrl={formData.rekamanSuaraPengucapanUrl}
+              disabled={isReadOnly}
             />
             <FileInput
               id='rekaman-audio-visual'
@@ -679,6 +691,7 @@ const ToponymDetailLayout = ({
               maxSizeMB={5}
               icon={<Camera size={20} className='text-gray-500' />}
               initialUrl={formData.rekamanAudioVisualUrl}
+              disabled={isReadOnly}
             />
             <FileInput
               id='dokumen-pendukung'
@@ -688,6 +701,7 @@ const ToponymDetailLayout = ({
               maxSizeMB={5}
               icon={<File size={20} className='text-gray-500' />}
               initialUrl={formData.dokumenPendukungUrl}
+              disabled={isReadOnly}
             />
           </fieldset>
           <div className="flex gap-3">

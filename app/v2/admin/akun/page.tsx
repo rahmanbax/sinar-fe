@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminUsers, useOrganizations } from '@/hooks/useAdmin';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 import FilterModal, { FilterField, FilterState } from '@/components/v2/modals/FilterModal';
+import { formatInstansiName, formatRoleName } from '@/utils/formatters';
 
 interface AdminAkunData {
     id: string;
@@ -29,7 +30,7 @@ const AdminAkunPage = () => {
     const [filters, setFilters] = useState<FilterState>({});
 
     const { data: usersResponse, isLoading, refetch } = useAdminUsers(token, page, search, filters.role, filters.instansi);
-    const [instansiOptions, setInstansiOptions] = useState<{label: string, value: string}[]>([]);
+    const [instansiOptions, setInstansiOptions] = useState<{ label: string, value: string }[]>([]);
 
     useEffect(() => {
         if (!usersResponse?.data) return;
@@ -59,7 +60,7 @@ const AdminAkunPage = () => {
             label: 'Role',
             options: [
                 { label: 'Semua Role', value: '' },
-                { label: 'Admin', value: 'admin' },
+                // { label: 'Admin', value: 'admin' },
                 { label: 'Verifikator', value: 'verificator' },
                 { label: 'Surveyor', value: 'surveyor' },
             ],
@@ -69,7 +70,7 @@ const AdminAkunPage = () => {
             label: 'Instansi',
             options: [
                 { label: 'Semua Instansi', value: '' },
-                ...instansiOptions
+                ...instansiOptions.map(opt => ({ ...opt, label: formatInstansiName(opt.label) }))
             ],
             searchable: true,
         },
@@ -122,16 +123,18 @@ const AdminAkunPage = () => {
             accessorKey: 'email',
         },
         {
-            header: 'No. Telepon WhatsApp',
+            header: 'No. Telepon',
             accessorKey: 'no_telp',
         },
         {
             header: 'Role',
             accessorKey: 'role',
+            cell: (row) => formatRoleName(row.role),
         },
         {
             header: 'Instansi',
             accessorKey: 'org_name',
+            cell: (row) => formatInstansiName(row.org_name),
         },
         {
             header: 'Status',

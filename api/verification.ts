@@ -84,6 +84,24 @@ export const getAllVerificationToponyms = async (token: string | null, params: {
     return response.json();
 };
 
+export const getVerificationsToponyms = async (token: string | null, params?: any) => {
+    if (!token) return { error: true, message: "No token provided" };
+    let url = `${API_URL}/verifications/toponyms`;
+    if (params) {
+        const cleanParams = Object.fromEntries(
+            Object.entries(params).filter(([_, v]) => v != null && v !== "")
+        );
+        const query = new URLSearchParams(cleanParams as any).toString();
+        if (query) url += `?${query}`;
+    }
+    const response = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    return response.json();
+};
+
 export const getVerificationTransactionToponyms = async (token: string | null, transactionId: string, params: { page: number; per_page: number }) => {
     if (!token) return { error: true, message: "No token provided" };
     const { page, per_page } = params;

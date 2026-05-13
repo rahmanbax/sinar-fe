@@ -10,6 +10,7 @@ import {
     getVerificationTransactionToponyms,
     getVerificationToponymDetail,
     getAllVerificationToponyms,
+    getVerificationsToponyms,
     finishVerificationTransaction,
 } from "@/api/verification";
 
@@ -17,6 +18,15 @@ export const useAllVerificationToponyms = (token: string | null, params: { page:
     return useQuery({
         queryKey: ["all-verification-toponyms", params],
         queryFn: () => getAllVerificationToponyms(token, params),
+        enabled: !!token,
+        retry: false,
+    });
+};
+
+export const useVerificationsToponyms = (token: string | null, params?: any) => {
+    return useQuery({
+        queryKey: ["verifications-toponyms", params],
+        queryFn: () => getVerificationsToponyms(token, params),
         enabled: !!token,
         retry: false,
     });

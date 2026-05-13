@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import MapModal from '@/components/v2/modals/MapModal';
 import { useProvinces, useCities, useElements } from '@/hooks/useRegions';
+import { useVerificationsToponyms } from '@/hooks/useVerification';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
  
 const getStatusBadgeV2 = (status: string) => {
@@ -44,26 +45,42 @@ const DataSurveyorPage = () => {
 
     const { token } = useAuth();
 
-    // --- Dummy Data for Table ---
-    const dummyData = useMemo(() => [
-        { id: 1, no: 1, created_at: "08/05/2026", survey_at: "07/05/2026", element_type: "Gunung", map_name: "Gunung Gede", province: "JAWA BARAT", regency: "KABUPATEN CIANJUR", status: "pengajuan" },
-        { id: 2, no: 2, created_at: "08/05/2026", survey_at: "06/05/2026", element_type: "Bukit", map_name: "Bukit Moko", province: "JAWA BARAT", regency: "KABUPATEN BANDUNG", status: "data survei" },
-        { id: 3, no: 3, created_at: "07/05/2026", survey_at: "05/05/2026", element_type: "Stadion", map_name: "Gelora Bandung Lautan Api", province: "JAWA BARAT", regency: "KOTA BANDUNG", status: "baku" },
-        { id: 4, no: 4, created_at: "06/05/2026", survey_at: "04/05/2026", element_type: "Candi", map_name: "Candi Prambanan", province: "DI YOGYAKARTA", regency: "KABUPATEN SLEMAN", status: "baku" },
-        { id: 5, no: 5, created_at: "05/05/2026", survey_at: "03/05/2026", element_type: "Laut", map_name: "Laut Jawa", province: "JAWA BARAT", regency: "KOTA CIREBON", status: "penelaahan kabupaten/kota" },
-    ], []);
-
-    const mapMarkers = useMemo(() => [
-        { longitude: 107.037, latitude: -6.743, color: '#DEB43F', label: "Gunung Gede" },
-        { longitude: 107.683, latitude: -6.848, color: '#DEB43F', label: "Bukit Moko" },
-        { longitude: 107.751, latitude: -6.957, color: '#053378', label: "Gelora Bandung Lautan Api" },
-        { longitude: 110.491, latitude: -7.752, color: '#053378', label: "Candi Prambanan" },
-        { longitude: 108.572, latitude: -6.706, color: '#64748b', label: "Laut Jawa" },
-    ], []);
-
     // --- TanStack Query hooks for filter options ---
     const { data: provincesData } = useProvinces(token);
     const { data: elementsData } = useElements(token);
+
+    const { data: toponymsResponse, isLoading } = useVerificationsToponyms(token, {
+        page,
+        per_page: 10,
+        search,
+        element_id: filters?.jenisUnsur,
+        province_id: filters?.provinsi,
+        regency_id: filters?.kabupaten,
+        status: filters?.status,
+    });
+
+    const toponyms = useMemo(() => {
+        return (toponymsResponse?.data ?? []).map((item: any, index: number) => ({
+            ...item,
+            no: (page - 1) * 10 + index + 1,
+            created_at: item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : "-",
+            survey_at: item.survey_at ? new Date(item.survey_at).toLocaleDateString('id-ID') : "-",
+            element_type: item.element?.name || "-",
+            regency: item.regency?.name || "-",
+            province: item.province?.name || "-",
+        }));
+    }, [toponymsResponse, page]);
+
+    const mapMarkers = useMemo(() => {
+        return (toponymsResponse?.data ?? [])
+            .filter((item: any) => item.location_point?.coordinates)
+            .map((item: any) => ({
+                longitude: item.location_point.coordinates[0],
+                latitude: item.location_point.coordinates[1],
+                color: item.status === 'baku' ? '#10b981' : '#f59e0b',
+                label: item.map_name || item.local_name || "Tanpa Nama"
+            }));
+    }, [toponymsResponse]);
 
     const provinces = useMemo(() =>
         (provincesData?.data ?? []).map((p) => ({
@@ -134,25 +151,26 @@ const DataSurveyorPage = () => {
 
             <DataTable
                 columns={columns}
-                data={dummyData}
-                isLoading={false}
+                data={toponyms}
+                isLoading={isLoading}
                 showSearch={true}
                 showFilter={true}
                 showDownload={true}
                 showMap={true}
                 onSearch={(val) => {
                     setSearch(val);
+                    setPage(1);
                 }}
                 onFilter={() => setIsFilterOpen(true)}
                 onDownload={() => alert("Fitur unduh segera hadir!")}
                 onMap={() => setIsMapOpen(true)}
-                pagination={{
-                    total: 5,
+                pagination={toponymsResponse?.pagination || {
+                    total: 0,
                     per_page: 10,
                     current_page: 1,
                     last_page: 1,
-                    from: 1,
-                    to: 5
+                    from: 0,
+                    to: 0
                 }}
                 onPageChange={(p) => setPage(p)}
             />

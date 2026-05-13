@@ -6,16 +6,12 @@ import FileInput from '@/components/v2/inputs/FileInput'
 import PasswordInput from '@/components/v2/inputs/PasswordInput'
 import TextInput from '@/components/v2/inputs/TextInput'
 import PublicLayout from '@/components/v2/nav/PublicLayout'
-import React, { useMemo, Suspense } from 'react'
-import { useOrganizations } from '@/hooks/useAdmin'
+import React, { Suspense } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { useRegisterAdminMutation } from '@/hooks/useAuth'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 type AdminRegistrationFormData = {
-  instansi: string;
-  provinsi: string;
-  kabupaten: string;
   noTelepon: string;
   emailInstansi: string;
   nama: string;
@@ -32,9 +28,6 @@ const DaftarAkunAdminForm = () => {
 
   const { control, handleSubmit, watch, formState: { errors } } = useForm<AdminRegistrationFormData>({
     defaultValues: {
-      instansi: '',
-      provinsi: '',
-      kabupaten: '',
       noTelepon: '',
       emailInstansi: '',
       nama: '',
@@ -45,30 +38,7 @@ const DaftarAkunAdminForm = () => {
     }
   });
 
-  const instansi = watch('instansi');
 
-  const { data: provResponse } = useOrganizations('PROVINCE');
-  const { data: kabResponse } = useOrganizations('CITY');
-
-  const realProvinsiOptions = useMemo(() => {
-    return provResponse?.data?.map((org: any) => ({
-      label: org.region?.name || org.name,
-      value: String(org.id)
-    })) || [];
-  }, [provResponse]);
-
-  const realKabupatenOptions = useMemo(() => {
-    return kabResponse?.data?.map((org: any) => ({
-      label: org.region?.name || org.name,
-      value: String(org.id)
-    })) || [];
-  }, [kabResponse]);
-
-  const linkInstansiOptions = [
-    { label: 'Provinsi', value: 'admin_provinsi' },
-    { label: 'Kab/Kota', value: 'admin_kabkota' },
-    { label: 'BIG', value: 'big' }
-  ];
 
   const { mutate: registerAdmin, isPending } = useRegisterAdminMutation({
     onSuccess: () => {
@@ -90,21 +60,7 @@ const DaftarAkunAdminForm = () => {
       return;
     }
 
-    let finalOrgId = '';
-    if (data.instansi === 'admin_provinsi') {
-      finalOrgId = data.provinsi;
-    } else if (data.instansi === 'admin_kabkota') {
-      finalOrgId = data.kabupaten;
-    }
-
-    if (!finalOrgId) {
-      alert('Silakan pilih instansi dengan benar');
-      return;
-    }
-
     registerAdmin({
-      institution_type: data.instansi,
-      org_id: finalOrgId,
       name: data.nama,
       email: data.emailInstansi,
       phone: data.noTelepon,
@@ -122,59 +78,6 @@ const DaftarAkunAdminForm = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="bg-white shadow-sm rounded-lg p-6 max-w-xl mx-auto space-y-5">
           <h1 className='text-xl font-semibold'>Daftar Akun Admin</h1>
           <div className='space-y-4'>
-            <Controller
-              name="instansi"
-              control={control}
-              rules={{ required: true }}
-              render={({ field }) => (
-                <DropdownInput
-                  label='Instansi'
-                  placeholder='Pilih Instansi'
-                  onChange={field.onChange}
-                  value={field.value}
-                  options={linkInstansiOptions}
-                  required
-                />
-              )}
-            />
-
-            {instansi === 'admin_provinsi' && (
-              <Controller
-                name="provinsi"
-                control={control}
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <DropdownInput
-                    label='Provinsi'
-                    placeholder='Pilih Provinsi'
-                    onChange={field.onChange}
-                    value={field.value}
-                    options={realProvinsiOptions}
-                    searchable={true}
-                    required
-                  />
-                )}
-              />
-            )}
-
-            {instansi === 'admin_kabkota' && (
-              <Controller
-                name="kabupaten"
-                control={control}
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <DropdownInput
-                    label='Kabupaten/ Kota'
-                    placeholder='Pilih Kabupaten/ Kota'
-                    onChange={field.onChange}
-                    value={field.value}
-                    options={realKabupatenOptions}
-                    searchable={true}
-                    required
-                  />
-                )}
-              />
-            )}
 
             <Controller
               name="noTelepon"

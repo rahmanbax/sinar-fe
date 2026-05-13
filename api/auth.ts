@@ -59,8 +59,6 @@ export const getUserProfile = async (token: string) => {
 };
 
 export const registerAdmin = async (data: {
-    institution_type: string;
-    org_id: string;
     name: string;
     email: string;
     phone: string;
@@ -71,8 +69,6 @@ export const registerAdmin = async (data: {
     invite_token?: string | null;
 }) => {
     const formData = new FormData();
-    formData.append("institution_type", data.institution_type);
-    formData.append("org_id", data.org_id);
     formData.append("name", data.name);
     formData.append("email", data.email);
     formData.append("phone", data.phone);

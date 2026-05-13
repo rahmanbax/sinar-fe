@@ -51,8 +51,6 @@ export const useRegisterMutation = (
 };
 
 type RegisterAdminVariables = {
-    institution_type: string;
-    org_id: string;
     name: string;
     email: string;
     phone: string;

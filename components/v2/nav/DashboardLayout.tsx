@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import SurveyorNav from './SurveyorNav';
 import VerifikatorKotaNav from './VerifikatorKotaNav';
 import VerifikatorProvinsiNav from './VerifikatorProvinsiNav';
+import VerifikatorPusatNav from './VerifikatorPusatNav';
 import { ChevronDown, LogOut, Menu, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
@@ -36,6 +37,7 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
 
     const getProfileRoute = () => {
         if (user?.role === 'verificator') {
+            if (user?.level === 'NATIONAL') return 'verifikator-pusat';
             return (user?.level === 'PROVINCE')
                 ? 'verifikator-provinsi'
                 : 'verifikator-kota';
@@ -52,6 +54,7 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
         const regionName = formatRegionName(user?.region_name);
 
         if (user?.role === 'verificator') {
+            if (user?.level === 'NATIONAL') return 'Verifikator Pusat';
             return (user?.level === 'PROVINCE')
                 ? `Verifikator Provinsi ${regionName}`.trim()
                 : `Verifikator Kota ${regionName}`.trim();
@@ -78,7 +81,9 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
                         <SurveyorNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                     )}
                     {user?.role === 'verificator' && (
-                        (user?.level === 'PROVINCE') ? (
+                        (user?.level === 'NATIONAL') ? (
+                            <VerifikatorPusatNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+                        ) : (user?.level === 'PROVINCE') ? (
                             <VerifikatorProvinsiNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                         ) : (
                             <VerifikatorKotaNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />

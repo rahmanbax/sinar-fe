@@ -200,10 +200,15 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
     const filteredToponyms = useMemo(() => {
         // Since API doesn't have search, we filter locally for the current page
         if (!searchText) return toponyms;
-        return toponyms.filter((t: any) =>
-            t.name?.toLowerCase().includes(searchText.toLowerCase()) ||
-            t.element_name?.toLowerCase().includes(searchText.toLowerCase())
-        );
+        const s = searchText.toLowerCase();
+        return toponyms.filter((t: any) => {
+            const name = t.specific_element || t.map_name || t.local_name || t.name || "";
+            const element = t.element?.name || t.element_name || "";
+            const surveyor = t.creator?.name || t.surveyor_name || "";
+            return name.toLowerCase().includes(s) || 
+                   element.toLowerCase().includes(s) || 
+                   surveyor.toLowerCase().includes(s);
+        });
     }, [searchText, toponyms]);
 
     const transactionColumns: ColumnDef<any>[] = [
@@ -244,31 +249,44 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
     const toponymColumns: ColumnDef<any>[] = [
         { header: "No", cell: (_, idx) => (toponymPage - 1) * 10 + idx + 1, className: "w-12 text-center" },
         { header: "Tanggal", cell: (row) => row.created_at ? new Date(row.created_at).toLocaleDateString("id-ID") : "-", className: "w-32" },
-        { header: "Jenis Unsur", accessorKey: "element_name" },
-        { header: "Nama Rupabumi", accessorKey: "name", className: "font-bold" },
-        { header: "Surveyor", accessorKey: "surveyor_name" },
+        { header: "Jenis Unsur", cell: (row) => row.element?.name || row.element_name || "-" },
+        { header: "Nama Rupabumi", cell: (row) => row.specific_element || row.map_name || row.local_name || row.name || "-" },
+        { header: "Surveyor", cell: (row) => row.creator?.name || row.surveyor_name || "-" },
         {
-            header: "Status", cell: (row) => (
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${row.status_num === 1 ? 'bg-emerald-100 text-emerald-700' :
-                    row.status_num === 2 ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-700'
-                    }`}>
-                    {row.status_label || (row.status_num === 1 ? "Disetujui" : row.status_num === 2 ? "Ditolak" : "Belum Ditelaah")}
-                </span>
-            )
+            header: "Status", cell: (row) => {
+                // Provincial Verifier is level 3 or 4 usually. 
+                // We look for reviews from users with verification_permission_level >= 3
+                const provReview = row.review_transaction_toponyms?.find((r: any) => (r.user?.verification_permission_level || 0) >= 3);
+                
+                const statusLabel = row.status_label || (provReview ? (provReview.accepted ? "Disetujui" : "Ditolak") : "Belum Ditelaah");
+                const isAccepted = provReview ? provReview.accepted : (row.status_num === 1);
+                const isRejected = provReview ? !provReview.accepted : (row.status_num === 2);
+
+                return (
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${isAccepted ? 'bg-emerald-100 text-emerald-700' :
+                        isRejected ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-700'
+                        }`}>
+                        {statusLabel}
+                    </span>
+                );
+            }
         },
         {
             header: "Aksi",
             className: "w-16 text-center",
-            cell: (row) => (
-                <div className="flex justify-center">
-                    <button
-                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/toponym/${row.id}`)}
-                        className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
-                    >
-                        <Search size={18} />
-                    </button>
-                </div>
-            )
+            cell: (row) => {
+                const transactionId = row.review_transaction_toponyms?.[0]?.transaction_id;
+                return (
+                    <div className="flex justify-center">
+                        <button
+                            onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail/${row.id}${transactionId ? `?transactionId=${transactionId}` : ''}`)}
+                            className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
+                        >
+                            <Search size={18} />
+                        </button>
+                    </div>
+                );
+            }
         }
     ];
 

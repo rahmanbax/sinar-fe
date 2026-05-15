@@ -38,6 +38,7 @@ export const getRoleDefaultRoute = (user: { role: Role | string; permission_leve
         case Role.BIG:
             return '/v2/big'
         case Role.VERIFICATOR:
+            if (user.level === 'NATIONAL') return '/v2/verifikator-pusat'
             if (user.level === 'PROVINCE') return '/v2/verifikator-provinsi'
             return '/v2/verifikator-kota'
         case Role.SURVEYOR:

@@ -296,7 +296,7 @@ const VerifikatorPusatDataPenelaahanContent = () => {
                 <ButtonComponent
                     label="Buat Penelaahan"
                     icon={<Plus size={18} />}
-                    onClick={() => alert("Fitur ini akan segera hadir.")}
+                    onClick={() => router.push('/v2/verifikator-pusat/data-penelaahan/buat')}
                 />
             </div>
 

@@ -83,19 +83,17 @@ const TransactionDetailContent = () => {
                     id: item.id,
                     no: idx + 1,
                     date: item.created_at ? dayjs(item.created_at).format("DD/MM/YYYY") : "-",
-                    element: item.element?.name || item.element_name || item.toponym?.element?.name || item.toponym?.element_name || "-",
-                    name: item.map_name || item.local_name || item.name || item.toponym?.map_name || item.toponym?.local_name || item.toponym?.name || "-",
-                    province_id: item.province_id || item.toponym?.province_id,
-                    regency_id: item.regency_id || item.toponym?.regency_id,
-                    province_name: item.province_name || item.province?.name || item.toponym?.province_name || item.toponym?.province?.name || "-",
-                    regency_name: item.regency_name || item.regency?.name || item.city_name || item.city?.name || item.toponym?.regency_name || item.toponym?.regency?.name || item.toponym?.city_name || item.toponym?.city?.name || "-",
-                    surveyor: item.surveyor_name || item.creator?.name || item.toponym?.surveyor_name || item.toponym?.creator?.name || "-",
-                    assignedTo: item.review_transaction_data?.[0]?.user?.name || item.review_transaction_data?.[0]?.user || "-",
-                    coordinates: item.location_point ?
+                    element: item.element?.name || "-",
+                    name: item.specific_element || item.map_name || item.local_name || "-",
+                    province_id: item.province_id,
+                    regency_id: item.regency_id,
+                    province_name: item.province?.name || "-",
+                    regency_name: item.regency?.name || "-",
+                    surveyor: item.creator?.name || "-",
+                    assignedTo: item.review_transaction_data?.[0]?.user?.name || "-",
+                    coordinates: item.location_point?.coordinates ?
                         `${item.location_point.coordinates[0].toFixed(3)}, ${item.location_point.coordinates[1].toFixed(3)}` :
-                        item.toponym?.location_point ?
-                            `${item.toponym.location_point.coordinates[0].toFixed(3)}, ${item.toponym.location_point.coordinates[1].toFixed(3)}` :
-                            "-",
+                        "-",
                 }));
                 setAllToponyms(transformed || []);
             }

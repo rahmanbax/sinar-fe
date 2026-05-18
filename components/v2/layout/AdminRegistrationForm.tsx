@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import DropdownInput from '../inputs/DropdownInput';
 import ButtonComponent from '../buttons/ButtonComponent';
@@ -9,14 +9,15 @@ import TextInput from '../inputs/TextInput';
 import PasswordInput from '../inputs/PasswordInput';
 import { useAuth } from '@/contexts/AuthContext';
 import SelectionButtonComponent from '../buttons/SelectionButtonComponent';
-import { useOrganizations, useCreateManualAdminMutation, useImportAdminMutation, useGenerateAdminTokenMutation } from '@/hooks/useAdmin';
-import { Download, Copy, Check, Loader2 } from 'lucide-react';
+import { useOrganizations, useRegions, useCreateManualAdminMutation, useImportAdminMutation, useGenerateAdminTokenMutation } from '@/hooks/useAdmin';
+import { Download, Copy, Check, Loader2, Plus, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface FormValues {
     instansi: string;
-    provinsi: string;
-    kabupaten: string;
+    orgId: string;
+    orgName: string;
+    regionCode: string;
     noTelepon: string;
     emailInstansi: string;
     nama: string;
@@ -31,12 +32,20 @@ interface FormValues {
     max_uses: string;
 }
 
+const instansiOptions = [
+    { label: 'BIG', value: 'big' },
+    { label: 'K/L/P', value: 'admin_klp' },
+    { label: 'Provinsi', value: 'admin_provinsi' },
+    { label: 'Kab/Kota', value: 'admin_kabkota' },
+];
+
 const AdminRegistrationForm = () => {
-    const { control, handleSubmit, watch, reset } = useForm<FormValues>({
+    const { control, handleSubmit, watch, reset, setValue } = useForm<FormValues>({
         defaultValues: {
             instansi: '',
-            provinsi: '',
-            kabupaten: '',
+            orgId: '',
+            orgName: '',
+            regionCode: '',
             noTelepon: '',
             emailInstansi: '',
             nama: '',
@@ -53,46 +62,52 @@ const AdminRegistrationForm = () => {
     });
 
     const router = useRouter();
-
     const instansi = watch('instansi');
 
     const [activeTab, setActiveTab] = useState<'formulir' | 'xlsx' | 'link'>('formulir');
     const [generatedData, setGeneratedData] = useState<any>(null);
     const [copied, setCopied] = useState(false);
+    const [isCreatingNewOrg, setIsCreatingNewOrg] = useState(false);
+    const [orgSearchQuery, setOrgSearchQuery] = useState('');
+    const [regionSearchQuery, setRegionSearchQuery] = useState('');
 
     const { token, user } = useAuth();
-    const { data: provResponse } = useOrganizations('PROVINCE');
-    const { data: kabResponse } = useOrganizations('CITY');
 
-    const realProvinsiOptions = provResponse?.data?.map((org: any) => ({
-        label: org.region?.name || org.name,
-        value: String(org.id)
-    })) || [];
+    // Fetch orgs by search query (for K/L/P)
+    const { data: orgSearchResponse } = useOrganizations(undefined, orgSearchQuery || undefined);
 
-    const realKabupatenOptions = kabResponse?.data?.map((org: any) => ({
-        label: org.region?.name || org.name,
-        value: String(org.id)
-    })) || [];
+    // Fetch regions based on selected role
+    const regionLevel = instansi === 'admin_provinsi' ? 'PROVINCE' : instansi === 'admin_kabkota' ? 'CITY' : undefined;
+    const { data: regionsResponse } = useRegions(
+        regionLevel as 'PROVINCE' | 'CITY',
+        regionSearchQuery || undefined
+    );
 
-    const instansiOptions = [
-        { label: 'BIG', value: 'big' },
-        { label: 'Provinsi', value: 'admin_provinsi' },
-        { label: 'Kab/Kota', value: 'admin_kabkota' }
-    ];
+    const orgOptions = (orgSearchResponse?.data ?? []).map((org: any) => ({
+        label: org.name,
+        value: String(org.id),
+    }));
 
-    const linkInstansiOptions = [
-        { label: 'Provinsi', value: 'admin_provinsi' },
-        { label: 'Kab/Kota', value: 'admin_kabkota' },
-        { label: 'BIG', value: 'big' }
-    ];
+    const regionOptions = (regionsResponse?.data ?? []).map((region: any) => ({
+        label: region.name,
+        value: region.code,
+    }));
+
+    // Reset dependent fields when instansi changes
+    useEffect(() => {
+        setValue('orgId', '');
+        setValue('orgName', '');
+        setValue('regionCode', '');
+        setIsCreatingNewOrg(false);
+        setOrgSearchQuery('');
+        setRegionSearchQuery('');
+    }, [instansi, setValue]);
 
     const { mutate: createManualAdmin, isPending } = useCreateManualAdminMutation({
         onSuccess: () => {
             alert('Akun admin berhasil didaftarkan');
             reset();
-            if (user?.role) {
-                router.push(`/v2/${user.role}/akun`);
-            }
+            if (user?.role) router.push(`/v2/${user.role}/akun`);
         },
         onError: (err) => {
             alert('Pendaftaran gagal: ' + err.message);
@@ -106,37 +121,63 @@ const AdminRegistrationForm = () => {
         }
 
         const isAdminBig = data.instansi === 'big';
-        let finalOrgId = '';
 
-        if (!isAdminBig) {
-            finalOrgId = data.instansi === 'admin_provinsi' ? data.provinsi : (data.instansi === 'admin_kabkota' ? data.kabupaten : data.instansi);
+        if (data.instansi === 'admin_klp') {
+            const finalOrgId = isCreatingNewOrg ? data.orgName : data.orgId;
             if (!finalOrgId) {
-                alert('Silakan pilih instansi dengan benar');
+                alert('Silakan pilih atau isi nama organisasi');
                 return;
             }
+            createManualAdmin({
+                token,
+                is_admin_big: false,
+                org_id: finalOrgId,
+                name: data.nama,
+                email: data.emailInstansi,
+                phone: data.noTelepon,
+                password: data.password,
+                password_confirmation: data.konfirmasiPassword,
+                recommendation_file: data.suratPermohonan as File,
+                ref_number: data.noSurat,
+            });
+        } else if (data.instansi === 'admin_provinsi' || data.instansi === 'admin_kabkota') {
+            if (!data.regionCode) {
+                alert('Silakan pilih wilayah');
+                return;
+            }
+            createManualAdmin({
+                token,
+                is_admin_big: false,
+                region_id: data.regionCode,
+                name: data.nama,
+                email: data.emailInstansi,
+                phone: data.noTelepon,
+                password: data.password,
+                password_confirmation: data.konfirmasiPassword,
+                recommendation_file: data.suratPermohonan as File,
+                ref_number: data.noSurat,
+            });
+        } else {
+            // BIG
+            createManualAdmin({
+                token,
+                is_admin_big: true,
+                name: data.nama,
+                email: data.emailInstansi,
+                phone: data.noTelepon,
+                password: data.password,
+                password_confirmation: data.konfirmasiPassword,
+                recommendation_file: data.suratPermohonan as File,
+                ref_number: data.noSurat,
+            });
         }
-
-        createManualAdmin({
-            token,
-            org_id: finalOrgId,
-            name: data.nama,
-            email: data.emailInstansi,
-            phone: data.noTelepon,
-            password: data.password,
-            password_confirmation: data.konfirmasiPassword,
-            recommendation_file: data.suratPermohonan as File,
-            ref_number: data.noSurat,
-            is_admin_big: isAdminBig,
-        });
     };
 
     const { mutate: importAdmin, isPending: isImportPending } = useImportAdminMutation({
         onSuccess: () => {
             alert('Data akun berhasil ditambahkan melalui impor');
             reset();
-            if (user?.role) {
-                router.push(`/v2/${user.role}/akun`);
-            }
+            if (user?.role) router.push(`/v2/${user.role}/akun`);
         },
         onError: (err) => {
             alert('Impor gagal: ' + err.message);
@@ -144,25 +185,34 @@ const AdminRegistrationForm = () => {
     });
 
     const handleImportAdmin = (data: FormValues) => {
-        const isAdminBig = data.instansi === 'big';
-        let finalOrgId = '';
-
-        if (!isAdminBig) {
-            finalOrgId = data.instansi === 'admin_provinsi' ? data.provinsi : (data.instansi === 'admin_kabkota' ? data.kabupaten : data.instansi);
+        if (data.instansi === 'admin_klp') {
+            const finalOrgId = isCreatingNewOrg ? data.orgName : data.orgId;
             if (!finalOrgId) {
-                alert('Silakan pilih instansi dengan benar');
+                alert('Silakan pilih atau isi nama organisasi');
                 return;
             }
+            importAdmin({
+                token,
+                org_id: finalOrgId,
+                user_file: data.userFile as File,
+                recommendation_file: data.suratRekomendasi as File,
+                ref_number: data.noSuratRekomendasi,
+            });
+        } else if (data.instansi === 'admin_provinsi' || data.instansi === 'admin_kabkota') {
+            if (!data.regionCode) {
+                alert('Silakan pilih wilayah');
+                return;
+            }
+            importAdmin({
+                token,
+                region_id: data.regionCode,
+                user_file: data.userFile as File,
+                recommendation_file: data.suratRekomendasi as File,
+                ref_number: data.noSuratRekomendasi,
+            });
+        } else {
+            alert('Impor via xlsx tidak tersedia untuk Admin BIG');
         }
-
-        importAdmin({
-            token,
-            org_id: finalOrgId,
-            user_file: data.userFile as File,
-            recommendation_file: data.suratRekomendasi as File,
-            ref_number: data.noSuratRekomendasi,
-            is_admin_big: isAdminBig,
-        });
     };
 
     const { mutate: generateToken, isPending: isGeneratePending } = useGenerateAdminTokenMutation({
@@ -176,23 +226,48 @@ const AdminRegistrationForm = () => {
     });
 
     const handleGenerateLink = (data: FormValues) => {
-        let finalOrgId = data.instansi === 'admin_provinsi' ? data.provinsi : (data.instansi === 'admin_kabkota' ? data.kabupaten : data.instansi);
-        if (!finalOrgId) {
-            alert('Silakan pilih instansi dengan benar');
-            return;
-        }
         if (!data.expires_in_day || !data.max_uses) {
             alert('Silakan isi masa berlaku dan maksimal pakai');
             return;
         }
 
-        generateToken({
-            token,
-            institution_type: data.instansi,
-            org_id: finalOrgId,
-            expires_in_day: data.expires_in_day,
-            max_uses: data.max_uses
-        });
+        // Map 'big' → 'admin_big' untuk institution_type
+        const institutionType = data.instansi === 'big' ? 'admin_big' : data.instansi;
+
+        if (data.instansi === 'admin_klp') {
+            const finalOrgId = isCreatingNewOrg ? data.orgName : data.orgId;
+            if (!finalOrgId) {
+                alert('Silakan pilih atau isi nama organisasi');
+                return;
+            }
+            generateToken({
+                token,
+                institution_type: institutionType,
+                org_id: finalOrgId,
+                expires_in_days: data.expires_in_day,
+                max_uses: data.max_uses,
+            });
+        } else if (data.instansi === 'admin_provinsi' || data.instansi === 'admin_kabkota') {
+            if (!data.regionCode) {
+                alert('Silakan pilih wilayah');
+                return;
+            }
+            generateToken({
+                token,
+                institution_type: institutionType,
+                region_id: data.regionCode,
+                expires_in_days: data.expires_in_day,
+                max_uses: data.max_uses,
+            });
+        } else {
+            // BIG: tidak perlu org_id atau region_id
+            generateToken({
+                token,
+                institution_type: 'admin_big',
+                expires_in_days: data.expires_in_day,
+                max_uses: data.max_uses,
+            });
+        }
     };
 
     const handleCopy = () => {
@@ -202,6 +277,93 @@ const AdminRegistrationForm = () => {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
+    };
+
+    // Shared conditional field rendering based on instansi
+    const renderInstansiFields = () => {
+        if (instansi === 'admin_klp') {
+            return (
+                <div className="space-y-2">
+                    {!isCreatingNewOrg ? (
+                        <>
+                            <Controller
+                                name="orgId"
+                                control={control}
+                                render={({ field }) => (
+                                    <DropdownInput
+                                        label='Organisasi (K/L/P)'
+                                        placeholder='Ketik untuk mencari organisasi...'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        options={orgOptions}
+                                        searchable={true}
+                                        onSearchChange={setOrgSearchQuery}
+                                        required
+                                    />
+                                )}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setIsCreatingNewOrg(true)}
+                                className="flex items-center gap-1 text-sm text-navy-500 hover:underline"
+                            >
+                                <Plus size={14} /> Buat organisasi baru
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Controller
+                                name="orgName"
+                                control={control}
+                                rules={{ required: true }}
+                                render={({ field }) => (
+                                    <TextInput
+                                        id='orgName'
+                                        label='Nama Organisasi Baru'
+                                        onChange={field.onChange}
+                                        value={field.value}
+                                        required
+                                    />
+                                )}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setIsCreatingNewOrg(false)}
+                                className="flex items-center gap-1 text-sm text-navy-500 hover:underline"
+                            >
+                                <ArrowLeft size={14} /> Pilih organisasi yang sudah ada
+                            </button>
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        if (instansi === 'admin_provinsi' || instansi === 'admin_kabkota') {
+            const label = instansi === 'admin_provinsi' ? 'Provinsi' : 'Kabupaten / Kota';
+            const placeholder = instansi === 'admin_provinsi' ? 'Ketik nama provinsi...' : 'Ketik nama kabupaten/kota...';
+            return (
+                <Controller
+                    name="regionCode"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                        <DropdownInput
+                            label={label}
+                            placeholder={placeholder}
+                            onChange={field.onChange}
+                            value={field.value}
+                            options={regionOptions}
+                            searchable={true}
+                            onSearchChange={setRegionSearchQuery}
+                            required
+                        />
+                    )}
+                />
+            );
+        }
+
+        return null; // BIG: tidak ada field tambahan
     };
 
     return (
@@ -233,7 +395,6 @@ const AdminRegistrationForm = () => {
                 </div>
             </div>
 
-
             <div className='space-y-4 bg-white p-6 shadow-sm rounded-lg'>
                 {activeTab === 'formulir' && (
                     <form onSubmit={handleSubmit(handleCreateAdmin)} className='space-y-5'>
@@ -253,47 +414,7 @@ const AdminRegistrationForm = () => {
                                     />
                                 )}
                             />
-                            {/* Conditional Dropdown: Provinsi */}
-                            {instansi === 'admin_provinsi' && (
-                                <Controller
-                                    name="provinsi"
-                                    control={control}
-                                    rules={{ required: true }}
-                                    render={({ field }) => (
-                                        <DropdownInput
-                                            label='Provinsi'
-                                            placeholder='Pilih Provinsi'
-                                            onChange={(val) => {
-                                                field.onChange(val);
-                                                // Optional: reset kabupaten if needed
-                                            }}
-                                            value={field.value}
-                                            options={realProvinsiOptions}
-                                            searchable={true}
-                                            required
-                                        />
-                                    )}
-                                />
-                            )}
-                            {/* Conditional Dropdown: Kabupaten/Kota */}
-                            {instansi === 'admin_kabkota' && (
-                                <Controller
-                                    name="kabupaten"
-                                    control={control}
-                                    rules={{ required: true }}
-                                    render={({ field }) => (
-                                        <DropdownInput
-                                            label='Kabupaten/ Kota'
-                                            placeholder='Pilih Kabupaten/ Kota'
-                                            onChange={field.onChange}
-                                            value={field.value}
-                                            options={realKabupatenOptions}
-                                            searchable={true}
-                                            required
-                                        />
-                                    )}
-                                />
-                            )}
+                            {renderInstansiFields()}
                             <Controller
                                 name="noTelepon"
                                 control={control}
@@ -417,47 +538,12 @@ const AdminRegistrationForm = () => {
                                     placeholder='Pilih Role'
                                     onChange={field.onChange}
                                     value={field.value}
-                                    options={instansiOptions}
+                                    options={instansiOptions.filter(o => o.value !== 'big')}
                                     required
                                 />
                             )}
                         />
-                        {instansi === 'admin_provinsi' && (
-                            <Controller
-                                name="provinsi"
-                                control={control}
-                                rules={{ required: true }}
-                                render={({ field }) => (
-                                    <DropdownInput
-                                        label='Provinsi'
-                                        placeholder='Pilih Provinsi'
-                                        onChange={field.onChange}
-                                        value={field.value}
-                                        options={realProvinsiOptions}
-                                        searchable={true}
-                                        required
-                                    />
-                                )}
-                            />
-                        )}
-                        {instansi === 'admin_kabkota' && (
-                            <Controller
-                                name="kabupaten"
-                                control={control}
-                                rules={{ required: true }}
-                                render={({ field }) => (
-                                    <DropdownInput
-                                        label='Kabupaten/ Kota'
-                                        placeholder='Pilih Kabupaten/ Kota'
-                                        onChange={field.onChange}
-                                        value={field.value}
-                                        options={realKabupatenOptions}
-                                        searchable={true}
-                                        required
-                                    />
-                                )}
-                            />
-                        )}
+                        {renderInstansiFields()}
                         <Controller
                             name="userFile"
                             control={control}
@@ -526,9 +612,8 @@ const AdminRegistrationForm = () => {
                             {generatedData && (
                                 <div className="bg-navy-50 border border-navy-500 rounded-lg p-4 space-y-4">
                                     <h3 className="font-semibold text-navy-500">Link Berhasil Dibuat!</h3>
-
                                     <div className="space-y-1">
-                                        <p className="font-medium">{generatedData.organization?.name || '-'}</p>
+                                        <p className="font-medium">{generatedData.organization?.name || generatedData.region?.name || '-'}</p>
                                         <div className="flex items-center gap-1 border border-gray-300 bg-white rounded-lg">
                                             <input
                                                 readOnly
@@ -538,7 +623,7 @@ const AdminRegistrationForm = () => {
                                             <button
                                                 type="button"
                                                 onClick={handleCopy}
-                                                className="p-3 cursor-pointer text-navy-500 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                                                className="p-3 cursor-pointer text-navy-500 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
                                                 title="Salin Link"
                                             >
                                                 {copied ? <Check size={18} /> : <Copy size={18} />}
@@ -557,47 +642,12 @@ const AdminRegistrationForm = () => {
                                         placeholder='Pilih Role'
                                         onChange={field.onChange}
                                         value={field.value}
-                                        options={linkInstansiOptions}
+                                        options={instansiOptions}
                                         required
                                     />
                                 )}
                             />
-                            {instansi === 'admin_provinsi' && (
-                                <Controller
-                                    name="provinsi"
-                                    control={control}
-                                    rules={{ required: true }}
-                                    render={({ field }) => (
-                                        <DropdownInput
-                                            label='Provinsi'
-                                            placeholder='Pilih Provinsi'
-                                            onChange={field.onChange}
-                                            value={field.value}
-                                            options={realProvinsiOptions}
-                                            searchable={true}
-                                            required
-                                        />
-                                    )}
-                                />
-                            )}
-                            {instansi === 'admin_kabkota' && (
-                                <Controller
-                                    name="kabupaten"
-                                    control={control}
-                                    rules={{ required: true }}
-                                    render={({ field }) => (
-                                        <DropdownInput
-                                            label='Kabupaten/ Kota'
-                                            placeholder='Pilih Kabupaten/ Kota'
-                                            onChange={field.onChange}
-                                            value={field.value}
-                                            options={realKabupatenOptions}
-                                            searchable={true}
-                                            required
-                                        />
-                                    )}
-                                />
-                            )}
+                            {renderInstansiFields()}
                             <Controller
                                 name="expires_in_day"
                                 control={control}
@@ -634,13 +684,11 @@ const AdminRegistrationForm = () => {
                                 type="submit"
                             />
                         </form>
-
-
                     </div>
                 )}
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default AdminRegistrationForm;

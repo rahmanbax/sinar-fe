@@ -39,7 +39,7 @@ const generateColumns = (currentPage: number, perPage: number = 10): ColumnDef<P
         cell: (row) => (
             <div className="flex items-center justify-center gap-2">
                 <Link href={`/v2?id=${row.id}`} className="p-2 block hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" title="Lihat Peta">
-                    <Search size={16} strokeWidth={2.5} />
+                    <Search size={16} strokeWidth={2} />
                 </Link>
             </div>
         ),

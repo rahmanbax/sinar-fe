@@ -250,7 +250,7 @@ const DataPenelaahanVerifikatorContent = () => {
         {
             header: "Aksi", className: "w-16 text-center", cell: (row) => (
                 <div className="flex justify-center">
-                    <button onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail/${row.id}?transactionId=${row.transactionId}`)} className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md">
+                    <button onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail/${row.id}?transactionId=${row.transactionId}&reviewed=${row.status !== 'Belum Ditelaah'}`)} className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md">
                         <Search size={18} />
                     </button>
                 </div>

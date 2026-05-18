@@ -30,6 +30,14 @@ export const useCities = (parentCode: string | null, token?: string | null) => {
     });
 };
 
+export const useCitiesAll = () => {
+    return useQuery<RegionResponse>({
+        queryKey: ["regions", "cities", "all"],
+        queryFn: () => getRegions({ level: "CITY" }),
+        staleTime: Infinity,
+    });
+};
+
 export const useDistricts = (parentCode: string | null, token?: string | null) => {
     return useQuery<RegionResponse>({
         queryKey: ["regions", "districts", parentCode],

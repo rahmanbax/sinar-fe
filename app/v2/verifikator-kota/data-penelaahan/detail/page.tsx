@@ -63,6 +63,7 @@ const TransactionDetailContent = () => {
                     city: item.city?.name || "KOTA BANDUNG",
                     surveyor: item.creator?.name || "-",
                     assignedTo: item.review_transaction_data?.[0]?.user || "Admin 1",
+                    isReviewed: item.review_transaction_data?.[0]?.accepted != null,
                     coordinates: item.location_point ?
                         `${item.location_point.coordinates[0].toFixed(3)}, ${item.location_point.coordinates[1].toFixed(3)}` :
                         "-",
@@ -108,7 +109,7 @@ const TransactionDetailContent = () => {
             cell: (row) => (
                 <div className="flex justify-center">
                     <button
-                        onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail/${row.id}?transactionId=${transactionId}`)}
+                        onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail/${row.id}?transactionId=${transactionId}&reviewed=${row.isReviewed}`)}
                         className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
                     >
                         <Search size={18} />

@@ -20,6 +20,7 @@ interface DropdownInputProps {
     required?: boolean;
     allowCustomValue?: boolean;
     disabled?: boolean;
+    onSearchChange?: (query: string) => void;
 }
 
 const DropdownInput = ({
@@ -32,7 +33,8 @@ const DropdownInput = ({
     searchable = false,
     required = false,
     allowCustomValue = false,
-    disabled = false
+    disabled = false,
+    onSearchChange,
 }: DropdownInputProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -137,7 +139,7 @@ const DropdownInput = ({
                                     className="w-full text-sm bg-transparent outline-none placeholder:text-gray-400"
                                     placeholder="Cari..."
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={(e) => { setSearchQuery(e.target.value); onSearchChange?.(e.target.value); }}
                                     autoFocus
                                 />
                             </div>

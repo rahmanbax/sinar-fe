@@ -1,5 +1,5 @@
 import { useQuery, useMutation, UseMutationOptions, useQueryClient } from "@tanstack/react-query";
-import { getOrganizations, createManualAdmin, createManualMember, importAdminData, importMemberData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration, updateAdminStatus, generateAdminRegistrationToken } from "@/api/admin";
+import { getOrganizations, getRegions, createManualAdmin, createManualMember, importAdminData, importMemberData, getAdminUsers, getAdminUser, rejectAdminRegistration, approveAdminRegistration, updateAdminStatus, generateAdminRegistrationToken } from "@/api/admin";
 
 
 type UpdateStatusVariables = {
@@ -29,11 +29,19 @@ export const useUpdateAdminStatusMutation = (
     });
 };
 
-export const useOrganizations = (regionLevel?: string) => {
+export const useOrganizations = (regionLevel?: string, search?: string) => {
     return useQuery({
-        queryKey: ["admin", "organizations", regionLevel],
-        queryFn: () => getOrganizations(regionLevel),
-        staleTime: Infinity,
+        queryKey: ["admin", "organizations", regionLevel, search],
+        queryFn: () => getOrganizations(regionLevel, search),
+        staleTime: regionLevel ? Infinity : 2 * 60 * 1000,
+    });
+};
+
+export const useRegions = (level: 'PROVINCE' | 'CITY', search?: string) => {
+    return useQuery({
+        queryKey: ["regions", level, search],
+        queryFn: () => getRegions(level, search),
+        staleTime: 10 * 60 * 1000,
     });
 };
 
@@ -56,7 +64,8 @@ export const useAdminUser = (token: string | null, id: string) => {
 
 type ManualAdminVariables = {
     token: string | null;
-    org_id: string;
+    org_id?: string;
+    region_id?: string;
     name: string;
     email: string;
     phone: string;
@@ -74,6 +83,7 @@ export const useCreateManualAdminMutation = (
         mutationFn: async (vars: ManualAdminVariables) => {
             const result = await createManualAdmin(vars.token, {
                 org_id: vars.org_id,
+                region_id: vars.region_id,
                 name: vars.name,
                 email: vars.email,
                 phone: vars.phone,
@@ -126,11 +136,11 @@ export const useCreateManualMemberMutation = (
 
 type ImportAdminVariables = {
     token: string | null;
-    org_id: string;
+    org_id?: string;
+    region_id?: string;
     user_file: File;
     recommendation_file: File;
     ref_number: string;
-    is_admin_big: boolean;
 };
 
 export const useImportAdminMutation = (
@@ -140,10 +150,10 @@ export const useImportAdminMutation = (
         mutationFn: async (vars: ImportAdminVariables) => {
             const result = await importAdminData(vars.token, {
                 org_id: vars.org_id,
+                region_id: vars.region_id,
                 user_file: vars.user_file,
                 recommendation_file: vars.recommendation_file,
                 ref_number: vars.ref_number,
-                is_admin_big: vars.is_admin_big,
             });
             if (result.error) throw new Error(result.message);
             return result;
@@ -182,8 +192,9 @@ export const useImportMemberMutation = (
 type GenerateAdminTokenVariables = {
     token: string | null;
     institution_type: string;
-    org_id: string;
-    expires_in_day: string;
+    org_id?: string;
+    region_id?: string;
+    expires_in_days: string;
     max_uses: string;
 };
 
@@ -195,7 +206,8 @@ export const useGenerateAdminTokenMutation = (
             const result = await generateAdminRegistrationToken(vars.token, {
                 institution_type: vars.institution_type,
                 org_id: vars.org_id,
-                expires_in_day: vars.expires_in_day,
+                region_id: vars.region_id,
+                expires_in_days: vars.expires_in_days,
                 max_uses: vars.max_uses,
             });
             if (result.error) throw new Error(result.message);

@@ -7,6 +7,8 @@ import { useVerificationCandidates, useCreateVerificationTransaction } from '@/h
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/v2/nav/DashboardLayout'
+import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
 
 const BuatPenelaahanPage = () => {
   const { token } = useAuth()
@@ -64,8 +66,14 @@ const BuatPenelaahanPage = () => {
   return (
     <DashboardLayout showNav={false}>
       <div className='mt-6 mx-5 lg:mx-auto max-w-7xl space-y-5'>
-        <p className='text-gray-500'>Dashboard / Data Penelaahan / Buat Penelaahan</p>
-        <h1 className='text-2xl font-bold'>Buat Penelaahan</h1>
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-400">
+          <Link href="/v2/verifikator-kota" className="hover:text-navy-600 transition-colors">Dashboard</Link>
+            <ChevronRight size={14} />
+          <Link href="/v2/verifikator-kota/data-penelaahan" className="hover:text-navy-600 transition-colors">Data Penelaahan</Link>
+            <ChevronRight size={14} />
+          <span className="text-gray-900 font-semibold">Buat Penelaahan</span>
+        </nav>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
           <div className='md:col-span-2'>
             <HorizontalBarChart

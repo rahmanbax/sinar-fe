@@ -2,8 +2,9 @@ import { create } from 'zustand';
 
 interface AdminRegistrationState {
   instansi: string;
-  provinsi: string;
-  kabupaten: string;
+  orgId: string;
+  orgName: string;
+  regionCode: string;
   noTelepon: string;
   emailInstansi: string;
   nama: string;
@@ -14,12 +15,11 @@ interface AdminRegistrationState {
   userFile: File | null;
   noSuratRekomendasi: string;
   suratRekomendasi: File | null;
-  isAdminBig: boolean;
-  
-  // Actions
+
   setInstansi: (val: string) => void;
-  setProvinsi: (val: string) => void;
-  setKabupaten: (val: string) => void;
+  setOrgId: (val: string) => void;
+  setOrgName: (val: string) => void;
+  setRegionCode: (val: string) => void;
   setNoTelepon: (val: string) => void;
   setEmailInstansi: (val: string) => void;
   setNama: (val: string) => void;
@@ -30,14 +30,14 @@ interface AdminRegistrationState {
   setUserFile: (file: File | null) => void;
   setNoSuratRekomendasi: (val: string) => void;
   setSuratRekomendasi: (file: File | null) => void;
-  setIsAdminBig: (val: boolean) => void;
   resetForm: () => void;
 }
 
 const initialState = {
   instansi: '',
-  provinsi: '',
-  kabupaten: '',
+  orgId: '',
+  orgName: '',
+  regionCode: '',
   noTelepon: '',
   emailInstansi: '',
   nama: '',
@@ -48,15 +48,15 @@ const initialState = {
   userFile: null,
   noSuratRekomendasi: '',
   suratRekomendasi: null,
-  isAdminBig: false,
 };
 
 export const useAdminRegistrationStore = create<AdminRegistrationState>((set) => ({
   ...initialState,
-  
+
   setInstansi: (val) => set({ instansi: val }),
-  setProvinsi: (val) => set({ provinsi: val }),
-  setKabupaten: (val) => set({ kabupaten: val }),
+  setOrgId: (val) => set({ orgId: val }),
+  setOrgName: (val) => set({ orgName: val }),
+  setRegionCode: (val) => set({ regionCode: val }),
   setNoTelepon: (val) => set({ noTelepon: val }),
   setEmailInstansi: (val) => set({ emailInstansi: val }),
   setNama: (val) => set({ nama: val }),
@@ -67,6 +67,5 @@ export const useAdminRegistrationStore = create<AdminRegistrationState>((set) =>
   setUserFile: (file) => set({ userFile: file }),
   setNoSuratRekomendasi: (val) => set({ noSuratRekomendasi: val }),
   setSuratRekomendasi: (file) => set({ suratRekomendasi: file }),
-  setIsAdminBig: (val) => set({ isAdminBig: val }),
   resetForm: () => set(initialState),
 }));

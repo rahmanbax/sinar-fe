@@ -37,11 +37,12 @@ export const useOrganizations = (regionLevel?: string, search?: string) => {
     });
 };
 
-export const useRegions = (level: 'PROVINCE' | 'CITY', search?: string) => {
+export const useRegions = (level: 'PROVINCE' | 'CITY' | undefined, search?: string) => {
     return useQuery({
         queryKey: ["regions", level, search],
-        queryFn: () => getRegions(level, search),
+        queryFn: () => getRegions(level as 'PROVINCE' | 'CITY', search),
         staleTime: 10 * 60 * 1000,
+        enabled: !!level,
     });
 };
 

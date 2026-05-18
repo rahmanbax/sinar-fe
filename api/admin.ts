@@ -16,28 +16,58 @@ export interface Organization {
     } | null;
 }
 
-export const getOrganizations = async (regionLevel?: string): Promise<{
+export const getOrganizations = async (regionLevel?: string, search?: string): Promise<{
     error: boolean;
     message: string;
     data: Organization[];
 }> => {
-    const url = regionLevel 
-        ? `${API_URL}/admin/organizations?region_level=${regionLevel}`
-        : `${API_URL}/admin/organizations`;
-        
+    const params = new URLSearchParams();
+    if (regionLevel) params.set('region_level', regionLevel);
+    if (search) params.set('search', search);
+    const qs = params.toString();
+    const url = `${API_URL}/admin/organizations${qs ? '?' + qs : ''}`;
+
     const res = await fetch(url);
-    
+
     if (!res.ok) {
         throw new Error('Failed to fetch organizations data');
     }
-    
+
+    return res.json();
+};
+
+export interface Region {
+    code: string;
+    name: string;
+    level: string;
+    path: string;
+}
+
+export const getRegions = async (level: 'PROVINCE' | 'CITY', search?: string, limit: number = 50): Promise<{
+    error: boolean;
+    message: string;
+    data: Region[];
+}> => {
+    const params = new URLSearchParams();
+    params.set('level', level);
+    if (search) params.set('search', search);
+    params.set('limit', String(limit));
+
+    const res = await fetch(`${API_URL}/regions?${params.toString()}`);
+
+    if (!res.ok) {
+        throw new Error('Failed to fetch regions data');
+    }
+
     return res.json();
 };
 
 export const createManualAdmin = async (
     token: string | null,
     data: {
-        org_id: string;
+        is_admin_big: boolean;
+        org_id?: string;
+        region_id?: string;
         name: string;
         email: string;
         phone: string;
@@ -45,14 +75,17 @@ export const createManualAdmin = async (
         password_confirmation: string;
         recommendation_file: File;
         ref_number: string;
-        is_admin_big: boolean;
     }
 ) => {
     if (!token) return { error: true, message: "No token provided" };
 
     const formData = new FormData();
+    formData.append('is_admin_big', data.is_admin_big ? '1' : '0');
     if (data.org_id) {
         formData.append('org_id', data.org_id);
+    }
+    if (data.region_id) {
+        formData.append('region_id', data.region_id);
     }
     formData.append('name', data.name);
     formData.append('email', data.email);
@@ -61,7 +94,6 @@ export const createManualAdmin = async (
     formData.append('password_confirmation', data.password_confirmation);
     formData.append('recommendation_file', data.recommendation_file);
     formData.append('ref_number', data.ref_number);
-    formData.append('is_admin_big', data.is_admin_big ? '1' : '0');
 
     const res = await fetch(`${API_URL}/admin/users/manual/create-admin`, {
         method: 'POST',
@@ -123,11 +155,11 @@ export const createManualMember = async (
 export const importAdminData = async (
     token: string | null,
     data: {
-        org_id: string;
+        org_id?: string;
+        region_id?: string;
         user_file: File;
         recommendation_file: File;
         ref_number: string;
-        is_admin_big: boolean;
     }
 ) => {
     if (!token) return { error: true, message: "No token provided" };
@@ -136,10 +168,12 @@ export const importAdminData = async (
     if (data.org_id) {
         formData.append('org_id', data.org_id);
     }
+    if (data.region_id) {
+        formData.append('region_id', data.region_id);
+    }
     formData.append('user_file', data.user_file);
     formData.append('recommendation_file', data.recommendation_file);
     formData.append('ref_number', data.ref_number);
-    formData.append('is_admin_big', data.is_admin_big ? '1' : '0');
 
     const res = await fetch(`${API_URL}/admin/users/imports/admin-imports`, {
         method: 'POST',
@@ -192,8 +226,9 @@ export const generateAdminRegistrationToken = async (
     token: string | null,
     data: {
         institution_type: string;
-        org_id: string;
-        expires_in_day: string;
+        org_id?: string;
+        region_id?: string;
+        expires_in_days: string;
         max_uses: string;
     }
 ) => {

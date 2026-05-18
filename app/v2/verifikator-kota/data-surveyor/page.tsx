@@ -123,22 +123,7 @@ const DataSurveyorPage = () => {
         { header: "Nama Rupabumi", accessorKey: "map_name" },
         { header: "Kabupaten/ Kota", accessorKey: "regency", className: "uppercase whitespace-nowrap" },
         { header: "Provinsi", accessorKey: "province", className: "uppercase whitespace-nowrap" },
-        { header: "Status", cell: (row) => getStatusBadgeV2(row.status) },
-        {
-            header: "Aksi",
-            className: "w-16 text-center",
-            cell: (row) => (
-                <div className="flex items-center justify-center">
-                    <button
-                        onClick={() => {}} // Dummy action
-                        className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
-                        title="Lihat Detail"
-                    >
-                        <Search size={18} />
-                    </button>
-                </div>
-            )
-        }
+        { header: "Status", cell: (row) => getStatusBadgeV2(row.status) }
     ];
 
     return (

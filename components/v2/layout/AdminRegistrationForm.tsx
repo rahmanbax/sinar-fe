@@ -538,7 +538,7 @@ const AdminRegistrationForm = () => {
                                             <button
                                                 type="button"
                                                 onClick={handleCopy}
-                                                className="p-3 cursor-pointer text-navy-500 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                                                className="p-3 cursor-pointer text-navy-500 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
                                                 title="Salin Link"
                                             >
                                                 {copied ? <Check size={18} /> : <Copy size={18} />}

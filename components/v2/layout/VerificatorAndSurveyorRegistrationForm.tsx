@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import TextInput from '../inputs/TextInput';
@@ -31,17 +31,30 @@ interface XlsxFormValues {
     suratRekomendasi: File | null;
 }
 
+const BIG_ORG_CODE = 'badan_informasi_geospasial';
+
 const VerificatorAndSurveyorRegistrationForm = () => {
     const router = useRouter();
     const { token, user } = useAuth();
     const [activeTab, setActiveTab] = useState<'formulir' | 'xlsx'>('formulir');
 
-    const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+    const isBigAdmin = user?.organization_code === BIG_ORG_CODE;
+
+    const defaultRole = isBigAdmin ? 'big' : 'verificator';
+
+    const roleOptions = isBigAdmin
+        ? [{ label: 'Staff BIG', value: 'big' }]
+        : [
+            { label: 'Verifikator', value: 'verificator' },
+            { label: 'Surveyor', value: 'surveyor' },
+          ];
+
+    const { control, handleSubmit } = useForm<FormValues>({
         defaultValues: {
             nama: '',
             email: '',
             no_telepon: '',
-            role: user?.role || 'verificator',
+            role: defaultRole,
             password: '',
             konfirmasi_password: '',
             no_surat: '',
@@ -49,9 +62,9 @@ const VerificatorAndSurveyorRegistrationForm = () => {
         }
     });
 
-    const { control: xlsxControl, handleSubmit: handleXlsxSubmit, watch: watchXlsx } = useForm<XlsxFormValues>({
+    const { control: xlsxControl, handleSubmit: handleXlsxSubmit } = useForm<XlsxFormValues>({
         defaultValues: {
-            role: user?.role || 'verificator',
+            role: defaultRole,
             userFile: null,
             noSuratRekomendasi: '',
             suratRekomendasi: null,
@@ -85,7 +98,8 @@ const VerificatorAndSurveyorRegistrationForm = () => {
             ref_number: data.no_surat,
         }, {
             onSuccess: () => {
-                router.push('/v2/verifikator-provinsi/tim-saya');
+                alert('Akun berhasil ditambahkan');
+                router.push(`/v2/${user?.role}/akun`);
             },
             onError: (error: any) => {
                 alert(error.message || "Terjadi kesalahan saat menambahkan akun");
@@ -110,7 +124,7 @@ const VerificatorAndSurveyorRegistrationForm = () => {
         }, {
             onSuccess: () => {
                 alert("Import berhasil dilakukan");
-                router.push('/v2/verifikator-provinsi/tim-saya');
+                router.push(`/v2/${user?.role}/akun`);
             },
             onError: (err) => {
                 alert("Gagal melakukan import: " + err.message);
@@ -126,7 +140,9 @@ const VerificatorAndSurveyorRegistrationForm = () => {
     return (
         <div className="max-w-xl mx-auto space-y-5">
             <div className='space-y-4 bg-white p-6 shadow-sm rounded-lg'>
-                <h1 className='text-xl font-semibold'>Tambah Akun Verifikator/ Surveyor</h1>
+                <h1 className='text-xl font-semibold'>
+                    {isBigAdmin ? 'Tambah Staff BIG' : 'Tambah Akun Verifikator / Surveyor'}
+                </h1>
                 <div className='flex gap-2 '>
                     <SelectionButtonComponent
                         label='Dengan Formulir'
@@ -156,10 +172,8 @@ const VerificatorAndSurveyorRegistrationForm = () => {
                                         label='Role'
                                         value={field.value}
                                         onChange={field.onChange}
-                                        options={[
-                                            { label: 'Verifikator', value: 'verificator' },
-                                            { label: 'Surveyor', value: 'surveyor' }
-                                        ]}
+                                        options={roleOptions}
+                                        disabled={isBigAdmin}
                                         required
                                     />
                                 )}
@@ -292,10 +306,8 @@ const VerificatorAndSurveyorRegistrationForm = () => {
                                     label='Role'
                                     value={field.value}
                                     onChange={field.onChange}
-                                    options={[
-                                        { label: 'Verifikator', value: 'verificator' },
-                                        { label: 'Surveyor', value: 'surveyor' }
-                                    ]}
+                                    options={roleOptions}
+                                    disabled={isBigAdmin}
                                     required
                                 />
                             )}

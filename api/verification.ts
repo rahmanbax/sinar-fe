@@ -19,6 +19,7 @@ export interface VerificationTransaction {
         news_number: string;
         file_url: string;
     };
+    ba_file_url?: string | null;
 }
 
 export interface VerificationPagination {
@@ -38,7 +39,7 @@ export const getVerificationTransactions = async (token: string | null) => {
     return response.json();
 };
 
-export const createVerificationTransaction = async (token: string | null, data: { title: string; elements: string[]; due_at: string }) => {
+export const createVerificationTransaction = async (token: string | null, data: { title: string; elements: string[]; issued_at: string; due_at: string }) => {
     if (!token) return { error: true, message: "No token provided" };
     const response = await fetch(`${API_URL}/verifications/transaction`, {
         method: "POST",

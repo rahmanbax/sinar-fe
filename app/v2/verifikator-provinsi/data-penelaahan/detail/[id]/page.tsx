@@ -43,6 +43,7 @@ const ToponymDetailPage = () => {
     
     const id = params?.id as string
     const transactionId = searchParams.get('transactionId')
+    const recommendationId = searchParams.get('recommendationId')
 
     const { data: toponymRes, isLoading } = useToponymDetail(id)
     const toponymData = toponymRes?.data
@@ -186,7 +187,7 @@ const ToponymDetailPage = () => {
                 <ToponymDetailLayout
                     mode='detail'
                     initialData={toponymData}
-                    isVerifikator={true}
+                    isVerifikator={!recommendationId}
                     onSubmitAction={handleSubmit}
                     onApproveAction={handleApprove}
                     onRejectAction={handleReject}

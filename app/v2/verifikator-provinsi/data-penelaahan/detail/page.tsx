@@ -7,7 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
     getVerificationTransactions,
     getVerificationTransactionToponyms,
-    VerificationTransaction
+    VerificationTransaction,
+    getIncomingRecommendationDetail
 } from '@/api/verification';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dayjs from 'dayjs';
@@ -18,6 +19,7 @@ const TransactionDetailContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const transactionId = searchParams.get('transactionId');
+    const recommendationId = searchParams.get('recommendationId');
     const { token } = useAuth();
 
     // States
@@ -58,17 +60,26 @@ const TransactionDetailContent = () => {
         if (!token || !transactionId) return;
         setLoading(true);
         try {
-            const res = await getVerificationTransactions(token);
-            if (!res.error) {
-                const found = res.data?.find((t: VerificationTransaction) => t.id === transactionId);
-                if (found) setTransaction(found);
+            if (recommendationId) {
+                const res = await getIncomingRecommendationDetail(token, recommendationId);
+                if (!res.error) {
+                    const txs = res.data || [];
+                    const found = txs.find((t: any) => String(t.id) === String(transactionId));
+                    if (found) setTransaction(found);
+                }
+            } else {
+                const res = await getVerificationTransactions(token);
+                if (!res.error) {
+                    const found = res.data?.find((t: VerificationTransaction) => String(t.id) === String(transactionId));
+                    if (found) setTransaction(found);
+                }
             }
         } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
         }
-    }, [token, transactionId]);
+    }, [token, transactionId, recommendationId]);
 
     const fetchToponyms = useCallback(async () => {
         if (!token || !transactionId) return;
@@ -146,7 +157,7 @@ const TransactionDetailContent = () => {
             cell: (row) => (
                 <div className="flex justify-center">
                     <button
-                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail/${row.id}?transactionId=${transactionId}`)}
+                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail/${row.id}?transactionId=${transactionId}${recommendationId ? `&recommendationId=${recommendationId}` : ''}`)}
                         className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
                     >
                         <Search size={18} />

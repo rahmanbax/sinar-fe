@@ -10,6 +10,7 @@ export type UserType = {
     created_at?: string
     updated_at?: string
     organization_name?: string
+    organization_code?: string
     region_name?: string
     level?: string
 }

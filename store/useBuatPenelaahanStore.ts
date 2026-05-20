@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export interface BuatPenelaahanFormState {
   formData: {
     judulPenelaahan: string;
+    tanggalAwalPenelaahan: string;
     tanggalPenelaahan: string;
     jenisUnsur: string[];
   };
@@ -12,6 +13,7 @@ export interface BuatPenelaahanFormState {
 
 const initialFormState: BuatPenelaahanFormState['formData'] = {
   judulPenelaahan: '',
+  tanggalAwalPenelaahan: '',
   tanggalPenelaahan: '',
   jenisUnsur: [],
 };

@@ -19,6 +19,7 @@ export interface VerificationTransaction {
         news_number: string;
         file_url: string;
     };
+    ba_file_url?: string | null;
 }
 
 export interface VerificationPagination {

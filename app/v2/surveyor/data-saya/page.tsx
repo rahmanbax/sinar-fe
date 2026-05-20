@@ -165,12 +165,12 @@ const MyDataPage = () => {
 
     const columns: ColumnDef<any>[] = [
         { header: "No", accessorKey: "no", className: "w-12 text-center" },
-        { header: "Tanggal Dibuat", accessorKey: "created_at", className: "w-32" },
-        { header: "Tanggal Survey", accessorKey: "survey_at", className: "w-32" },
+        { header: "Tanggal Dibuat", accessorKey: "created_at", className: "w-32 text-center" },
+        { header: "Tanggal Survey", accessorKey: "survey_at", className: "w-32 text-center" },
         { header: "Jenis Unsur", accessorKey: "element_type" },
         { header: "Nama Rupabumi", accessorKey: "map_name" },
-        { header: "Kabupaten/ Kota", accessorKey: "regency", className: "uppercase whitespace-nowrap" },
-        { header: "Provinsi", accessorKey: "province", className: "uppercase whitespace-nowrap" },
+        { header: "Kabupaten/ Kota", accessorKey: "regency", className: "whitespace-nowrap text-center" },
+        { header: "Provinsi", accessorKey: "province", className: "whitespace-nowrap text-center" },
         { header: "Status", cell: (row) => getStatusBadgeV2(row.status), className: "text-center" },
         {
             header: "Aksi",
@@ -244,20 +244,20 @@ const MyDataPage = () => {
                         options: elements,
                         placeholder: 'Jenis Unsur'
                     },
-                    {
-                        id: 'provinsi',
-                        label: 'Provinsi',
-                        searchable: true,
-                        options: provinces,
-                        placeholder: 'Provinsi'
-                    },
-                    {
-                        id: 'kabupaten',
-                        label: 'Kabupaten/ Kota',
-                        searchable: true,
-                        options: cities,
-                        placeholder: !selectedProvinceId ? "Kabupaten/Kota" : "Kabupaten/ Kota"
-                    },
+                    // {
+                    //     id: 'provinsi',
+                    //     label: 'Provinsi',
+                    //     searchable: true,
+                    //     options: provinces,
+                    //     placeholder: 'Provinsi'
+                    // },
+                    // {
+                    //     id: 'kabupaten',
+                    //     label: 'Kabupaten/ Kota',
+                    //     searchable: true,
+                    //     options: cities,
+                    //     placeholder: !selectedProvinceId ? "Kabupaten/Kota" : "Kabupaten/ Kota"
+                    // },
                     {
                         id: 'status',
                         label: 'Status',

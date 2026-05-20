@@ -18,8 +18,8 @@ interface ToponymSidebarProps {
 }
 
 const DetailItem = ({ label, value }: { label: string; value: string | React.ReactNode }) => (
-    <div className="flex justify-between gap-4 py-3 border-b border-gray-50 last:border-0">
-        <span className="text-sm text-gray-400 shrink-0">{label}</span>
+    <div className="flex justify-between gap-4 border-b border-gray-50 last:border-0">
+        <span className="text-sm text-gray-500 shrink-0">{label}</span>
         <span className="text-sm text-right">{value || "-"}</span>
     </div>
 );
@@ -37,14 +37,14 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                     animate={{ x: 0 }}
                     exit={{ x: "-100%" }}
                     transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="absolute top-0 left-0 h-full w-full sm:w-[400px] bg-white shadow-2xl z-60 flex flex-col border-r border-gray-100"
+                    className="absolute top-0 left-0 h-full w-full sm:w-100 bg-white shadow-2xl z-60 flex flex-col border-r border-gray-100"
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 border-b border-gray-50 bg-white sticky top-0 z-10">
                         <h2 className="text-base font-bold  truncate pr-4 w-full">
                             {isLoading ? (
                                 <div className="h-5 bg-gray-200 rounded-md w-3/4 animate-pulse"></div>
-                            ) : toponym?.map_name || "Detail Toponim"}
+                            ) : toponym?.local_name || toponym?.map_name || "Detail Toponim"}
                         </h2>
                         <button
                             onClick={onClose}
@@ -128,10 +128,10 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
                                     <div className="space-y-6">
                                         {/* General Info */}
                                         <section>
-                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                                                 <Info size={14} /> Informasi Umum
                                             </h3>
-                                            <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100">
+                                            <div className="rounded-lg p-4 border border-gray-200 space-y-3">
                                                 {/* <DetailItem label="ID Unsur" value={toponym.element.code} /> */}
                                                 <DetailItem label="Jenis Unsur" value={toponym.element.name} />
                                                 <DetailItem label="Nama Peta" value={toponym.map_name} />
@@ -148,10 +148,10 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
 
                                         {/* Geography */}
                                         <section>
-                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                                                 <MapPin size={14} /> Geografi & Lokasi
                                             </h3>
-                                            <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100">
+                                            <div className="rounded-lg p-4 border border-gray-200 space-y-3">
                                                 {/* <DetailItem label="Tipe Geometri" value={toponym.geometry_type} /> */}
                                                 <DetailItem label="Bujur" value={toponym.location_point?.coordinates[0].toFixed(7)} />
                                                 <DetailItem label="Lintang" value={toponym.location_point?.coordinates[1].toFixed(7)} />
@@ -165,10 +165,10 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
 
                                         {/* Cultural */}
                                         <section>
-                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                                                 <Globe size={14} /> Budaya & Bahasa
                                             </h3>
-                                            <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100">
+                                            <div className="rounded-lg p-4 border border-gray-200 space-y-3">
                                                 <DetailItem label="Asal Bahasa" value={toponym.language_origin} />
                                                 <DetailItem label="Arti Nama" value={
                                                     <p className="leading-relaxed text-right">{toponym.name_meaning}</p>
@@ -178,16 +178,16 @@ export default function ToponymSidebar({ toponymId, onClose }: ToponymSidebarPro
 
                                         {/* History & Notes */}
                                         <section>
-                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                                                 <History size={14} /> Sejarah & Catatan
                                             </h3>
-                                            <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-100">
-                                                <div className="py-2">
-                                                    <span className="text-xs font-bold text-gray-400 uppercase block mb-2">Sejarah Nama</span>
+                                            <div className="rounded-lg p-4 border border-gray-200 space-y-3">
+                                                <div>
+                                                    <span className="text-xs text-gray-500 uppercase block mb-2">Sejarah Nama</span>
                                                     <p className="leading-relaxed">{toponym.name_history || "-"}</p>
                                                 </div>
-                                                <div className="py-2 border-t border-gray-100 mt-2">
-                                                    <span className="text-xs font-bold text-gray-400 uppercase block mb-2">Catatan Tambahan</span>
+                                                <div>
+                                                    <span className="text-xs text-gray-500 uppercase block mb-2">Catatan Tambahan</span>
                                                     <p className="leading-relaxed">{toponym.notes || "-"}</p>
                                                 </div>
                                             </div>

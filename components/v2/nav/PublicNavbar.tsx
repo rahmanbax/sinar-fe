@@ -151,16 +151,26 @@ const PublicNavbar = () => {
               </ul>
               <div className="pt-2 border-t border-gray-100">
                 {user ? (
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      logout();
-                    }}
-                    className="w-full text-left flex items-center gap-2 font-medium text-red-600 py-2 mt-2"
-                  >
-                    <LogOut size={18} />
-                    <span>Keluar</span>
-                  </button>
+                  <>
+                    <Link
+                      href={getRoleDefaultRoute(user)}
+                      onClick={() => setIsOpen(false)}
+                      className="w-full text-lg flex items-center gap-2 font-medium text-gray-700 hover:text-navy-500 py-2 mt-2"
+                    >
+                      <LayoutDashboard size={20} strokeWidth={2}/>
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        logout();
+                      }}
+                      className="w-full text-lg flex items-center gap-2 font-medium text-red-600 py-2 mt-2"
+                    >
+                      <LogOut size={20} strokeWidth={2} />
+                      <span>Keluar</span>
+                    </button>
+                  </>
                 ) : (
                   <ButtonComponent
                     label="Masuk"

@@ -12,7 +12,7 @@ interface Option {
 
 interface BuatPenelaahanFormProps {
   jenisUnsurOptions?: Option[];
-  onSubmit?: (data: { judulPenelaahan: string; tanggalPenelaahan: string; jenisUnsur: string[] }) => void;
+  onSubmit?: (data: { judulPenelaahan: string; tanggalAwalPenelaahan: string; tanggalPenelaahan: string; jenisUnsur: string[] }) => void;
   isSubmitting?: boolean;
 }
 
@@ -44,6 +44,13 @@ const BuatPenelaahanForm = ({ jenisUnsurOptions, onSubmit, isSubmitting = false 
         label="Judul Penelaahan"
         value={formData.judulPenelaahan}
         onChange={(e) => setFieldValue('judulPenelaahan', e.target.value)}
+        required
+      />
+      <CalendarInput
+        id="tanggal-awal-penelaahan"
+        label="Tanggal Awal Penelaahan"
+        value={formData.tanggalAwalPenelaahan}
+        onChange={(e) => setFieldValue('tanggalAwalPenelaahan', e.target.value)}
         required
       />
       <CalendarInput

@@ -152,7 +152,7 @@ const IncomingRecommendationDetailPage = () => {
             cell: (row) => (
                 <div className="flex items-center justify-center gap-2">
                     <button
-                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail?transactionId=${row.id}`)}
+                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail?transactionId=${row.id}&recommendationId=${id}`)}
                         className="p-1.5 hover:bg-gray-100 rounded text-gray-400 hover: transition-colors"
                         title="Lihat Detail Transaksi"
                     >

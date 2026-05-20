@@ -52,6 +52,13 @@ const ToponymDetailPage = () => {
     const { mutate: rejectMutate } = useRejectVerificationToponym()
     const { mutate: updateMutate, isPending: isUpdating } = useUpdateVerificationToponym()
 
+    const isReviewedParam = searchParams.get('reviewed') === 'true';
+
+    const isAlreadyReviewed = 
+        isReviewedParam ||
+        toponymData?.status?.toLowerCase() === 'disetujui' || 
+        toponymData?.status?.toLowerCase() === 'ditolak';
+
     const handleApprove = () => {
         if (!transactionId || !id) return
         acceptMutate(
@@ -187,7 +194,7 @@ const ToponymDetailPage = () => {
                 <ToponymDetailLayout
                     mode='detail'
                     initialData={toponymData}
-                    isVerifikator={!recommendationId}
+                    isVerifikator={!recommendationId && !isAlreadyReviewed}
                     onSubmitAction={handleSubmit}
                     onApproveAction={handleApprove}
                     onRejectAction={handleReject}

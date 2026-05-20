@@ -59,23 +59,14 @@ const DataKabupatenKotaPage = () => {
         {
             header: "Status",
             cell: (row) => {
-                const statusLower = (row.status || "").toLowerCase();
-
-                const isSelesai = statusLower === "sesuai" || statusLower === "selesai" || statusLower === "completed";
-                const isDitolak = statusLower === "tidak sesuai" || statusLower === "ditolak" || statusLower === "rejected";
-                const isButuh = !isSelesai && !isDitolak;
-
-                let displayStatus = "Butuh Rekomendasi";
-                if (isSelesai) displayStatus = "Sesuai";
-                if (isDitolak) displayStatus = "Tidak Sesuai";
+                const isButuh = row.accepted === null;
+                const displayStatus = isButuh ? "Butuh Rekomendasi" : "Rekomendasi Pusat";
 
                 return (
                     <div className="flex justify-center">
-                        <span className={`px-4 py-1 rounded-full text-xs font-semibold ${isSelesai
-                                ? "bg-green-50 text-green-500 border border-green-100"
-                                : isDitolak
-                                    ? "bg-red-50 text-red-500 border border-red-100"
-                                    : "bg-gray-50 text-gray-500 border border-gray-200"
+                        <span className={`px-4 py-1 rounded-full text-xs font-semibold ${isButuh
+                                ? "bg-gray-50 text-gray-500 border border-gray-200"
+                                : "bg-green-50 text-green-500 border border-green-100"
                             }`}>
                             {displayStatus}
                         </span>

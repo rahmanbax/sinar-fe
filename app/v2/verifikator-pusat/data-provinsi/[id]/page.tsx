@@ -83,7 +83,7 @@ const IncomingRecommendationDetailPage = () => {
             onSuccess: (res) => {
                 if (!res.error) {
                     alert("Rekomendasi berhasil diberikan");
-                    router.push("/v2/verifikator-provinsi/data-kabupaten-kota");
+                    router.push("/v2/verifikator-pusat/data-provinsi");
                 } else {
                     alert(res.message || "Gagal memberikan rekomendasi");
                 }
@@ -152,7 +152,7 @@ const IncomingRecommendationDetailPage = () => {
             cell: (row) => (
                 <div className="flex items-center justify-center gap-2">
                     <button
-                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail?transactionId=${row.id}&recommendationId=${id}`)}
+                        onClick={() => router.push(`/v2/verifikator-pusat/data-penelaahan/detail?transactionId=${row.id}&recommendationId=${id}`)}
                         className="p-1.5 hover:bg-gray-100 rounded text-gray-400 hover: transition-colors"
                         title="Lihat Detail Transaksi"
                     >
@@ -183,7 +183,7 @@ const IncomingRecommendationDetailPage = () => {
                 {/* Header */}
                 <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold  tracking-tight">Data Kabupaten/ Kota</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">Data Provinsi</h1>
                         <div className="flex items-center gap-2 text-blue-600 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 shadow-sm">
                             <MapPin size={16} className="fill-blue-600" />
                             <span className="text-sm font-bold tracking-wide">{recommendation.source_region?.name || "-"}</span>

@@ -32,11 +32,15 @@ const BuatPenelaahanPage = () => {
 
   const handleSubmit = (formData: {
     judulPenelaahan: string;
+    tanggalAwalPenelaahan: string;
     tanggalPenelaahan: string;
     jenisUnsur: string[];
   }) => {
+    const issued_at = formData.tanggalAwalPenelaahan
+      ? `${formData.tanggalAwalPenelaahan} 00:00:00.00`
+      : ''
     const due_at = formData.tanggalPenelaahan
-      ? `${formData.tanggalPenelaahan}`
+      ? `${formData.tanggalPenelaahan} 23:59:59.00`
       : ''
 
     createTransaction(
@@ -45,6 +49,7 @@ const BuatPenelaahanPage = () => {
         data: {
           title: formData.judulPenelaahan,
           elements: formData.jenisUnsur,
+          issued_at,
           due_at,
         },
       },

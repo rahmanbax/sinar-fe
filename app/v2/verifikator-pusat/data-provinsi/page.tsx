@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import Link from "next/link";
 import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
-const DataKabupatenKotaPage = () => {
+const DataProvinsiPage = () => {
     const { data: incomingRes, isLoading } = useIncomingRecommendations();
     const recommendations = incomingRes?.data || [];
 
@@ -48,7 +48,7 @@ const DataKabupatenKotaPage = () => {
             className: "text-center w-32",
         },
         {
-            header: "Kab/ Kota",
+            header: "Provinsi",
             cell: (row) => (
                 <div className="text-gray-900 capitalize text-center">
                     {row.recommendation?.source_region?.name || row.source_region_name || "-"}
@@ -80,7 +80,7 @@ const DataKabupatenKotaPage = () => {
             cell: (row) => (
                 <div className="flex justify-center">
                     <Link
-                        href={`/v2/verifikator-provinsi/data-kabupaten-kota/${row.id}`}
+                        href={`/v2/verifikator-pusat/data-provinsi/${row.id}`}
                         className="p-1.5 hover:bg-gray-100 rounded transition-colors "
                     >
                         <Search size={18} strokeWidth={3} />
@@ -95,7 +95,7 @@ const DataKabupatenKotaPage = () => {
         <DashboardLayout>
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-bold ">Data Kabupaten/ Kota</h1>
+                    <h1 className="text-2xl font-bold ">Data Provinsi</h1>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-none">
@@ -105,7 +105,7 @@ const DataKabupatenKotaPage = () => {
                         isLoading={isLoading}
                         showSearch={true}
                         showFilter={true}
-                        emptyMessage="Belum ada data dari Kabupaten/ Kota"
+                        emptyMessage="Belum ada data dari Provinsi"
                     />
                 </div>
             </div>
@@ -113,4 +113,4 @@ const DataKabupatenKotaPage = () => {
     );
 };
 
-export default DataKabupatenKotaPage;
+export default DataProvinsiPage;

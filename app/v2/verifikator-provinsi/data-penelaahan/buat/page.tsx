@@ -37,12 +37,16 @@ const BuatPenelaahanProvinsiPage = () => {
 
   const handleSubmit = (formData: {
     judulPenelaahan: string;
+    tanggalAwalPenelaahan: string;
     tanggalPenelaahan: string;
     jenisUnsur: string[];
     adminVerifikator: string[];
   }) => {
+    const issued_at = formData.tanggalAwalPenelaahan
+      ? `${formData.tanggalAwalPenelaahan} 00:00:00.00`
+      : ''
     const due_at = formData.tanggalPenelaahan
-      ? `${formData.tanggalPenelaahan}`
+      ? `${formData.tanggalPenelaahan} 23:59:59.00`
       : ''
 
     // Panggil API createTransaction
@@ -52,6 +56,7 @@ const BuatPenelaahanProvinsiPage = () => {
         data: {
           title: formData.judulPenelaahan,
           elements: formData.jenisUnsur,
+          issued_at,
           due_at,
           // TODO: tambahkan field untuk mengirim adminVerifikator jika API-nya sudah siap
           // verificator_ids: formData.adminVerifikator

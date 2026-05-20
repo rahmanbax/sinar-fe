@@ -1,87 +1,208 @@
-"use client";
+'use client'
 
-import React, { useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import DashboardLayout from '@/components/v2/nav/DashboardLayout';
-import ToponymDetailLayout from '@/components/v2/layout/ToponymDetailLayout';
+import ToponymDetailLayout from '@/components/v2/layout/ToponymDetailLayout'
+import { useToponymDetail } from '@/hooks/useToponyms'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { useAcceptVerificationToponym, useRejectVerificationToponym, useUpdateVerificationToponym } from '@/hooks/useVerification'
+import { uploadImage, uploadAudio, uploadVideo, uploadDocs } from '@/api/media'
+import React, { useState } from 'react'
+import DashboardLayout from '@/components/v2/nav/DashboardLayout'
 
-// Mock Data for a single toponym detail
-const DUMMY_TOPONYM_DETAIL = {
-    id: 'top-1',
-    element_id: 'BN1BGN118',
-    specific_element: 'Semeru',
-    map_name: 'Gunung Semeru',
-    local_name: 'Semeru',
-    generic_element: 'Gunung',
-    language_origin: 'Jawa',
-    name_meaning: 'Puncak Abadi Para Dewa',
-    name_history: 'Ditemukan sejak zaman dahulu oleh penduduk lokal.',
-    pronounciation: 'Se-me-ru',
-    spelling: 'Semeru',
-    location_point: {
-        type: 'Point',
-        coordinates: [112.922, -8.108]
-    },
-    elevation_value: '3676',
-    province_id: '35',
-    regency_id: '35.08',
-    district_id: '35.08.01',
-    village_id: '35.08.01.2001',
-    created_at: '2026-05-01T08:00:00Z',
-    element: {
-        code: 'BN1BGN118',
-        name: 'Gunung'
-    },
-    province: { name: 'JAWA TIMUR' },
-    regency: { name: 'LUMAJANG' },
-    district: { name: 'PASRUJAMBE' },
-    village: { name: 'PASRUJAMBE' },
-    photos: [],
-    status: 'penelaahan'
+const buildGeometry = (geometry: any) => {
+    const { drawType, drawnPoint, drawnLine, drawnPolygon } = geometry;
+
+    if (drawType === 'Point' && drawnPoint) {
+        return { type: 'Point', coordinates: [drawnPoint.lng, drawnPoint.lat] };
+    }
+    if (drawType === 'Line' && drawnLine.length >= 2) {
+        return {
+            type: 'LineString',
+            coordinates: drawnLine.map((p: any) => [p.lng, p.lat]),
+        };
+    }
+    if (drawType === 'Polygon' && drawnPolygon.length > 0 && drawnPolygon[0].length >= 3) {
+        const rings = drawnPolygon
+            .filter((ring: any) => ring.length >= 3)
+            .map((ring: any) => {
+                const coords = ring.map((p: any) => [p.lng, p.lat]);
+                // Close the ring
+                coords.push(coords[0]);
+                return coords;
+            });
+        return { type: 'MultiPolygon', coordinates: [rings] };
+    }
+    return null;
 };
 
 const ToponymDetailPage = () => {
-    const params = useParams();
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const id = params?.id as string;
-    const transactionId = searchParams.get('transactionId');
+    const params = useParams()
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const { token } = useAuth()
+    
+    const id = params?.id as string
+    const transactionId = searchParams.get('transactionId')
+    const recommendationId = searchParams.get('recommendationId')
 
-    const [isUpdating, setIsUpdating] = useState(false);
+    const { data: toponymRes, isLoading } = useToponymDetail(id)
+    const toponymData = toponymRes?.data
+
+    const { mutate: acceptMutate } = useAcceptVerificationToponym()
+    const { mutate: rejectMutate } = useRejectVerificationToponym()
+    const { mutate: updateMutate, isPending: isUpdating } = useUpdateVerificationToponym()
+
+    const isReviewedParam = searchParams.get('reviewed') === 'true';
+
+    const isAlreadyReviewed = 
+        isReviewedParam ||
+        toponymData?.status?.toLowerCase() === 'disetujui' || 
+        toponymData?.status?.toLowerCase() === 'ditolak';
 
     const handleApprove = () => {
-        alert("Toponim (Dummy) disetujui!");
-        router.back();
-    };
+        if (!transactionId || !id) return
+        acceptMutate(
+            { token, transactionId, toponymId: id },
+            { 
+                onSuccess: (res) => {
+                    if (!res.error) {
+                        alert('Toponim berhasil disetujui!');
+                        router.push('/v2/verifikator-pusat/data-penelaahan');
+                    } else {
+                        alert(res.message || 'Gagal menyetujui toponim');
+                    }
+                },
+                onError: () => alert('Terjadi kesalahan koneksi saat menyetujui toponim')
+            }
+        )
+    }
 
     const handleReject = () => {
-        alert("Toponim (Dummy) ditolak!");
-        router.back();
-    };
+        if (!transactionId || !id) return
+        rejectMutate(
+            { token, transactionId, toponymId: id },
+            {
+                onSuccess: (res) => {
+                    if (!res.error) {
+                        alert('Toponim berhasil ditolak!');
+                        router.push('/v2/verifikator-pusat/data-penelaahan');
+                    } else {
+                        alert(res.message || 'Gagal menolak toponim');
+                    }
+                },
+                onError: () => alert('Terjadi kesalahan koneksi saat menolak toponim')
+            }
+        )
+    }
 
     const handleSubmit = async (data: any) => {
-        setIsUpdating(true);
-        console.log("Saving data:", data);
-        setTimeout(() => {
-            alert("Data (Dummy) berhasil disimpan!");
-            setIsUpdating(false);
-            router.back();
-        }, 1000);
-    };
+        if (!transactionId || !id) return
+        
+        try {
+            // Upload files if they are File objects
+            let uploadedPhotos: { url: string; filename: string }[] = [];
+            if (data.foto instanceof File) {
+                const res = await uploadImage(data.foto, token);
+                if (!res.error && res.data) uploadedPhotos = [{ url: res.data.url, filename: res.data.filename }];
+            }
+
+            let sketchUrl: string | null = null;
+            if (data.sketsaLokasi instanceof File) {
+                const res = await uploadImage(data.sketsaLokasi, token);
+                if (!res.error && res.data) sketchUrl = res.data.url;
+            }
+
+            let audioUrl: string | null = null;
+            if (data.rekamanSuaraPengucapan instanceof File) {
+                const res = await uploadAudio(data.rekamanSuaraPengucapan, token);
+                if (!res.error && res.data) audioUrl = res.data.url;
+            }
+
+            let videoUrl: string | null = null;
+            if (data.rekamanAudioVisual instanceof File) {
+                const res = await uploadVideo(data.rekamanAudioVisual, token);
+                if (!res.error && res.data) videoUrl = res.data.url;
+            }
+
+            let docsUrl: string | null = null;
+            if (data.dokumenPendukung instanceof File) {
+                const res = await uploadDocs(data.dokumenPendukung, token);
+                if (!res.error && res.data) docsUrl = res.data.url;
+            }
+
+            // Build payload
+            const payload: Record<string, unknown> = {
+                generic_element: data.elemenGenerik,
+                specific_element: data.elemenSpesifik,
+                map_name: data.namaRupabumi,
+                local_name: data.namaLokal,
+                other_name: data.namaLain,
+                language_origin: data.asalBahasa,
+                name_meaning: data.artiNama,
+                name_history: data.sejarahNama,
+                pronounciation: data.pelafalan,
+                spelling: data.ejaan,
+                element_id: data.jenisUnsur,
+                province_code: data.provinsi,
+                regency_code: data.kabupatenKota,
+                district_code: data.kecamatan,
+                village_code: data.desaKelurahan,
+                survey_at: data.tanggalSurvey,
+            };
+
+            const geometry = buildGeometry(data._geometry);
+            if (geometry) {
+                if (geometry.type === 'Point') payload.location_point = geometry;
+                else if (geometry.type === 'LineString') payload.location_line = geometry;
+                else if (geometry.type === 'MultiPolygon') payload.location_area = geometry;
+                payload.geometry = geometry;
+            }
+
+            if (uploadedPhotos.length > 0) payload.photos = uploadedPhotos;
+            if (sketchUrl) payload.sketch = sketchUrl;
+            if (audioUrl) payload.pronounciation_audio_url = audioUrl;
+            if (videoUrl) payload.video_url = videoUrl;
+            if (docsUrl) payload.support_document_url = docsUrl;
+
+            updateMutate(
+                { token, transactionId, toponymId: id, payload },
+                {
+                    onSuccess: (res) => {
+                        if (!res.error) {
+                            alert('Data berhasil disimpan!');
+                            router.push('/v2/verifikator-pusat/data-penelaahan');
+                        } else {
+                            alert(`Gagal menyimpan: ${res.message}`);
+                        }
+                    },
+                    onError: () => alert('Terjadi kesalahan saat menyimpan data.')
+                }
+            )
+        } catch (error) {
+            console.error(error);
+            alert('Gagal menyusun data topnomi.');
+        }
+    }
 
     return (
         <DashboardLayout showNav={false} tightMargin={true}>
-            <ToponymDetailLayout
-                mode='detail'
-                initialData={DUMMY_TOPONYM_DETAIL}
-                isVerifikator={true}
-                onSubmitAction={handleSubmit}
-                onApproveAction={handleApprove}
-                onRejectAction={handleReject}
-                isSubmitting={isUpdating}
-            />
+            {isLoading ? (
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-sm text-gray-500">Memuat data toponim...</p>
+                </div>
+            ) : (
+                <ToponymDetailLayout
+                    mode='detail'
+                    initialData={toponymData}
+                    isVerifikator={!recommendationId && !isAlreadyReviewed}
+                    onSubmitAction={handleSubmit}
+                    onApproveAction={handleApprove}
+                    onRejectAction={handleReject}
+                    isSubmitting={isUpdating}
+                />
+            )}
         </DashboardLayout>
-    );
-};
+    )
+}
 
-export default ToponymDetailPage;
+export default ToponymDetailPage

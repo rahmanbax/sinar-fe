@@ -46,6 +46,7 @@ function formatUserData(data: any): UserType | null {
     role: userObj.role,
     permission_level: userObj.verification_permission_level ?? userObj.permission_level,
     organization_name: data.organization?.name,
+    organization_code: data.organization?.code,
     region_name: data.region?.name,
     level: data.region?.level
   } as UserType;

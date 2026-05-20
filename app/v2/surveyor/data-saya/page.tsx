@@ -15,18 +15,38 @@ import { useSurveyBoundingBox } from '@/hooks/useToponyms';
 import Link from 'next/link';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
+const getStatusNameFromLevel = (level: number | undefined): string => {
+    switch (level) {
+        case -1: return "Ditolak";
+        case 0: return "Pengajuan Kota/Kab";
+        case 1: return "Penelaahan Kota/Kab";
+        case 2: return "Rekomendasi Provinsi";
+        case 3: return "Pengajuan Provinsi";
+        case 4: return "Penelaahan Provinsi";
+        case 5: return "Rekomendasi Pusat";
+        case 6: return "Pengajuan Pusat";
+        case 7: return "Penelaahan Pusat";
+        case 8: return "Penetapan";
+        case 9: return "Baku";
+        default: return "Pengajuan";
+    }
+};
+
 const getStatusBadgeV2 = (status: string) => {
     const s = status?.toLowerCase() || "";
     const statusStyles: Record<string, { bg: string; text: string }> = {
         "baku": { bg: "bg-emerald-100", text: "text-emerald-700" },
-        "pengajuan": { bg: "bg-amber-100", text: "text-amber-700" },
+        "pengajuan kota/kab": { bg: "bg-amber-100", text: "text-amber-700" },
+        "pengajuan provinsi": { bg: "bg-amber-100", text: "text-amber-700" },
+        "pengajuan pusat": { bg: "bg-amber-100", text: "text-amber-700" },
         "ditolak": { bg: "bg-rose-100", text: "text-rose-700" },
-        "penelaahan": { bg: "bg-slate-100", text: "text-slate-700" },
-        "penelaahan kabupaten/kota": { bg: "bg-slate-100", text: "text-slate-700" },
+        "penelaahan kota/kab": { bg: "bg-slate-100", text: "text-slate-700" },
         "penelaahan provinsi": { bg: "bg-slate-100", text: "text-slate-700" },
         "penelaahan pusat": { bg: "bg-slate-100", text: "text-slate-700" },
-        "penerapan": { bg: "bg-emerald-100", text: "text-emerald-700" },
-        "data survei": { bg: "bg-blue-100", text: "text-blue-700" },
+        "rekomendasi provinsi": { bg: "bg-blue-100", text: "text-blue-700" },
+        "rekomendasi pusat": { bg: "bg-blue-100", text: "text-blue-700" },
+        "penetapan": { bg: "bg-emerald-100", text: "text-emerald-700" },
+        "pengajuan": { bg: "bg-amber-100", text: "text-amber-700" },
     };
 
     const style = statusStyles[s] || { bg: "bg-gray-100", text: "text-gray-700" };
@@ -110,7 +130,7 @@ const MyDataPage = () => {
                 ...(filters?.provinsi ? { province_id: filters.provinsi } : {}),
                 ...(filters?.kabupaten ? { regency_id: filters.kabupaten } : {}),
                 ...(filters?.jenisUnsur ? { element_id: filters.jenisUnsur } : {}),
-                ...(filters?.status ? { status: filters.status } : {}),
+                ...(filters?.status ? { status_level: filters.status } : {}),
             };
 
             // TODO: Append actual filters to queryParams here if needed
@@ -137,7 +157,7 @@ const MyDataPage = () => {
             province: item.province?.name ?? "-",
             regency: item.regency?.name ?? "-",
             source: item.source || "-",
-            status: item.status || "pengajuan",
+            status: getStatusNameFromLevel(item.status_level),
         }))
         : [];
 
@@ -242,13 +262,17 @@ const MyDataPage = () => {
                         id: 'status',
                         label: 'Status',
                         options: [
-                            { value: 'baku', label: 'Baku' },
-                            { value: 'pengajuan', label: 'Pengajuan' },
-                            { value: 'data survei', label: 'Data Survei' },
-                            { value: 'penelaahan kabupaten/kota', label: 'Penelaahan Kab/Kota' },
-                            { value: 'penelaahan provinsi', label: 'Penelaahan Provinsi' },
-                            { value: 'penelaahan pusat', label: 'Penelaahan Pusat' },
-                            { value: 'penetapan', label: 'Penetapan' },
+                            { value: '9', label: 'Baku' },
+                            { value: '8', label: 'Penetapan' },
+                            { value: '7', label: 'Penelaahan Pusat' },
+                            { value: '6', label: 'Pengajuan Pusat' },
+                            { value: '5', label: 'Rekomendasi Pusat' },
+                            { value: '4', label: 'Penelaahan Provinsi' },
+                            { value: '3', label: 'Pengajuan Provinsi' },
+                            { value: '2', label: 'Rekomendasi Provinsi' },
+                            { value: '1', label: 'Penelaahan Kab/Kota' },
+                            { value: '0', label: 'Pengajuan Kab/Kota' },
+                            { value: '-1', label: 'Ditolak' },
                         ]
                     }
                 ]}

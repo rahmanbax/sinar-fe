@@ -10,7 +10,6 @@ import {
     VerificationTransaction
 } from '@/api/verification';
 import { useVerificationTransactions, useAllVerificationToponyms } from '@/hooks/useVerification';
-import { useBeritaAcaraData } from '@/hooks/useBeritaAcara';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 
@@ -33,9 +32,7 @@ const ReviewCard = ({
     const isIssued = item.status === 'issued';
     const isVerificationDone = item.total_data > 0 && item.total_data === item.handled_data;
 
-    // Check if BA exists for completed transactions
-    const { data: baData } = useBeritaAcaraData(token, isCompleted ? item.id : null);
-    const hasBA = !!baData?.ba_file_url;
+    const hasBA = !!item.ba_file_url;
     
     const isRecommended = item.status === 'recommended' || hasBA;
 
@@ -131,8 +128,8 @@ const ReviewCard = ({
                     className="w-full py-2.5 rounded-xl text-sm font-bold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2" 
                     onClick={(e) => { 
                         e.stopPropagation(); 
-                        if (baData?.ba_file_url) {
-                            window.open(baData.ba_file_url, '_blank');
+                        if (item.ba_file_url) {
+                            window.open(item.ba_file_url, '_blank');
                         } else {
                             router.push(`/v2/verifikator-kota/data-penelaahan/cetak-ba?transactionId=${item.id}`); 
                         }

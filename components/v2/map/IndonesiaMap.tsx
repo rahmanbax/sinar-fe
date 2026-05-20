@@ -472,7 +472,7 @@ const IndonesiaMap = ({
                                             setMapStyle(item);
                                             setIsStylesOpen(false);
                                         }}
-                                        className={`group w-full flex items-center gap-3 p-2 rounded-lg transition border-2 ${mapStyle.id === item.id
+                                        className={`group w-full cursor-pointer flex items-center gap-3 p-2 rounded-lg transition border-2 ${mapStyle.id === item.id
                                             ? 'bg-navy-50 border-navy-200 text-navy-700'
                                             : 'bg-transparent border-transparent hover:bg-gray-100 text-gray-600 hover:border-gray-100'
                                             }`}

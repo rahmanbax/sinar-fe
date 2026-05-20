@@ -58,11 +58,7 @@ const PengumumanContent = () => {
     const search = searchParams.get('search') || "";
 
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-    const [filterState, setFilterState] = useState<FilterState>({
-        element_id: searchParams.get('element_id') || undefined,
-        province_id: searchParams.get('province_id') || undefined,
-        regency_id: searchParams.get('regency_id') || undefined,
-    });
+    const [filterState, setFilterState] = useState<FilterState>({});
     const [activeProvinceForFilter, setActiveProvinceForFilter] = useState<string>("");
 
     const { data: elementsData } = useElements("public");
@@ -97,9 +93,9 @@ const PengumumanContent = () => {
         {
             id: "element_id",
             label: "Jenis Unsur",
-            options: elementsData?.data?.map((e: any) => ({ 
-                label: e.name || e.nama || "Tanpa Nama", 
-                value: (e.code || e.id || e.value || "").toString() 
+            options: elementsData?.data?.map((e: any) => ({
+                label: e.name || e.nama || "Tanpa Nama",
+                value: (e.code || e.id || e.value || "").toString()
             })) || [],
             searchable: true,
             placeholder: "Jenis Unsur",
@@ -122,7 +118,7 @@ const PengumumanContent = () => {
 
     const updateParams = (newPage: number, newSearch: string, newFilters?: FilterState) => {
         const params = new URLSearchParams(searchParams.toString());
-        
+
         if (newPage > 1) params.set('page', newPage.toString());
         else params.delete('page');
 
@@ -176,7 +172,7 @@ const PengumumanContent = () => {
                     onFilter={() => setIsFilterModalOpen(true)}
                 />
             </div>
-            
+
             <FilterModal
                 isOpen={isFilterModalOpen}
                 onClose={() => {

@@ -43,7 +43,7 @@ const PublicNavbar = () => {
         setIsDropdownOpen(false)
       }
     }
-    
+
     if (isOpen || isDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside)
     } else {
@@ -57,8 +57,8 @@ const PublicNavbar = () => {
 
   return (
     <>
-      <nav ref={navRef} className="sticky top-0 z-999 w-full">
-        <div className="relative z-20 p-4 bg-white border-b border-gray-200">
+      <nav ref={navRef} className="sticky top-0 z-99 w-full">
+        <div className="relative p-4 bg-white border-b border-gray-200">
           <div className="flex justify-between items-center">
             {/* Logo Section */}
             <div className="shrink-0 flex items-center gap-3">
@@ -178,7 +178,7 @@ const PublicNavbar = () => {
                       onClick={() => setIsOpen(false)}
                       className="w-full text-lg flex items-center gap-2 font-medium text-gray-700 hover:text-navy-500 py-2 mt-2"
                     >
-                      <LayoutDashboard size={20} strokeWidth={2}/>
+                      <LayoutDashboard size={20} strokeWidth={2} />
                       Dashboard
                     </Link>
                     <button

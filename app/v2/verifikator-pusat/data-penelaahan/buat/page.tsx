@@ -1,51 +1,71 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart'
 import BuatPenelaahanPusatForm from '@/components/v2/layout/BuatPenelaahanPusatForm'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import DashboardLayout from '@/components/v2/nav/DashboardLayout'
 import { useBuatPenelaahanPusatStore } from '@/store/useBuatPenelaahanPusatStore'
+import { useAuth } from '@/contexts/AuthContext'
+import { useVerificationCandidates, useCreateVerificationTransaction } from '@/hooks/useVerification'
 
 const BuatPenelaahanPusatPage = () => {
   const router = useRouter()
+  const { token } = useAuth()
   const { resetForm } = useBuatPenelaahanPusatStore()
-  const [isPending, setIsPending] = useState(false)
 
-  // Dummy Data for Chart (Candidates)
-  const chartItems = [
-    { name: 'Gunung', value: 450, max: 500 },
-    { name: 'Sungai', value: 380, max: 500 },
-    { name: 'Tanjung', value: 210, max: 500 },
-    { name: 'Bukit', value: 150, max: 500 },
-    { name: 'Danau', value: 90, max: 500 },
-  ]
+  const { data: candidatesRes, isLoading } = useVerificationCandidates(token)
+  const { mutate: createTransaction, isPending } = useCreateVerificationTransaction()
 
-  const jenisUnsurOptions = [
-    { label: 'Gunung', value: 'gunung' },
-    { label: 'Sungai', value: 'sungai' },
-    { label: 'Tanjung', value: 'tanjung' },
-    { label: 'Bukit', value: 'bukit' },
-    { label: 'Danau', value: 'danau' },
-  ]
+  const candidates = candidatesRes?.data ?? []
+  const maxCount = candidates.reduce((acc, item) => Math.max(acc, item.count), 0) || 1
+
+  const chartItems = candidates.map((item) => ({
+    name: item.element_name,
+    value: item.count,
+    max: maxCount,
+  }))
+
+  const jenisUnsurOptions = candidates.map((item) => ({
+    label: item.element_name,
+    value: item.element_code,
+  }))
 
   const handleSubmit = (formData: {
     judulPenelaahan: string;
+    tanggalAwalPenelaahan: string;
     tanggalPenelaahan: string;
     jenisUnsur: string[];
     adminVerifikator: string[];
   }) => {
-    setIsPending(true)
-    console.log("Creating Penelaahan Pusat:", formData)
+    const due_at = formData.tanggalPenelaahan ? `${formData.tanggalPenelaahan} 23:59:59.99` : ''
+    const issued_at = formData.tanggalAwalPenelaahan ? `${formData.tanggalAwalPenelaahan} 00:00:00.00` : ''
 
-    // Simulate API call
-    setTimeout(() => {
-      alert('Penelaahan Pusat berhasil dibuat (Dummy Mode)')
-      resetForm()
-      setIsPending(false)
-      router.push('/v2/verifikator-pusat/data-penelaahan')
-    }, 1500)
+    createTransaction(
+      {
+        token,
+        data: {
+          title: formData.judulPenelaahan,
+          elements: formData.jenisUnsur,
+          due_at,
+          issued_at,
+        },
+      },
+      {
+        onSuccess: (res) => {
+          if (!res.error) {
+            resetForm()
+            router.push('/v2/verifikator-pusat/data-penelaahan')
+          } else {
+            alert(`Gagal membuat penelaahan: ${res.message}`)
+          }
+        },
+        onError: () => {
+          alert('Terjadi kesalahan saat membuat penelaahan.')
+        },
+      }
+    )
   }
 
   const handleCancel = () => {
@@ -65,7 +85,7 @@ const BuatPenelaahanPusatPage = () => {
             <HorizontalBarChart
               title="Kandidat Jenis Unsur Nasional"
               items={chartItems}
-              isLoading={false}
+              isLoading={isLoading}
             />
           </div>
           <div className='flex flex-col'>

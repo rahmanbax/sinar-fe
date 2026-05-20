@@ -102,6 +102,7 @@ const TransactionDetailContent = () => {
                     regency_name: item.regency?.name || "-",
                     surveyor: item.creator?.name || "-",
                     assignedTo: item.review_transaction_data?.[0]?.user?.name || "-",
+                    status: item.review_transaction_data?.[0]?.accepted === true ? "Disetujui" : item.review_transaction_data?.[0]?.accepted === false ? "Ditolak" : "Belum Ditelaah",
                     coordinates: item.location_point?.coordinates ?
                         `${item.location_point.coordinates[0].toFixed(3)}, ${item.location_point.coordinates[1].toFixed(3)}` :
                         "-",
@@ -157,7 +158,7 @@ const TransactionDetailContent = () => {
             cell: (row) => (
                 <div className="flex justify-center">
                     <button
-                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail/${row.id}?transactionId=${transactionId}${recommendationId ? `&recommendationId=${recommendationId}` : ''}`)}
+                        onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail/${row.id}?transactionId=${transactionId}${recommendationId ? `&recommendationId=${recommendationId}` : ''}&reviewed=${row.status !== 'Belum Ditelaah'}`)}
                         className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
                     >
                         <Search size={18} />

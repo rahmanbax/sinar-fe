@@ -12,7 +12,7 @@ interface Option {
 
 interface BuatPenelaahanPusatFormProps {
   jenisUnsurOptions?: Option[];
-  onSubmit?: (data: { judulPenelaahan: string; tanggalPenelaahan: string; jenisUnsur: string[]; adminVerifikator: string[] }) => void;
+  onSubmit?: (data: { judulPenelaahan: string; tanggalAwalPenelaahan: string; tanggalPenelaahan: string; jenisUnsur: string[]; adminVerifikator: string[] }) => void;
   onCancel?: () => void;
   isSubmitting?: boolean;
 }
@@ -50,6 +50,13 @@ const BuatPenelaahanPusatForm = ({
         label="Judul Penelaahan"
         value={formData.judulPenelaahan}
         onChange={(e) => setFieldValue('judulPenelaahan', e.target.value)}
+        required
+      />
+      <CalendarInput
+        id="tanggal-awal-penelaahan"
+        label="Tanggal Awal Penelaahan"
+        value={formData.tanggalAwalPenelaahan}
+        onChange={(e) => setFieldValue('tanggalAwalPenelaahan', e.target.value)}
         required
       />
       <CalendarInput

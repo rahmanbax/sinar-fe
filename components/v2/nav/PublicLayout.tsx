@@ -9,9 +9,9 @@ interface PublicLayoutProps {
 
 const PublicLayout = ({ children, isMap = false }: PublicLayoutProps) => {
     return (
-        <div className="h-screen flex flex-col bg-slate-50/50 overflow-hidden">
+        <div className="h-dvh flex flex-col bg-slate-50/50 overflow-hidden">
             <PublicNavbar />
-            <div className="flex-1 w-full overflow-y-auto flex flex-col">
+            <div className={`flex-1 w-full flex flex-col ${isMap ? 'overflow-hidden' : 'overflow-y-auto'}`}>
                 <main className="flex-1 w-full flex flex-col">
                     {children}
                 </main>

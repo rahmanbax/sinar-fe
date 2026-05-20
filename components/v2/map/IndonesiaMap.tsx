@@ -2,9 +2,13 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Map, Marker, type MapRef, type ViewState } from '@vis.gl/react-maplibre'
 import { Search, SlidersHorizontal, Plus, Minus, LocateFixed, Compass, Layers, X, MapPin } from "lucide-react";
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useSpatialToponyms, type SpatialToponym } from "@/hooks/useToponyms";
+import { useSpatialToponyms, usePublicToponyms, type SpatialToponym } from "@/hooks/useToponyms";
 import ToponymSidebar from "./ToponymSidebar";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { capitalizeFirstLetter } from "@/utils/formatters";
+import FilterModal, { type FilterState } from "@/components/v2/modals/FilterModal";
+import { useProvinces, useCities, useElements } from "@/hooks/useRegions";
+import { useAuth } from "@/contexts/AuthContext";
 
 const big_office_coord = {
     longitude: 106.8467944,
@@ -67,7 +71,7 @@ const IndonesiaMap = ({
     const initialViewState: ViewState = {
         longitude: big_office_coord.longitude,
         latitude: big_office_coord.latitude,
-        zoom: 4.55,
+        zoom: 5,
         bearing: 0,
         pitch: 0,
         padding: { bottom: 0 }
@@ -77,6 +81,102 @@ const IndonesiaMap = ({
     const [mapStyle, setMapStyle] = useState(MapStyles[0])
     const [isStylesOpen, setIsStylesOpen] = useState(false);
     const [selectedToponymId, setSelectedToponymId] = useState<string | null>(searchParams.get('id') || null);
+
+    // Search state
+    const [searchText, setSearchText] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [showSearchResults, setShowSearchResults] = useState(false);
+    const searchContainerRef = useRef<HTMLDivElement>(null);
+
+    // Filter Modal States
+    const { token } = useAuth();
+    const resolvedToken = token || "public";
+    
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [filterState, setFilterState] = useState<FilterState>({});
+    const [activeProvinceForFilter, setActiveProvinceForFilter] = useState<string>("");
+
+    const { data: elementsData } = useElements(resolvedToken);
+    const { data: provincesData } = useProvinces();
+
+    const provinces = useMemo(() =>
+        (provincesData?.data ?? []).map((p: any) => ({
+            label: p.name,
+            value: p.code,
+            path: p.path,
+        })),
+        [provincesData]
+    );
+
+    const selectedProvinceId = activeProvinceForFilter || filterState.province_id || null;
+    const selectedProvincePath = useMemo(() => {
+        if (!selectedProvinceId) return null;
+        return provinces.find((p) => p.value === selectedProvinceId)?.path ?? null;
+    }, [selectedProvinceId, provinces]);
+
+    const { data: citiesData } = useCities(selectedProvincePath, resolvedToken);
+
+    const cities = useMemo(() =>
+        (citiesData?.data ?? []).map((c: any) => ({
+            label: c.name,
+            value: c.code,
+        })),
+        [citiesData]
+    );
+
+    const filterFields = useMemo(() => [
+        {
+            id: "element_id",
+            label: "Jenis Unsur",
+            options: elementsData?.data?.map((e: any) => ({ 
+                label: e.name, 
+                value: e.code 
+            })) || [],
+            searchable: true,
+            placeholder: "Jenis Unsur",
+        },
+        {
+            id: "province_id",
+            label: "Provinsi",
+            options: provinces,
+            searchable: true,
+            placeholder: "Provinsi",
+        },
+        {
+            id: "regency_id",
+            label: "Kabupaten/Kota",
+            options: cities,
+            searchable: true,
+            placeholder: !selectedProvinceId ? "Kabupaten/Kota" : "Kabupaten/ Kota",
+        }
+    ], [elementsData, provinces, cities, selectedProvinceId]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchText);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchText]);
+
+    const { data: searchData, isLoading: isSearchLoading } = usePublicToponyms({
+        page: "1",
+        limit: "5",
+        ...(debouncedSearch ? { search: debouncedSearch } : {})
+    });
+
+    // Click outside for search results
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+                setShowSearchResults(false);
+            }
+        };
+
+        if (showSearchResults) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [showSearchResults]);
 
     // State for bounding box to trigger TanStack Query
     const [bounds, setBounds] = useState({
@@ -88,7 +188,10 @@ const IndonesiaMap = ({
 
     const { data, isLoading, error } = useSpatialToponyms({
         ...bounds,
-        limit: "20"
+        limit: "20",
+        ...(filterState.province_id ? { province_id: filterState.province_id } : {}),
+        ...(filterState.regency_id ? { regency_id: filterState.regency_id } : {}),
+        ...(filterState.element_id ? { element_id: filterState.element_id } : {})
     });
 
     const markers = useMemo<SpatialToponym[]>(() => data?.data?.results || [], [data]);
@@ -217,15 +320,73 @@ const IndonesiaMap = ({
         <div className="w-full h-full overflow-hidden relative">
             <div className="flex gap-2 absolute z-20 top-5 left-5 right-5 md:left-auto">
                 {/* search */}
-                <div className="flex flex-1 md:flex-initial gap-2 items-center w-96 md:max-w-96 p-3 bg-white rounded-lg shadow-sm">
-                    <Search size={16} className="text-gray-500" />
-                    <input
-                        type="text"
-                        className="w-full text-sm outline-none"
-                        placeholder="Cari Nama Rupabumi"
-                    />
+                <div ref={searchContainerRef} className="relative flex-1 md:flex-initial">
+                    <div className="flex gap-2 items-center w-full md:w-96 p-3 bg-white rounded-lg shadow-sm">
+                        <Search size={16} className="text-gray-500 shrink-0" />
+                        <input
+                            type="text"
+                            className="w-full text-sm outline-none"
+                            placeholder="Cari Nama Rupabumi"
+                            value={searchText}
+                            onChange={(e) => {
+                                setSearchText(e.target.value);
+                                setShowSearchResults(true);
+                            }}
+                            onFocus={() => setShowSearchResults(true)}
+                        />
+                        {searchText && (
+                            <button className="text-gray-500 hover:text-gray-700 cursor-pointer transition-all" onClick={() => setSearchText("")}>
+                                <X size={16}/>
+                            </button>
+                        )}
+                    </div>
+                    {/* Search Results Dropdown */}
+                    {showSearchResults && searchText && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden max-h-80 overflow-y-auto">
+                            {isSearchLoading ? (
+                                <div className="p-4 text-center text-sm text-gray-500">Mencari...</div>
+                            ) : searchData?.data && searchData.data.length > 0 ? (
+                                <div className="p-3">
+                                    <h3 className="text-sm font-bold">Hasil Pencarian</h3>
+                                    <ul className="flex flex-col mt-2">
+                                        {searchData.data.map((item) => (
+                                            <li key={item.id}>
+                                                <button
+                                                    className="w-full rounded-lg text-left p-4 hover:bg-gray-100 transition-colors cursor-pointer"
+                                                    onClick={() => {
+                                                        // Move map to location
+                                                        if (item.location_point) {
+                                                            mapRef.current?.getMap().flyTo({
+                                                                center: [item.location_point.coordinates[0], item.location_point.coordinates[1]],
+                                                                zoom: 15,
+                                                                duration: 1000
+                                                            });
+                                                        }
+                                                        setSearchText(item.local_name || item.map_name);
+                                                        setShowSearchResults(false);
+                                                        setSelectedToponymId(item.id);
+                                                        router.push(`/v2?id=${item.id}`);
+                                                    }}
+                                                >
+                                                    <div className="font-medium text-sm text-gray-800">{item.local_name || item.map_name}</div>
+                                                    <div className="text-xs text-gray-500 mt-1 flex gap-2">
+                                                        <span className="">{capitalizeFirstLetter(item.regency?.name)}, {capitalizeFirstLetter(item.province?.name)}</span>
+                                                    </div>
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ) : (
+                                <div className="p-4 text-center text-sm text-gray-500">Tidak ada hasil yang ditemukan</div>
+                            )}
+                        </div>
+                    )}
                 </div>
-                <button className="flex items-center gap-2 bg-white text-sm rounded-lg p-2 px-3 font-medium shadow-sm hover:bg-gray-50 transition drop-shadow-sm cursor-pointer whitespace-nowrap">
+                <button 
+                    onClick={() => setIsFilterModalOpen(true)}
+                    className={`flex items-center gap-2 text-sm rounded-lg p-2 px-3 font-medium shadow-sm transition drop-shadow-sm cursor-pointer whitespace-nowrap ${Object.values(filterState).some(val => val) ? 'bg-navy-50 border border-navy-300 text-navy-500 hover:bg-navy-100' : 'bg-white hover:bg-gray-100'}`}
+                >
                     <SlidersHorizontal size={18} />
                     <span className="hidden sm:inline">Filter</span>
                 </button>
@@ -410,8 +571,28 @@ const IndonesiaMap = ({
                 toponymId={selectedToponymId}
                 onClose={handleCloseSidebar}
             />
+
+            {/* Filter Modal */}
+            <FilterModal
+                isOpen={isFilterModalOpen}
+                onClose={() => {
+                    setIsFilterModalOpen(false);
+                    setActiveProvinceForFilter("");
+                }}
+                fields={filterFields}
+                initialFilters={filterState}
+                onFieldChange={(id, value) => {
+                    if (id === 'province_id') {
+                        setActiveProvinceForFilter(value);
+                    }
+                }}
+                onApply={(filters) => {
+                    setFilterState(filters);
+                    setIsFilterModalOpen(false);
+                }}
+            />
         </div>
-    )
+    );
 }
 
-export default IndonesiaMap
+export default IndonesiaMap;

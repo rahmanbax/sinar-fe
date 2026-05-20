@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { Plus, Database, MapPin } from 'lucide-react';
-import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
+import { Database, MapPin } from 'lucide-react';
 import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap';
 import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePersonalPerformance } from '@/hooks/usePersonal';
 import { useSurveyBoundingBox } from '@/hooks/useToponyms';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
-import Link from 'next/link';
 
 const SurveyorPage = () => {
     const { token, user } = useAuth();

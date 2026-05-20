@@ -122,6 +122,9 @@ export const useSpatialToponyms = (params: {
     min_lng: string;
     max_lng: string;
     limit?: string;
+    province_id?: string;
+    regency_id?: string;
+    element_id?: string;
 }) => {
     return useQuery<SpatialToponymResponse>({
         queryKey: ["toponyms", "spatial", params],

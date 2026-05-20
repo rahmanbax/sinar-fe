@@ -276,10 +276,12 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
             className: "w-16 text-center",
             cell: (row) => {
                 const transactionId = row.review_transaction_toponyms?.[0]?.transaction_id;
+                const provReview = row.review_transaction_toponyms?.find((r: any) => (r.user?.verification_permission_level || 0) >= 3);
+                const isReviewed = provReview != null || row.status_num === 1 || row.status_num === 2;
                 return (
                     <div className="flex justify-center">
                         <button
-                            onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail/${row.id}${transactionId ? `?transactionId=${transactionId}` : ''}`)}
+                            onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail/${row.id}?${transactionId ? `transactionId=${transactionId}&` : ''}reviewed=${isReviewed}`)}
                             className="p-1.5 text-slate-400 hover:text-navy-600 hover:bg-slate-100 rounded-md transition-colors"
                         >
                             <Search size={18} />

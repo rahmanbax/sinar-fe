@@ -260,45 +260,49 @@ const IncomingRecommendationDetailPage = () => {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-1 bg-gray-100 p-1.5 rounded-2xl">
-                                <button
-                                    onClick={() => setIsSesuai(true)}
-                                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${isSesuai ? 'bg-white  shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
-                                >
-                                    Sesuai
-                                </button>
-                                <button
-                                    onClick={() => setIsSesuai(false)}
-                                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${!isSesuai ? 'bg-navy-900 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}
-                                >
-                                    Tidak Sesuai
-                                </button>
-                            </div>
+                            {recommendation.accepted === null && (
+                                <>
+                                    <div className="flex items-center gap-1 bg-gray-100 p-1.5 rounded-2xl">
+                                        <button
+                                            onClick={() => setIsSesuai(true)}
+                                            className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${isSesuai ? 'bg-white  shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            Sesuai
+                                        </button>
+                                        <button
+                                            onClick={() => setIsSesuai(false)}
+                                            className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${!isSesuai ? 'bg-navy-900 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            Tidak Sesuai
+                                        </button>
+                                    </div>
 
-                            {!isSesuai && (
-                                <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Alasan Tidak Sesuai</label>
-                                    <textarea
-                                        rows={4}
-                                        placeholder="Tuliskan catatan ketidaksesuaian..."
-                                        value={alasan}
-                                        onChange={(e) => setAlasan(e.target.value)}
-                                        className="w-full px-5 py-4 border border-gray-200 rounded-2xl text-sm outline-none focus:border-navy-900 focus:ring-4 focus:ring-navy-900/5 transition-all resize-none shadow-inner bg-gray-50/30"
-                                    />
-                                </div>
+                                    {!isSesuai && (
+                                        <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Alasan Tidak Sesuai</label>
+                                            <textarea
+                                                rows={4}
+                                                placeholder="Tuliskan catatan ketidaksesuaian..."
+                                                value={alasan}
+                                                onChange={(e) => setAlasan(e.target.value)}
+                                                className="w-full px-5 py-4 border border-gray-200 rounded-2xl text-sm outline-none focus:border-navy-900 focus:ring-4 focus:ring-navy-900/5 transition-all resize-none shadow-inner bg-gray-50/30"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={handleSubmit}
+                                        disabled={acceptMutation.isPending || selectedIds.length === 0}
+                                        className={`w-full py-4.5 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2 group ${acceptMutation.isPending || selectedIds.length === 0
+                                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                                : 'bg-navy-900 hover:bg-navy-800 text-white shadow-xl shadow-navy-900/20 active:scale-[0.98]'
+                                            }`}
+                                    >
+                                        <Check size={18} className={`${acceptMutation.isPending ? 'hidden' : 'group-hover:scale-110 transition-transform'}`} />
+                                        {acceptMutation.isPending ? "Memproses..." : "Beri Rekomendasi"}
+                                    </button>
+                                </>
                             )}
-
-                            <button
-                                onClick={handleSubmit}
-                                disabled={acceptMutation.isPending || selectedIds.length === 0}
-                                className={`w-full py-4.5 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2 group ${acceptMutation.isPending || selectedIds.length === 0
-                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                        : 'bg-navy-900 hover:bg-navy-800 text-white shadow-xl shadow-navy-900/20 active:scale-[0.98]'
-                                    }`}
-                            >
-                                <Check size={18} className={`${acceptMutation.isPending ? 'hidden' : 'group-hover:scale-110 transition-transform'}`} />
-                                {acceptMutation.isPending ? "Memproses..." : "Beri Rekomendasi"}
-                            </button>
                         </div>
                     </div>
                 </div>

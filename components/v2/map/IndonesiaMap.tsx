@@ -160,8 +160,10 @@ const IndonesiaMap = ({
 
     const { data: searchData, isLoading: isSearchLoading } = usePublicToponyms({
         page: "1",
-        limit: "5",
+        limit: "",
         ...(debouncedSearch ? { search: debouncedSearch } : {})
+    }, {
+        enabled: !!debouncedSearch
     });
 
     // Click outside for search results

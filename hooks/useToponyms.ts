@@ -254,15 +254,22 @@ export interface PublicToponymResponse {
     pagination: PaginationMeta;
 }
 
-export const usePublicToponyms = (params: {
-    page: string;
-    limit: string;
-    [key: string]: any;
-}) => {
+export const usePublicToponyms = (
+    params: {
+        page: string;
+        limit: string;
+        search?: string;
+        province_id?: string;
+        regency_id?: string;
+        element_id?: string;
+    },
+    options?: { enabled?: boolean }
+) => {
     return useQuery<PublicToponymResponse>({
         queryKey: ["toponyms", "public", params],
         queryFn: () => getPublicToponyms(params),
         retry: false,
+        enabled: options?.enabled,
     });
 };
 

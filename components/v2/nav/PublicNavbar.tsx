@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import ButtonComponent from '../buttons/ButtonComponent'
@@ -34,9 +34,30 @@ const PublicNavbar = () => {
   const openAuthModal = () => setIsAuthModalOpen(true)
   const closeAuthModal = () => setIsAuthModalOpen(false)
 
+  const navRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+        setIsDropdownOpen(false)
+      }
+    }
+    
+    if (isOpen || isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside)
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [isOpen, isDropdownOpen])
+
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full">
+      <nav ref={navRef} className="sticky top-0 z-999 w-full">
         <div className="relative z-20 p-4 bg-white border-b border-gray-200">
           <div className="flex justify-between items-center">
             {/* Logo Section */}
@@ -130,7 +151,7 @@ const PublicNavbar = () => {
         </div>
 
         {/* Mobile Menu Panel Layer */}
-        <div className="md:hidden absolute top-full left-0 w-full overflow-hidden">
+        <div className={`md:hidden absolute top-full left-0 w-full overflow-hidden ${!isOpen ? 'pointer-events-none' : ''}`}>
           <div
             className={`w-full bg-white border-b border-gray-100 shadow-xl transition-transform duration-300 ease-in-out ${isOpen ? 'translate-y-0 pointer-events-auto' : '-translate-y-full pointer-events-none'
               }`}

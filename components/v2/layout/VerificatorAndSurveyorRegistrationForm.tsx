@@ -43,7 +43,11 @@ const VerificatorAndSurveyorRegistrationForm = () => {
     const defaultRole = isBigAdmin ? 'big' : 'verificator';
 
     const roleOptions = isBigAdmin
-        ? [{ label: 'Staff BIG', value: 'big' }]
+        ? [
+            { label: 'Staff BIG', value: 'big' },
+            { label: 'Verifikator', value: 'verificator' },
+            { label: 'Surveyor', value: 'surveyor' },
+          ]
         : [
             { label: 'Verifikator', value: 'verificator' },
             { label: 'Surveyor', value: 'surveyor' },
@@ -173,7 +177,7 @@ const VerificatorAndSurveyorRegistrationForm = () => {
                                         value={field.value}
                                         onChange={field.onChange}
                                         options={roleOptions}
-                                        disabled={isBigAdmin}
+
                                         required
                                     />
                                 )}

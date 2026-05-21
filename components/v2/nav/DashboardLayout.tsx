@@ -37,10 +37,9 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
 
     const getProfileRoute = () => {
         if (user?.role === 'verificator') {
-            if (user?.level === 'NATIONAL') return 'verifikator-pusat';
-            return (user?.level === 'PROVINCE')
-                ? 'verifikator-provinsi'
-                : 'verifikator-kota';
+            if (!user?.level || user.level === 'NATIONAL') return 'verifikator-pusat';
+            if (user.level === 'PROVINCE') return 'verifikator-provinsi';
+            return 'verifikator-kota';
         }
         return user?.role || 'admin';
     };
@@ -54,10 +53,9 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
         const regionName = formatRegionName(user?.region_name);
 
         if (user?.role === 'verificator') {
-            if (user?.level === 'NATIONAL') return 'Verifikator Pusat';
-            return (user?.level === 'PROVINCE')
-                ? `Verifikator Provinsi ${regionName}`.trim()
-                : `Verifikator Kota ${regionName}`.trim();
+            if (!user?.level || user.level === 'NATIONAL') return 'Verifikator Pusat';
+            if (user.level === 'PROVINCE') return `Verifikator Provinsi ${regionName}`.trim();
+            return `Verifikator Kota ${regionName}`.trim();
         }
 
         if (user?.role === 'surveyor' || user?.role === 'admin' || user?.role === 'contributor') {
@@ -81,9 +79,9 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
                         <SurveyorNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                     )}
                     {user?.role === 'verificator' && (
-                        (user?.level === 'NATIONAL') ? (
+                        (!user?.level || user.level === 'NATIONAL') ? (
                             <VerifikatorPusatNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-                        ) : (user?.level === 'PROVINCE') ? (
+                        ) : (user.level === 'PROVINCE') ? (
                             <VerifikatorProvinsiNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                         ) : (
                             <VerifikatorKotaNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />

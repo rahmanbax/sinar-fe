@@ -58,7 +58,13 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
             return `Verifikator Kota ${regionName}`.trim();
         }
 
-        if (user?.role === 'surveyor' || user?.role === 'admin' || user?.role === 'contributor') {
+        if (user?.role === 'surveyor') {
+            if (!user?.level || user.level === 'NATIONAL') return 'Surveyor Pusat';
+            if (user.level === 'PROVINCE') return `Surveyor Provinsi ${regionName}`.trim();
+            return `Surveyor ${regionName}`.trim();
+        }
+
+        if (user?.role === 'admin' || user?.role === 'contributor') {
             const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
             return `${roleName} ${regionName}`.trim();
         }

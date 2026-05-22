@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import { Search } from "lucide-react";
 import { useIncomingRecommendations } from "@/hooks/useVerificationTransactions";
@@ -9,14 +9,17 @@ import Link from "next/link";
 import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 
 const DataKabupatenKotaPage = () => {
-    const { data: incomingRes, isLoading } = useIncomingRecommendations();
+    const [page, setPage] = useState(1);
+
+    const { data: incomingRes, isLoading } = useIncomingRecommendations({ page, per_page: 10 });
     const recommendations = incomingRes?.data || [];
+    const pagination = incomingRes?.pagination;
 
     const columns: ColumnDef<any>[] = [
         {
             header: "No",
             cell: (_, index) => (
-                <div className="text-gray-900 text-center w-10">{index + 1}</div>
+                <div className="text-gray-900 text-center w-10">{(page - 1) * 10 + index + 1}</div>
             ),
             className: "text-center w-10",
         },
@@ -106,6 +109,8 @@ const DataKabupatenKotaPage = () => {
                         showSearch={true}
                         showFilter={true}
                         emptyMessage="Belum ada data dari Kabupaten/ Kota"
+                        pagination={pagination || { total: 0, per_page: 10, current_page: 1, last_page: 1, from: 0, to: 0 }}
+                        onPageChange={setPage}
                     />
                 </div>
             </div>

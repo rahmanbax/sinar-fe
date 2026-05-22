@@ -169,9 +169,10 @@ export const getCompletedVerificationTransactions = async (token: string | null)
     return response.json();
 };
 
-export const getRecommendations = async (token: string | null) => {
+export const getRecommendations = async (token: string | null, params?: { page?: number; per_page?: number }) => {
     if (!token) return { error: true, message: "No token provided", data: [] };
-    const response = await fetch(`${API_URL}/verifications/recommendation/outgoing`, {
+    const query = new URLSearchParams({ page: String(params?.page ?? 1), per_page: String(params?.per_page ?? 10) });
+    const response = await fetch(`${API_URL}/verifications/recommendation/outgoing?${query}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -192,9 +193,10 @@ export const createRecommendation = async (token: string | null, data: { ref_num
     return response.json();
 };
 
-export const getIncomingRecommendations = async (token: string | null) => {
+export const getIncomingRecommendations = async (token: string | null, params?: { page?: number; per_page?: number }) => {
     if (!token) return { error: true, message: "No token provided", data: [] };
-    const response = await fetch(`${API_URL}/verifications/recommendation/incoming`, {
+    const query = new URLSearchParams({ page: String(params?.page ?? 1), per_page: String(params?.per_page ?? 10) });
+    const response = await fetch(`${API_URL}/verifications/recommendation/incoming?${query}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

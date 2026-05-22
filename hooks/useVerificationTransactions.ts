@@ -19,12 +19,12 @@ export const useCompletedVerificationTransactions = () => {
     });
 };
 
-export const useRecommendations = () => {
+export const useRecommendations = (params?: { page?: number; per_page?: number }) => {
     const { token } = useAuth();
 
     return useQuery({
-        queryKey: ["recommendations"],
-        queryFn: () => getRecommendations(token),
+        queryKey: ["recommendations", params],
+        queryFn: () => getRecommendations(token, params),
         enabled: !!token,
     });
 };
@@ -42,11 +42,11 @@ export const useCreateRecommendationMutation = () => {
     });
 };
 
-export const useIncomingRecommendations = () => {
+export const useIncomingRecommendations = (params?: { page?: number; per_page?: number }) => {
     const { token } = useAuth();
     return useQuery({
-        queryKey: ["incoming-recommendations"],
-        queryFn: () => getIncomingRecommendations(token),
+        queryKey: ["incoming-recommendations", params],
+        queryFn: () => getIncomingRecommendations(token, params),
         enabled: !!token,
     });
 };

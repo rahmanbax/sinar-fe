@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import { Plus, Search } from "lucide-react";
@@ -12,15 +12,18 @@ import Link from "next/link";
 
 const DataRekomendasiPusatPage = () => {
     const router = useRouter();
-    const { data: recommendationsRes, isLoading } = useRecommendations();
+    const [page, setPage] = useState(1);
+
+    const { data: recommendationsRes, isLoading } = useRecommendations({ page, per_page: 10 });
 
     const recommendations = recommendationsRes?.data || [];
+    const pagination = recommendationsRes?.pagination;
 
     const columns: ColumnDef<any>[] = [
         {
             header: "No",
             cell: (_, index) => (
-                <div className="">{index + 1}</div>
+                <div className="">{(page - 1) * 10 + index + 1}</div>
             ),
             className: "w-14 text-center",
         },
@@ -91,7 +94,6 @@ const DataRekomendasiPusatPage = () => {
     return (
         <DashboardLayout>
             <div className="flex flex-col gap-8">
-                {/* Header Section */}
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Data Rekomendasi</h1>
                     <Link href="/v2/verifikator-pusat/data-rekomendasi/ajukan-rekomendasi">
@@ -103,7 +105,6 @@ const DataRekomendasiPusatPage = () => {
                     </Link>
                 </div>
 
-                {/* Table Section */}
                 <div className="bg-white rounded-xl shadow-none">
                     <DataTable
                         columns={columns}
@@ -112,6 +113,8 @@ const DataRekomendasiPusatPage = () => {
                         showSearch={true}
                         showFilter={true}
                         emptyMessage="Belum ada data rekomendasi"
+                        pagination={pagination || { total: 0, per_page: 10, current_page: 1, last_page: 1, from: 0, to: 0 }}
+                        onPageChange={setPage}
                     />
                 </div>
             </div>

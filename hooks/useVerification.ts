@@ -82,10 +82,10 @@ export const useVerificationCandidates = (token: string | null) => {
     });
 };
 
-export const useVerificationTransactions = (token: string | null) => {
+export const useVerificationTransactions = (token: string | null, params?: { page?: number; per_page?: number }) => {
     return useQuery({
-        queryKey: ["verification-transactions"],
-        queryFn: () => getVerificationTransactions(token),
+        queryKey: ["verification-transactions", params],
+        queryFn: () => getVerificationTransactions(token, params),
         enabled: !!token,
         retry: false,
     });
@@ -102,7 +102,7 @@ export const useCreateVerificationTransaction = () => {
             data: { title: string; elements: string[]; issued_at: string; due_at: string };
         }) => createVerificationTransaction(token, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["verification-transactions"], exact: false });
         },
     });
 };
@@ -120,7 +120,7 @@ export const useAcceptVerificationToponym = () => {
             toponymId: string;
         }) => acceptVerificationToponym(token, transactionId, toponymId),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["verification-transactions"], exact: false });
         },
     });
 };
@@ -138,7 +138,7 @@ export const useRejectVerificationToponym = () => {
             toponymId: string;
         }) => rejectVerificationToponym(token, transactionId, toponymId),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["verification-transactions"], exact: false });
         },
     });
 };
@@ -158,7 +158,7 @@ export const useUpdateVerificationToponym = () => {
             payload: any;
         }) => updateVerificationToponym(token, transactionId, toponymId, payload),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["verification-transactions"], exact: false });
         },
     });
 };
@@ -173,7 +173,7 @@ export const useFinishVerificationTransaction = () => {
             transactionId: string;
         }) => finishVerificationTransaction(token, transactionId),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["verification-transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["verification-transactions"], exact: false });
         },
     });
 };

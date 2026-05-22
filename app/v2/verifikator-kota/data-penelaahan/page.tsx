@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
-import { Plus, Search, SlidersHorizontal, Check, FileText } from 'lucide-react';
+import { Plus, Search, SlidersHorizontal, Check, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
     finishVerificationTransaction,
@@ -161,12 +161,14 @@ const DataPenelaahanVerifikatorContent = () => {
 
     const [activeTab, setActiveTab] = useState<'semua' | 'toponim'>('semua');
     const [searchText, setSearchText] = useState("");
+    const [transactionPage, setTransactionPage] = useState(1);
 
     // API Hooks
-    const { data: transactionsRes, isLoading: loadingTransactions, refetch: refetchTransactions } = useVerificationTransactions(token);
+    const { data: transactionsRes, isLoading: loadingTransactions, refetch: refetchTransactions } = useVerificationTransactions(token, { page: transactionPage, per_page: 10 });
     const { data: toponymsRes, isLoading: loadingToponyms } = useAllVerificationToponyms(token, { page: 1, per_page: 9999 });
 
     const transactions = useMemo(() => transactionsRes?.data || [], [transactionsRes]);
+    const transactionPagination = useMemo(() => transactionsRes?.pagination, [transactionsRes]);
     const allToponyms = useMemo(() => {
         const data = toponymsRes?.data || [];
         return data.map((item: any, idx: number) => ({
@@ -202,7 +204,7 @@ const DataPenelaahanVerifikatorContent = () => {
     }, [allToponyms, searchText]);
 
     const transactionColumns: ColumnDef<VerificationTransaction>[] = [
-        { header: "No", cell: (_, idx) => idx + 1, className: "w-12 text-center" },
+        { header: "No", cell: (_, idx) => (transactionPage - 1) * 10 + idx + 1, className: "w-12 text-center" },
         { header: "Rentang Penelaahan", cell: (row) => row.due_at ? new Date(row.due_at).toLocaleDateString("id-ID") : "-", className: "w-40" },
         { header: "Judul Penelaahan", accessorKey: "title" },
         { header: "Jumlah Data Ditelaah", accessorKey: "total_data", className: "text-center w-32" },
@@ -264,7 +266,7 @@ const DataPenelaahanVerifikatorContent = () => {
 
             <div className="flex items-center border-b border-gray-100">
                 <button onClick={() => setActiveTab('semua')} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'semua' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'}`}>
-                    Semua Penelaahan ({transactions.length})
+                    Semua Penelaahan ({transactionPagination?.total ?? transactions.length})
                 </button>
                 <button onClick={() => { setActiveTab('toponim'); setSearchText(""); }} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'toponim' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'}`}>
                     Semua Toponim ({allToponyms.length})
@@ -291,13 +293,46 @@ const DataPenelaahanVerifikatorContent = () => {
                     {loadingTransactions ? (
                         <div className="flex justify-center py-20"><p className="text-gray-400 animate-pulse">Memuat data...</p></div>
                     ) : viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 pb-10">
-                            {filteredTransactions.map((item: VerificationTransaction) => (
-                                <ReviewCard key={item.id} item={item} token={token} onRefresh={refetchTransactions} viewMode={viewMode} />
-                            ))}
-                        </div>
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                                {filteredTransactions.map((item: VerificationTransaction) => (
+                                    <ReviewCard key={item.id} item={item} token={token} onRefresh={refetchTransactions} viewMode={viewMode} />
+                                ))}
+                            </div>
+                            {transactionPagination && (
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-10 mt-2">
+                                    <span className="text-[13px] text-gray-500">
+                                        Menampilkan {(transactionPagination.from && transactionPagination.to) ? transactionPagination.to - transactionPagination.from + 1 : 0} dari {transactionPagination.total} data
+                                    </span>
+                                    <div className="flex items-center gap-1.5">
+                                        <button disabled={transactionPagination.current_page <= 1} onClick={() => setTransactionPage(p => p - 1)} className="w-8 h-8 flex items-center justify-center rounded-full bg-navy-500 text-white hover:bg-navy-400 transition disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer">
+                                            <ChevronLeft size={16} />
+                                        </button>
+                                        {Array.from({ length: Math.min(5, transactionPagination.last_page) }).map((_, i) => {
+                                            let pageNum = i + 1;
+                                            if (transactionPagination.last_page > 5 && transactionPagination.current_page > 3) {
+                                                pageNum = transactionPagination.current_page - 2 + i;
+                                            }
+                                            if (pageNum > transactionPagination.last_page) return null;
+                                            return (
+                                                <button key={pageNum} onClick={() => setTransactionPage(pageNum)} className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold transition cursor-pointer ${transactionPagination.current_page === pageNum ? 'bg-navy-500 text-white' : 'text-gray-400 hover:bg-gray-100'}`}>
+                                                    {pageNum}
+                                                </button>
+                                            );
+                                        })}
+                                        {transactionPagination.last_page > 5 && transactionPagination.current_page < transactionPagination.last_page - 2 && (
+                                            <><span className="text-gray-400 px-1">...</span>
+                                            <button onClick={() => setTransactionPage(transactionPagination.last_page)} className="w-8 h-8 flex items-center justify-center rounded-full text-navy-700 text-sm font-semibold hover:bg-gray-50 transition cursor-pointer">{transactionPagination.last_page}</button></>
+                                        )}
+                                        <button disabled={transactionPagination.current_page >= transactionPagination.last_page} onClick={() => setTransactionPage(p => p + 1)} className="w-8 h-8 flex items-center justify-center rounded-full bg-navy-500 text-white hover:bg-navy-400 transition disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer">
+                                            <ChevronRight size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     ) : (
-                        <div className="pb-10"><DataTable columns={transactionColumns} data={filteredTransactions} isLoading={loadingTransactions} showSearch={false} showFilter={false} /></div>
+                        <div className="pb-10"><DataTable columns={transactionColumns} data={filteredTransactions} isLoading={loadingTransactions} showSearch={false} showFilter={false} pagination={transactionPagination} onPageChange={setTransactionPage} /></div>
                     )}
                 </>
             ) : (

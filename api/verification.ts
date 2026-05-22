@@ -29,9 +29,10 @@ export interface VerificationPagination {
     last_page: number;
 }
 
-export const getVerificationTransactions = async (token: string | null) => {
+export const getVerificationTransactions = async (token: string | null, params?: { page?: number; per_page?: number }) => {
     if (!token) return { error: true, message: "No token provided", data: [] };
-    const response = await fetch(`${API_URL}/verifications/transaction`, {
+    const query = new URLSearchParams({ page: String(params?.page ?? 1), per_page: String(params?.per_page ?? 10) });
+    const response = await fetch(`${API_URL}/verifications/transaction?${query}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

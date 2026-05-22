@@ -91,7 +91,7 @@ const IndonesiaMap = ({
     // Filter Modal States
     const { token } = useAuth();
     const resolvedToken = token || "public";
-    
+
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [filterState, setFilterState] = useState<FilterState>({});
     const [activeProvinceForFilter, setActiveProvinceForFilter] = useState<string>("");
@@ -128,9 +128,9 @@ const IndonesiaMap = ({
         {
             id: "element_id",
             label: "Jenis Unsur",
-            options: elementsData?.data?.map((e: any) => ({ 
-                label: e.name, 
-                value: e.code 
+            options: elementsData?.data?.map((e: any) => ({
+                label: e.name,
+                value: e.code
             })) || [],
             searchable: true,
             placeholder: "Jenis Unsur",
@@ -338,7 +338,7 @@ const IndonesiaMap = ({
                         />
                         {searchText && (
                             <button className="text-gray-500 hover:text-gray-700 cursor-pointer transition-all" onClick={() => setSearchText("")}>
-                                <X size={16}/>
+                                <X size={16} />
                             </button>
                         )}
                     </div>
@@ -367,6 +367,7 @@ const IndonesiaMap = ({
                                                         setSearchText(item.local_name || item.map_name);
                                                         setShowSearchResults(false);
                                                         setSelectedToponymId(item.id);
+                                                        setFilterState({});
                                                         router.push(`/v2?id=${item.id}`);
                                                     }}
                                                 >
@@ -385,9 +386,9 @@ const IndonesiaMap = ({
                         </div>
                     )}
                 </div>
-                <button 
+                <button
                     onClick={() => setIsFilterModalOpen(true)}
-                    className={`flex items-center gap-2 text-sm rounded-lg p-2 px-3 font-medium shadow-sm transition drop-shadow-sm cursor-pointer whitespace-nowrap ${Object.values(filterState).some(val => val) ? 'bg-navy-50 border border-navy-300 text-navy-500 hover:bg-navy-100' : 'bg-white hover:bg-gray-100'}`}
+                    className={`flex items-center gap-2 text-sm rounded-lg p-2 px-3 font-medium shadow-sm transition drop-shadow-sm cursor-pointer whitespace-nowrap ${Object.values(filterState).some(val => val) ? 'bg-navy-50 border-2 border-navy-300 text-navy-500 hover:bg-navy-100' : 'bg-white hover:bg-gray-100'}`}
                 >
                     <SlidersHorizontal size={18} />
                     <span className="hidden sm:inline">Filter</span>

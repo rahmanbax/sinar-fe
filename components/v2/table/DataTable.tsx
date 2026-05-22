@@ -195,7 +195,7 @@ export function DataTable<TData>({
             {pagination && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2 mb-2">
                     <span className="text-[13px] text-gray-500">
-                        Menampilkan <span className="">{pagination.to - pagination.from + 1 || 0}</span> dari <span className="">{pagination.total}</span> data
+                        Menampilkan <span className="">{(pagination.from && pagination.to) ? pagination.to - pagination.from + 1 : 0}</span> dari <span className="">{pagination.total}</span> data
                     </span>
 
                     <div className="flex items-center gap-1.5">
@@ -222,9 +222,9 @@ export function DataTable<TData>({
                                 <button
                                     key={pageNum}
                                     onClick={() => onPageChange && onPageChange(pageNum)}
-                                    className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold transition cursor-pointer hover:bg-gray-100 ${pagination.current_page === pageNum
-                                        ? ""
-                                        : "text-gray-400"
+                                    className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold transition cursor-pointer ${pagination.current_page === pageNum
+                                        ? "bg-navy-500 text-white"
+                                        : "text-gray-400 hover:bg-gray-100"
                                         }`}
                                 >
                                     {pageNum}

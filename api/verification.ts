@@ -75,10 +75,10 @@ export const getVerificationCandidates = async (token: string | null) => {
     return response.json();
 };
 
-export const getAllVerificationToponyms = async (token: string | null, params: { page: number; per_page: number }) => {
+export const getAllVerificationToponyms = async (token: string | null, params: { page: number }) => {
     if (!token) return { error: true, message: "No token provided" };
-    const { page, per_page } = params;
-    const response = await fetch(`${API_URL}/verifications/transaction/toponyms?page=${page}&per_page=${per_page}`, {
+    const { page } = params;
+    const response = await fetch(`${API_URL}/verifications/transaction/toponyms?page=${page}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -104,10 +104,10 @@ export const getVerificationsToponyms = async (token: string | null, params?: an
     return response.json();
 };
 
-export const getVerificationTransactionToponyms = async (token: string | null, transactionId: string, params: { page: number; per_page: number }) => {
+export const getVerificationTransactionToponyms = async (token: string | null, transactionId: string, params: { page: number }) => {
     if (!token) return { error: true, message: "No token provided" };
-    const { page, per_page } = params;
-    const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms?page=${page}&per_page=${per_page}`, {
+    const { page } = params;
+    const response = await fetch(`${API_URL}/verifications/transaction/${transactionId}/toponyms?page=${page}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

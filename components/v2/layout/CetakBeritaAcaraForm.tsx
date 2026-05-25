@@ -317,7 +317,7 @@ const CetakBeritaAcaraForm = ({ backPath, redirectAfterSubmit }: CetakBeritaAcar
                         </button>
                     </div>
 
-                    <div className="bg-gray-100 rounded-2xl p-8 overflow-hidden min-h-[600px] border border-gray-200 relative">
+                    <div className="bg-gray-100 rounded-2xl p-8 overflow-hidden min-h-150 border border-gray-200 relative">
                         {loadingData ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/50 backdrop-blur-sm">
                                 <Loader2 className="animate-spin text-navy-500" size={32} />

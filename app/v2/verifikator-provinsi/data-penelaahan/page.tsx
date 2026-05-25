@@ -3,13 +3,15 @@
 import React, { useState, useMemo, Suspense, useEffect } from 'react';
 import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
-import { Plus, Search, SlidersHorizontal, Check, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Check, FileText } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useVerificationTransactions, useAllVerificationToponyms, useFinishVerificationTransaction } from '@/hooks/useVerification';
 import { useBeritaAcaraData } from '@/hooks/useBeritaAcara';
 import Link from 'next/link';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
+import DataPenelaahanLayout from '@/components/v2/layout/DataPenelaahanLayout';
+import { useDataPenelaahanStore } from '@/store/useDataPenelaahanStore';
 
 // Components matches the Verifikator Kota style
 const ReviewCard = ({
@@ -171,28 +173,26 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
         setMounted(true);
     }, []);
 
-    const viewFromUrl = searchParams.get('view') as 'grid' | 'table' | null;
-    const viewMode = viewFromUrl || 'grid';
-
     const [activeTab, setActiveTab] = useState<'semua' | 'toponim'>('semua');
-    const [searchText, setSearchText] = useState("");
-    const [transactionPage, setTransactionPage] = useState(1);
+    const { searchText, setSearchText, transactionPage, setTransactionPage, viewMode, setViewMode } = useDataPenelaahanStore();
     const [toponymPage, setToponymPage] = useState(1);
 
     // API Hooks
     const { data: transactionsRes, isLoading: isLoadingTransactions, refetch: refetchTransactions } = useVerificationTransactions(token, { page: transactionPage, per_page: 10 });
-    const { data: toponymsRes, isLoading: isLoadingToponyms } = useAllVerificationToponyms(token, { page: toponymPage, per_page: 10 });
+    const { data: toponymsRes, isLoading: isLoadingToponyms } = useAllVerificationToponyms(token, { page: toponymPage });
 
     const transactions = useMemo(() => transactionsRes?.data ?? [], [transactionsRes]);
     const transactionPagination = useMemo(() => transactionsRes?.pagination, [transactionsRes]);
     const toponyms = useMemo(() => toponymsRes?.data ?? [], [toponymsRes]);
     const toponymPagination = useMemo(() => toponymsRes?.pagination, [toponymsRes]);
 
-    const setViewMode = (mode: 'grid' | 'table') => {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set('view', mode);
-        router.replace(`/v2/verifikator-provinsi/data-penelaahan?${params.toString()}`, { scroll: false });
-    };
+    // Sync viewMode from URL to Zustand
+    useEffect(() => {
+        const viewFromUrl = searchParams.get('view') as 'grid' | 'table' | null;
+        if (viewFromUrl && (viewFromUrl === 'grid' || viewFromUrl === 'table')) {
+            setViewMode(viewFromUrl);
+        }
+    }, [searchParams, setViewMode]);
 
     const filteredTransactions = useMemo(() => {
         if (!searchText) return transactions;
@@ -222,12 +222,23 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
         { header: "Jumlah Ditolak", accessorKey: "rejected_data", className: "text-center w-28" },
         {
             header: "Status", cell: (row) => {
-                const isRecommended = row.status === 'recommended' || !!row.news;
+                const hasBA = !!row.ba_file_url;
+                const isSelesai = row.status === 'recommended' || !!row.news;
+                const isRekomendasi = row.status === 'completed' && hasBA;
+                const isCetakBA = row.status === 'completed' && !hasBA;
+                
+                let colorClass = 'bg-gray-100 text-gray-600';
+                if (isSelesai) {
+                    colorClass = 'bg-emerald-100 text-emerald-700';
+                } else if (isRekomendasi) {
+                    colorClass = 'bg-blue-50 text-blue-600';
+                } else if (isCetakBA) {
+                    colorClass = 'bg-orange-100 text-orange-600';
+                }
+                
                 return (
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${isRecommended ? 'bg-emerald-100 text-emerald-700' :
-                        row.status === 'completed' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-600'
-                        }`}>
-                        {isRecommended ? 'Selesai' : row.status === 'completed' ? 'Cetak BA' : 'Proses Penelaahan'}
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${colorClass}`}>
+                        {isSelesai ? 'Selesai' : isRekomendasi ? 'Rekomendasi' : isCetakBA ? 'Cetak BA' : 'Proses Penelaahan'}
                     </span>
                 );
             }
@@ -329,93 +340,14 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
 
             {
                 activeTab === 'semua' ? (
-                    <>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg min-w-[300px] border border-gray-100 shadow-sm">
-                                    <Search size={16} className="text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Cari penelaahan..."
-                                        value={searchText}
-                                        onChange={(e) => setSearchText(e.target.value)}
-                                        className="bg-transparent text-sm w-full outline-none"
-                                    />
-                                </div>
-                                <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg text-sm font-bold text-navy-700 border border-gray-100 shadow-sm">
-                                    <SlidersHorizontal size={16} /> Filter
-                                </button>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}>
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="6" height="16" rx="1" /><rect x="14" y="4" width="6" height="8" rx="1" opacity="0.6" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>
-                                </button>
-                                <button onClick={() => setViewMode('table')} className={`p-2 rounded-xl transition-all ${viewMode === 'table' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}>
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="7" height="7" rx="1" /><rect x="13" y="4" width="7" height="7" rx="1" /><rect x="4" y="13" width="7" height="7" rx="1" /><rect x="13" y="13" width="7" height="7" rx="1" /></svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        {isLoadingTransactions ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                    <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm h-64 animate-pulse">
-                                        <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-                                        <div className="space-y-3">
-                                            <div className="h-4 bg-gray-100 rounded w-full"></div>
-                                            <div className="h-4 bg-gray-100 rounded w-5/6"></div>
-                                            <div className="h-4 bg-gray-100 rounded w-4/6"></div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            viewMode === 'grid' ? (
-                                <>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                        {filteredTransactions.map((item: any) => (
-                                            <ReviewCard key={item.id} item={item} token={token} onRefresh={refetchTransactions} viewMode={viewMode} />
-                                        ))}
-                                    </div>
-                                    {transactionPagination && (
-                                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-12 mt-2">
-                                            <span className="text-[13px] text-gray-500">
-                                                Menampilkan {(transactionPagination.from && transactionPagination.to) ? transactionPagination.to - transactionPagination.from + 1 : 0} dari {transactionPagination.total} data
-                                            </span>
-                                            <div className="flex items-center gap-1.5">
-                                                <button disabled={transactionPagination.current_page <= 1} onClick={() => setTransactionPage(p => p - 1)} className="w-8 h-8 flex items-center justify-center rounded-full bg-navy-500 text-white hover:bg-navy-400 transition disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer">
-                                                    <ChevronLeft size={16} />
-                                                </button>
-                                                {Array.from({ length: Math.min(5, transactionPagination.last_page) }).map((_, i) => {
-                                                    let pageNum = i + 1;
-                                                    if (transactionPagination.last_page > 5 && transactionPagination.current_page > 3) {
-                                                        pageNum = transactionPagination.current_page - 2 + i;
-                                                    }
-                                                    if (pageNum > transactionPagination.last_page) return null;
-                                                    return (
-                                                        <button key={pageNum} onClick={() => setTransactionPage(pageNum)} className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold transition cursor-pointer ${transactionPagination.current_page === pageNum ? 'bg-navy-500 text-white' : 'text-gray-400 hover:bg-gray-100'}`}>
-                                                            {pageNum}
-                                                        </button>
-                                                    );
-                                                })}
-                                                {transactionPagination.last_page > 5 && transactionPagination.current_page < transactionPagination.last_page - 2 && (
-                                                    <><span className="text-gray-400 px-1">...</span>
-                                                    <button onClick={() => setTransactionPage(transactionPagination.last_page)} className="w-8 h-8 flex items-center justify-center rounded-full text-navy-700 text-sm font-semibold hover:bg-gray-50 transition cursor-pointer">{transactionPagination.last_page}</button></>
-                                                )}
-                                                <button disabled={transactionPagination.current_page >= transactionPagination.last_page} onClick={() => setTransactionPage(p => p + 1)} className="w-8 h-8 flex items-center justify-center rounded-full bg-navy-500 text-white hover:bg-navy-400 transition disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer">
-                                                    <ChevronRight size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                <div className="pb-12">
-                                    <DataTable columns={transactionColumns} data={filteredTransactions} isLoading={isLoadingTransactions} showSearch={false} showFilter={false} pagination={transactionPagination} onPageChange={setTransactionPage} />
-                                </div>
-                            )
-                        )}
-                    </>
+                    <DataPenelaahanLayout
+                        loadingTransactions={isLoadingTransactions}
+                        filteredTransactions={filteredTransactions}
+                        token={token}
+                        refetchTransactions={refetchTransactions}
+                        transactionPagination={transactionPagination}
+                        transactionColumns={transactionColumns}
+                    />
                 ) : (
                     <div className="pb-12">
                         <DataTable

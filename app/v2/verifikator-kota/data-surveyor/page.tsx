@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import FilterModal, { FilterState } from '@/components/v2/modals/FilterModal';
 import { Search } from 'lucide-react';
@@ -69,7 +69,7 @@ const DataSurveyorPage = () => {
     const { data: provincesData } = useProvinces(token);
     const { data: elementsData } = useElements(token);
 
-    const { data: toponymsResponse, isLoading } = useVerificationsToponyms(token, {
+    const { data: toponymsResponse, isLoading, refetch } = useVerificationsToponyms(token, {
         page,
         per_page: 10,
         search,
@@ -78,6 +78,10 @@ const DataSurveyorPage = () => {
         regency_id: filters?.kabupaten,
         status_level: filters?.status,
     });
+
+    useEffect(() => {
+        refetch();
+    }, [page, search, filters, refetch]);
 
     const toponyms = useMemo(() => {
         return (toponymsResponse?.data ?? []).map((item: any, index: number) => ({
@@ -144,7 +148,7 @@ const DataSurveyorPage = () => {
         { header: "Nama Rupabumi", accessorKey: "map_name" },
         { header: "Kabupaten/ Kota", accessorKey: "regency", className: "uppercase whitespace-nowrap" },
         { header: "Provinsi", accessorKey: "province", className: "uppercase whitespace-nowrap" },
-        { header: "Status", cell: (row) => getStatusBadgeV2(row.status) }
+        { header: "Status", cell: (row) => getStatusBadgeV2(row.status), className: "text-center" }
     ];
 
     return (
@@ -162,7 +166,7 @@ const DataSurveyorPage = () => {
                 showSearch={true}
                 showFilter={true}
                 showDownload={true}
-                showMap={true}
+                showMap={false}
                 onSearch={(val) => {
                     setSearch(val);
                     setPage(1);

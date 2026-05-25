@@ -234,7 +234,7 @@ const CetakBeritaAcaraForm = ({ backPath, redirectAfterSubmit }: CetakBeritaAcar
         <div className="flex flex-col gap-6">
             {/* Breadcrumbs Placeholder */}
             <div className="text-sm text-gray-500 flex items-center gap-2">
-                <Link href={backPath.includes('verifikator-provinsi') ? '/v2/verifikator-provinsi' : '/v2/verifikator-kota'} className="hover: transition-colors">Dashboard</Link>
+                <Link href={backPath.includes('verifikator-provinsi') ? '/v2/verifikator-provinsi' : backPath.includes('verifikator-pusat') ? '/v2/verifikator-pusat' : '/v2/verifikator-kota'} className="hover: transition-colors">Dashboard</Link>
                 <span>/</span>
                 <Link href={backPath} className="hover: transition-colors">Data Penelaahan</Link>
                 <span>/</span>

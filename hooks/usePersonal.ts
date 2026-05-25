@@ -29,10 +29,10 @@ export const usePersonalPerformance = (token: string | null) => {
     });
 };
 
-export const useMyTeams = (token: string | null, page: number = 1, search: string = "") => {
+export const useMyTeams = (token: string | null, page: number = 1, search: string = "", role?: string) => {
     return useQuery({
-        queryKey: ["my-teams", page, search],
-        queryFn: () => getMyTeams(token, page, search),
+        queryKey: ["my-teams", page, search, role],
+        queryFn: () => getMyTeams(token, page, search, role),
         enabled: !!token,
     });
 };

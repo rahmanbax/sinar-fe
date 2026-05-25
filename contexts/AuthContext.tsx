@@ -52,6 +52,22 @@ function formatUserData(data: any): UserType | null {
   } as UserType;
 }
 
+function setAuthCookies(token: string, user: UserType) {
+  if (typeof document !== 'undefined') {
+    document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax`;
+    document.cookie = `role=${user.role}; path=/; max-age=604800; SameSite=Lax`;
+    document.cookie = `level=${user.level || 'NATIONAL'}; path=/; max-age=604800; SameSite=Lax`;
+  }
+}
+
+function clearAuthCookies() {
+  if (typeof document !== 'undefined') {
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
+    document.cookie = 'role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
+    document.cookie = 'level=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [token, setToken] = useState<string | null>(null)
@@ -75,6 +91,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (formattedUser) {
             setUser(formattedUser)
             localStorage.setItem("user", JSON.stringify(formattedUser))
+            setAuthCookies(result.token, formattedUser)
+          }
+        } else {
+          // If profile data is cached/stored in state, update cookies with result.token
+          const cachedUser = localStorage.getItem("user");
+          if (cachedUser) {
+            setAuthCookies(result.token, JSON.parse(cachedUser));
           }
         }
 
@@ -163,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Token expired, clear it
           localStorage.removeItem("token")
           localStorage.removeItem("user")
+          clearAuthCookies()
           setIsLoading(false)
           return
         }
@@ -174,11 +198,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (userData) {
           setUser(userData)
           localStorage.setItem("user", JSON.stringify(userData))
+          setAuthCookies(storedToken, userData)
           // Schedule token refresh
           scheduleRefresh(storedToken)
         } else {
           // Token invalid
           setToken(null)
+          clearAuthCookies()
         }
       }
 
@@ -214,6 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(formattedUser)
     localStorage.setItem("token", authToken)
     localStorage.setItem("user", JSON.stringify(formattedUser))
+    setAuthCookies(authToken, formattedUser)
 
     // Schedule token refresh
     scheduleRefresh(authToken)
@@ -254,6 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(formattedUser)
     localStorage.setItem("token", authToken)
     localStorage.setItem("user", JSON.stringify(formattedUser))
+    setAuthCookies(authToken, formattedUser)
 
     // Schedule token refresh
     scheduleRefresh(authToken)
@@ -286,6 +314,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoggingOut(false)
     localStorage.removeItem("token")
     localStorage.removeItem("user")
+    clearAuthCookies()
     router.push("/v2")
   }
 

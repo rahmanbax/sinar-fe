@@ -99,7 +99,7 @@ export const useCreateVerificationTransaction = () => {
             data,
         }: {
             token: string | null;
-            data: { title: string; elements: string[]; issued_at: string; due_at: string };
+            data: { title: string; elements: string[]; issued_at: string; due_at: string; participants?: string[] };
         }) => createVerificationTransaction(token, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["verification-transactions"], exact: false });

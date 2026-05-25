@@ -96,13 +96,17 @@ const Page = () => {
         setIsSubmitting(true)
 
         try {
-            // Format due_at to match required format: "2026-01-01 07:00:00.000 +0700"
+            // Format due_at and issued_at to match required format: "2026-01-01 07:00:00.000 +0700"
             const dueDate = new Date(tanggalAkhir)
             const due_at = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}-${String(dueDate.getDate()).padStart(2, '0')} 07:00:00.000 +0700`
+
+            const today = new Date()
+            const issued_at = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')} 07:00:00.000 +0700`
 
             const requestBody = {
                 title: title,
                 elements: jenisUnsur, // Array of selected element codes
+                issued_at: issued_at,
                 due_at: due_at
             }
 

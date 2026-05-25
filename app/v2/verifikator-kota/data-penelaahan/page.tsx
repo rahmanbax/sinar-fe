@@ -13,6 +13,7 @@ import {
 import { useVerificationTransactions, useAllVerificationToponyms } from '@/hooks/useVerification';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
+import Link from 'next/link';
 
 const DataPenelaahanVerifikatorContent = () => {
     const router = useRouter();
@@ -122,7 +123,9 @@ const DataPenelaahanVerifikatorContent = () => {
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Data Penelaahan</h1>
-                <ButtonComponent label="Buat Penelaahan" icon={<Plus size={18} />} onClick={() => router.push('/v2/verifikator-kota/data-penelaahan/buat')} />
+                <Link href={"/v2/verifikator-kota/data-penelaahan/buat"}>
+                    <ButtonComponent label="Buat Penelaahan" icon={<Plus size={20} />}/>
+                </Link>
             </div>
 
             <div className="flex items-center border-b border-gray-100">

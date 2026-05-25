@@ -40,7 +40,7 @@ export const getVerificationTransactions = async (token: string | null, params?:
     return response.json();
 };
 
-export const createVerificationTransaction = async (token: string | null, data: { title: string; elements: string[]; issued_at: string; due_at: string }) => {
+export const createVerificationTransaction = async (token: string | null, data: { title: string; elements: string[]; issued_at: string; due_at: string; participants?: string[] }) => {
     if (!token) return { error: true, message: "No token provided" };
     const response = await fetch(`${API_URL}/verifications/transaction`, {
         method: "POST",

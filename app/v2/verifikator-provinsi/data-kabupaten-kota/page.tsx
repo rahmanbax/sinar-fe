@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import { Search } from "lucide-react";
 import { useIncomingRecommendations } from "@/hooks/useVerificationTransactions";
@@ -11,7 +11,12 @@ import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 const DataKabupatenKotaPage = () => {
     const [page, setPage] = useState(1);
 
-    const { data: incomingRes, isLoading } = useIncomingRecommendations({ page, per_page: 10 });
+    const { data: incomingRes, isLoading, refetch } = useIncomingRecommendations({ page, per_page: 10 });
+
+    useEffect(() => {
+        refetch();
+    }, [page, refetch]);
+
     const recommendations = incomingRes?.data || [];
     const pagination = incomingRes?.pagination;
 

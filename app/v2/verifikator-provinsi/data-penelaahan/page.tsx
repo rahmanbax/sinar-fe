@@ -13,156 +13,6 @@ import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 import DataPenelaahanLayout from '@/components/v2/layout/DataPenelaahanLayout';
 import { useDataPenelaahanStore } from '@/store/useDataPenelaahanStore';
 
-// Components matches the Verifikator Kota style
-const ReviewCard = ({
-    item,
-    token,
-    onRefresh,
-    viewMode
-}: {
-    item: any;
-    token: string | null;
-    onRefresh: () => void;
-    viewMode: string
-}) => {
-    const router = useRouter();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const finishMutation = useFinishVerificationTransaction();
-
-    const isCompleted = item.status === 'completed';
-    const isIssued = item.status === 'issued';
-    const isVerificationDone = item.total_data > 0 && item.total_data === item.handled_data;
-
-    // Check if BA exists for completed transactions
-    const { data: baData } = useBeritaAcaraData(token, isCompleted ? item.id : null);
-    const hasBA = !!baData?.ba_file_url;
-
-    const isRecommended = item.status === 'recommended' || hasBA;
-
-    const progressPercent = Math.round(((item.handled_data || 0) / (item.total_data || 1)) * 100);
-
-    const handleFinish = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (isSubmitting) return;
-
-        if (!confirm(`Apakah Anda yakin ingin menandai penelaahan "${item.title}" sebagai selesai? Data yang sudah selesai tidak dapat diubah lagi.`)) {
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            await finishMutation.mutateAsync({ token, transactionId: item.id });
-            onRefresh();
-        } catch (err) {
-            alert("Gagal menyelesaikan penelaahan. Terjadi kesalahan koneksi.");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    return (
-        <div
-            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full cursor-pointer group"
-            onClick={() => router.push(`/v2/verifikator-provinsi/data-penelaahan/detail?transactionId=${item.id}&view=${viewMode}`)}
-        >
-            <div className="flex items-start justify-between mb-4">
-                <h3 className="font-bold text-gray-900 text-lg leading-tight group-hover:text-blue-600 transition-colors">{item.title}</h3>
-                <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase whitespace-nowrap ${isRecommended ? 'text-emerald-600 bg-white border-emerald-400' :
-                    isCompleted ? 'text-orange-500 bg-white border-orange-400' :
-                        isIssued ? 'text-blue-600 bg-white border-blue-400' :
-                            'text-gray-500 bg-gray-50 border-gray-100'
-                    }`}>
-                    {isRecommended ? 'Selesai' : isCompleted ? 'Cetak BA' : isIssued ? 'Proses Penelaahan' : item.status}
-                </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-y-3 mb-6">
-                <div className="flex items-baseline gap-1.5 font-semibold">
-                    <span className="text-gray-900">{item.element_count}</span>
-                    <span className="text-gray-500 text-xs text-nowrap">Jenis Unsur</span>
-                </div>
-                <div className="flex items-baseline gap-1.5 font-semibold">
-                    <span className="text-gray-900">{item.district_count}</span>
-                    <span className="text-gray-500 text-xs">Kecamatan</span>
-                </div>
-                <div className="flex items-baseline gap-1.5 font-semibold">
-                    <span className="text-gray-900">{item.total_data}</span>
-                    <span className="text-gray-500 text-xs">Total Data</span>
-                </div>
-                <div className="flex items-baseline gap-1.5 font-semibold">
-                    <span className="text-gray-900">{item.handled_data}</span>
-                    <span className="text-gray-500 text-xs text-nowrap">Data Ditelaah</span>
-                </div>
-                <div className="flex items-baseline gap-1.5 font-semibold col-span-2">
-                    <span className="text-gray-900">{item.verificator_count || 0}</span>
-                    <span className="text-gray-500 text-xs">Verifikator</span>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-6 mb-8 mt-auto">
-                <div className="relative w-22 h-22 shrink-0">
-                    <svg className="w-full h-full transform -rotate-90">
-                        <circle cx="44" cy="44" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-100" />
-                        {/* Red Part (Rejected) */}
-                        <circle cx="44" cy="44" r="36" stroke="#EF4444" strokeWidth="8" fill="transparent"
-                            strokeDasharray={226.2}
-                            strokeDashoffset={226.2 - (226.2 * (item.accepted_data + item.rejected_data)) / (item.total_data || 1)}
-                            strokeLinecap="round" />
-                        {/* Green Part (Accepted) */}
-                        <circle cx="44" cy="44" r="36" stroke="#10B981" strokeWidth="8" fill="transparent"
-                            strokeDasharray={226.2}
-                            strokeDashoffset={226.2 - (226.2 * item.accepted_data) / (item.total_data || 1)}
-                            strokeLinecap="round" />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gray-900">{progressPercent}%</span>
-                    </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center gap-2 font-semibold">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                        <span className="text-[11px] text-gray-900 w-4">{item.accepted_data}</span>
-                        <span className="text-[11px] text-gray-400">Data Disetujui</span>
-                    </div>
-                    <div className="flex items-center gap-2 font-semibold">
-                        <div className="w-2 h-2 rounded-full bg-rose-500"></div>
-                        <span className="text-[11px] text-gray-900 w-4">{item.rejected_data}</span>
-                        <span className="text-[11px] text-gray-400">Data Ditolak</span>
-                    </div>
-                </div>
-            </div>
-
-            {isRecommended ? (
-                <button
-                    className="w-full py-2.5 rounded-xl text-sm font-bold bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (baData?.ba_file_url) {
-                            window.open(baData.ba_file_url, '_blank');
-                        } else {
-                            router.push(`/v2/verifikator-provinsi/data-penelaahan/cetak-ba?transactionId=${item.id}`);
-                        }
-                    }}
-                >
-                    <FileText size={16} /> Lihat Berita Acara
-                </button>
-            ) : isCompleted ? (
-                <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-navy-900 hover:bg-navy-800 text-white transition-all flex items-center justify-center gap-2"
-                    onClick={(e) => { e.stopPropagation(); router.push(`/v2/verifikator-provinsi/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
-                    <FileText size={16} /> Cetak Berita Acara
-                </button>
-            ) : isVerificationDone ? (
-                <button className="w-full py-2.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-all flex items-center justify-center gap-2"
-                    onClick={handleFinish} disabled={isSubmitting}>
-                    <Check size={16} /> {isSubmitting ? "Memproses..." : "Tandai Selesai"}
-                </button>
-            ) : (
-                <div className="h-[42px]"></div> // Placeholder if no action
-            )}
-        </div>
-    );
-};
-
 const VerifikatorProvinsiDataPenelaahanContent = () => {
     const router = useRouter();
     const { token } = useAuth();
@@ -179,7 +29,15 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
 
     // API Hooks
     const { data: transactionsRes, isLoading: isLoadingTransactions, refetch: refetchTransactions } = useVerificationTransactions(token, { page: transactionPage, per_page: 10 });
-    const { data: toponymsRes, isLoading: isLoadingToponyms } = useAllVerificationToponyms(token, { page: toponymPage });
+    const { data: toponymsRes, isLoading: isLoadingToponyms, refetch: refetchToponyms } = useAllVerificationToponyms(token, { page: toponymPage });
+
+    useEffect(() => {
+        refetchTransactions();
+    }, [transactionPage, refetchTransactions]);
+
+    useEffect(() => {
+        refetchToponyms();
+    }, [toponymPage, refetchToponyms]);
 
     const transactions = useMemo(() => transactionsRes?.data ?? [], [transactionsRes]);
     const transactionPagination = useMemo(() => transactionsRes?.pagination, [transactionsRes]);
@@ -207,9 +65,9 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
             const name = t.specific_element || t.map_name || t.local_name || t.name || "";
             const element = t.element?.name || t.element_name || "";
             const surveyor = t.creator?.name || t.surveyor_name || "";
-            return name.toLowerCase().includes(s) || 
-                   element.toLowerCase().includes(s) || 
-                   surveyor.toLowerCase().includes(s);
+            return name.toLowerCase().includes(s) ||
+                element.toLowerCase().includes(s) ||
+                surveyor.toLowerCase().includes(s);
         });
     }, [searchText, toponyms]);
 
@@ -226,7 +84,7 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
                 const isSelesai = row.status === 'recommended' || !!row.news;
                 const isRekomendasi = row.status === 'completed' && hasBA;
                 const isCetakBA = row.status === 'completed' && !hasBA;
-                
+
                 let colorClass = 'bg-gray-100 text-gray-600';
                 if (isSelesai) {
                     colorClass = 'bg-emerald-100 text-emerald-700';
@@ -235,7 +93,7 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
                 } else if (isCetakBA) {
                     colorClass = 'bg-orange-100 text-orange-600';
                 }
-                
+
                 return (
                     <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${colorClass}`}>
                         {isSelesai ? 'Selesai' : isRekomendasi ? 'Rekomendasi' : isCetakBA ? 'Cetak BA' : 'Proses Penelaahan'}
@@ -270,7 +128,7 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
                 // Provincial Verifier is level 3 or 4 usually. 
                 // We look for reviews from users with verification_permission_level >= 3
                 const provReview = row.review_transaction_toponyms?.find((r: any) => (r.user?.verification_permission_level || 0) >= 3);
-                
+
                 const statusLabel = row.status_label || (provReview ? (provReview.accepted ? "Disetujui" : "Ditolak") : "Belum Ditelaah");
                 const isAccepted = provReview ? provReview.accepted : (row.status_num === 1);
                 const isRejected = provReview ? !provReview.accepted : (row.status_num === 2);
@@ -323,17 +181,17 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
                 <Link href="/v2/verifikator-provinsi/data-penelaahan/buat">
                     <ButtonComponent
                         label="Buat Penelaahan"
-                        icon={<Plus size={18} />}
+                        icon={<Plus size={20} />}
                     />
                 </Link>
             </div>
 
             {/* Tabs per Design */}
             <div className="flex items-center border-b border-gray-100">
-                <button onClick={() => setActiveTab('semua')} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'semua' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'}`}>
+                <button onClick={() => setActiveTab('semua')} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'semua' ? 'border-navy-500 text-navy-500' : 'border-transparent text-gray-400'}`}>
                     Semua Penelaahan ({transactionPagination?.total ?? transactions.length})
                 </button>
-                <button onClick={() => { setActiveTab('toponim'); setSearchText(""); }} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'toponim' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400'}`}>
+                <button onClick={() => { setActiveTab('toponim'); setSearchText(""); }} className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'toponim' ? 'border-navy-500 text-navy-500' : 'border-transparent text-gray-400'}`}>
                     Semua Toponim ({toponymPagination?.total || 0})
                 </button>
             </div>

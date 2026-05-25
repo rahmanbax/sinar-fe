@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import { Plus, Search } from "lucide-react";
@@ -14,7 +14,11 @@ const DataRekomendasiPage = () => {
     const router = useRouter();
     const [page, setPage] = useState(1);
 
-    const { data: recommendationsRes, isLoading } = useRecommendations({ page, per_page: 10 });
+    const { data: recommendationsRes, isLoading, refetch } = useRecommendations({ page, per_page: 10 });
+
+    useEffect(() => {
+        refetch();
+    }, [page, refetch]);
 
     const recommendations = recommendationsRes?.data || [];
     const pagination = recommendationsRes?.pagination;
@@ -99,8 +103,7 @@ const DataRekomendasiPage = () => {
                     <Link href="/v2/verifikator-provinsi/data-rekomendasi/ajukan-rekomendasi">
                         <ButtonComponent
                             label="Ajukan Rekomendasi"
-                            onClick={() => router.push("")}
-                            icon={<Plus size={18} />}
+                            icon={<Plus size={20} />}
                         />
                     </Link>
                 </div>

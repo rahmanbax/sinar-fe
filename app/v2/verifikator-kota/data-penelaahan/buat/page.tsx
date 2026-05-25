@@ -2,7 +2,7 @@
 
 import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart'
 import BuatPenelaahanForm from '@/components/v2/layout/BuatPenelaahanForm'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useVerificationCandidates, useCreateVerificationTransaction } from '@/hooks/useVerification'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -13,7 +13,12 @@ import { ChevronRight } from 'lucide-react'
 const BuatPenelaahanPage = () => {
   const { token } = useAuth()
   const router = useRouter()
-  const { data: candidatesRes, isLoading } = useVerificationCandidates(token)
+  const { data: candidatesRes, isLoading, refetch } = useVerificationCandidates(token)
+  
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
   const { mutate: createTransaction, isPending } = useCreateVerificationTransaction()
 
   const candidates = candidatesRes?.data ?? []
@@ -35,6 +40,7 @@ const BuatPenelaahanPage = () => {
     tanggalAwalPenelaahan: string;
     tanggalPenelaahan: string;
     jenisUnsur: string[];
+    participants?: string[];
   }) => {
     const issued_at = formData.tanggalAwalPenelaahan
       ? `${formData.tanggalAwalPenelaahan} 00:00:00.00`
@@ -51,6 +57,7 @@ const BuatPenelaahanPage = () => {
           elements: formData.jenisUnsur,
           issued_at,
           due_at,
+          participants: formData.participants,
         },
       },
       {

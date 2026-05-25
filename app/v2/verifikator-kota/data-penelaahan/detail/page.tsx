@@ -50,7 +50,6 @@ const TransactionDetailContent = () => {
         try {
             const res = await getVerificationTransactionToponyms(token, transactionId, {
                 page: 1,
-                per_page: 9999
             });
             if (!res.error) {
                 const transformed = res.data?.map((item: any, idx: number) => ({

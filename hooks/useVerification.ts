@@ -14,7 +14,7 @@ import {
     finishVerificationTransaction,
 } from "@/api/verification";
 
-export const useAllVerificationToponyms = (token: string | null, params: { page: number; per_page: number }) => {
+export const useAllVerificationToponyms = (token: string | null, params: { page: number }) => {
     return useQuery({
         queryKey: ["all-verification-toponyms", params],
         queryFn: () => getAllVerificationToponyms(token, params),

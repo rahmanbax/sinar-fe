@@ -223,7 +223,7 @@ export function DataTable<TData>({
                                     key={pageNum}
                                     onClick={() => onPageChange && onPageChange(pageNum)}
                                     className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold transition cursor-pointer ${pagination.current_page === pageNum
-                                        ? "bg-navy-500 text-white"
+                                        ? "text-black"
                                         : "text-gray-400 hover:bg-gray-100"
                                         }`}
                                 >

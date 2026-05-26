@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DataTable, ColumnDef } from "@/components/v2/table/DataTable";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import { Plus, Search } from "lucide-react";
@@ -10,12 +10,17 @@ import { useRouter } from "next/navigation";
 import { useRecommendations } from "@/hooks/useVerificationTransactions";
 import dayjs from "dayjs";
 import DashboardLayout from "@/components/v2/nav/DashboardLayout";
+import Link from "next/link";
 
 const DataRekomendasiPage = () => {
     const router = useRouter();
     const [page, setPage] = useState(1);
 
-    const { data: recommendationsRes, isLoading } = useRecommendations({ page, per_page: 10 });
+    const { data: recommendationsRes, isLoading, refetch } = useRecommendations({ page, per_page: 10 });
+
+    useEffect(() => {
+        refetch();
+    }, [page, refetch]);
 
     const recommendations = recommendationsRes?.data || [];
     const pagination = recommendationsRes?.pagination;
@@ -75,8 +80,13 @@ const DataRekomendasiPage = () => {
 
                 return (
                     <div className="flex justify-center">
-                        <span className={`px-4 py-1 rounded-full text-[13px] font-semibold ${statusClass}`}>
-                            {statusLabel}
+                        <span className={`px-4 py-1 rounded-full text-[13px] font-semibold ${isDiajukan
+                                ? "bg-blue-100/80 text-blue-600"
+                                : isSelesai
+                                    ? "bg-green-100/80 text-green-600"
+                                    : "bg-gray-100 text-gray-600"
+                            }`}>
+                            {row.status || "Diajukan"}
                         </span>
                     </div>
                 );
@@ -104,11 +114,12 @@ const DataRekomendasiPage = () => {
             <div className="flex flex-col gap-8">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900">Data Rekomendasi</h1>
-                    <ButtonComponent
-                        label="Ajukan Rekomendasi"
-                        onClick={() => router.push("/v2/verifikator-kota/data-rekomendasi/ajukan-rekomendasi")}
-                        icon={<Plus size={18} />}
-                    />
+                    <Link href={`/v2/verifikator-kota/data-rekomendasi/ajukan-rekomendasi`}>
+                        <ButtonComponent
+                            label="Ajukan Rekomendasi"
+                            icon={<Plus size={20} />}
+                        />
+                    </Link>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-none">

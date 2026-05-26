@@ -12,28 +12,32 @@ const ReviewCard = ({
     item,
     token,
     onRefresh,
-    viewMode
+    viewMode,
+    isLoading = false
 }: {
-    item: VerificationTransaction;
-    token: string | null;
-    onRefresh: () => void;
-    viewMode: string;
+    item?: VerificationTransaction;
+    token?: string | null;
+    onRefresh?: () => void;
+    viewMode?: string;
+    isLoading?: boolean;
 }) => {
     const router = useRouter();
     const { submittingTransactions, setSubmittingTransaction } = useDataPenelaahanStore();
-    const isSubmitting = !!submittingTransactions[item.id];
 
-    const isCompleted = item.status === 'completed';
-    const isIssued = item.status === 'issued';
-    const isVerificationDone = item.total_data > 0 && item.total_data === item.handled_data;
+    const isSubmitting = item ? !!submittingTransactions[item.id] : false;
 
-    const hasBA = !!item.ba_file_url;
-    const isSelesai = item.status === 'recommended' || !!item.news;
-    const isRekomendasi = item.status === 'completed' && hasBA;
-    const isCetakBA = item.status === 'completed' && !hasBA;
+    const isCompleted = item?.status === 'completed';
+    const isIssued = item?.status === 'issued';
+    const isVerificationDone = item ? (item.total_data > 0 && item.total_data === item.handled_data) : false;
+
+    const hasBA = item ? !!item.ba_file_url : false;
+    const isSelesai = item ? (item.status === 'recommended' || !!item.news) : false;
+    const isRekomendasi = isCompleted && hasBA;
+    const isCetakBA = isCompleted && !hasBA;
     const isRecommended = isSelesai || isRekomendasi;
 
     const handleFinish = async (e: React.MouseEvent) => {
+        if (!item) return;
         e.stopPropagation();
         if (isSubmitting) return;
 
@@ -43,9 +47,9 @@ const ReviewCard = ({
 
         setSubmittingTransaction(item.id, true);
         try {
-            const res = await finishVerificationTransaction(token, item.id);
+            const res = await finishVerificationTransaction(token ?? null, item.id);
             if (!res.error) {
-                onRefresh();
+                onRefresh?.();
             } else {
                 alert(res.message || "Gagal menyelesaikan penelaahan");
             }
@@ -57,10 +61,33 @@ const ReviewCard = ({
     };
 
     return (
-        <div
-            onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail?transactionId=${item.id}`)}
-            className="bg-white hover:bg-gray-100 rounded-xl border border-gray-300 p-4 transition-all cursor-pointer group space-y-4"
-        >
+        isLoading || !item ? (
+            <div className="bg-white border border-gray-300 rounded-xl p-4 flex flex-col gap-4 animate-pulse">
+                <div className="flex justify-between items-start gap-2">
+                    <div className="h-5 bg-gray-200 rounded w-2/3"></div>
+                    <div className="h-5 bg-gray-200 rounded w-16 shrink-0"></div>
+                </div>
+                <div className="grid grid-cols-2 gap-y-3">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-22 h-22 rounded-full bg-gray-200 shrink-0"></div>
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-2/5"></div>
+                    </div>
+                </div>
+                <div className="h-9 bg-gray-200 rounded-lg w-full mt-2"></div>
+            </div>
+        ) : (
+            <div
+                onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail?transactionId=${item.id}`)}
+                className="bg-white hover:bg-gray-100 rounded-xl border border-gray-300 p-4 transition-all cursor-pointer group space-y-4"
+            >
                 <div className="flex items-start gap-2">
                     <h3 className="text-lg transition-colors w-full font-semibold">{item.title}</h3>
                     <span className={`px-2 py-1 rounded-md text-xs font-semibold border whitespace-nowrap ${
@@ -140,6 +167,7 @@ const ReviewCard = ({
                     </button>
                 ) : null}
             </div>
+        )
     );
 };
 

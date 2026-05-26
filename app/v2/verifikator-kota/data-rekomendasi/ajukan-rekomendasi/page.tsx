@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ButtonComponent from "@/components/v2/buttons/ButtonComponent";
 import TextInput from "@/components/v2/inputs/TextInput";
 import FileInput from "@/components/v2/inputs/FileInput";
@@ -17,9 +17,14 @@ import DashboardLayout from "@/components/v2/nav/DashboardLayout";
 const AjukanRekomendasiPage = () => {
     const router = useRouter();
     const { token } = useAuth();
-    const { data: transactionsRes, isLoading } = useCompletedVerificationTransactions();
+    const { data: transactionsRes, isLoading, refetch } = useCompletedVerificationTransactions();
+
+    useEffect(() => {
+        refetch();
+    }, [refetch]);
+
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
-    
+
     // Form States
     const [noSurat, setNoSurat] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -29,7 +34,7 @@ const AjukanRekomendasiPage = () => {
     const transactions: VerificationTransaction[] = transactionsRes?.data || [];
 
     const toggleSelect = (id: string) => {
-        setSelectedIds(prev => 
+        setSelectedIds(prev =>
             prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
         );
     };
@@ -86,12 +91,12 @@ const AjukanRekomendasiPage = () => {
         <DashboardLayout showNav={false}>
             <div className="w-full flex flex-col gap-8 py-4 md:px-12 lg:px-20">
                 {/* Breadcrumb */}
-                <nav className="flex items-center gap-2 text-sm text-gray-400">
-                    <Link href="/v2/verifikator-kota" className="hover:text-navy-600 transition-colors">Dashboard</Link>
+                <nav className="flex items-center text-sm text-gray-500 gap-2" >
+                    <Link href="/v2/verifikator-kota" className="hover:text-black transition-colors">Dashboard</Link>
                     <ChevronRight size={14} />
-                    <Link href="/v2/verifikator-kota/data-rekomendasi" className="hover:text-navy-600 transition-colors">Data Rekomendasi</Link>
+                    <Link href="/v2/verifikator-kota/data-rekomendasi" className="hover:text-black transition-colors">Data Rekomendasi</Link>
                     <ChevronRight size={14} />
-                    <span className="text-gray-900 font-semibold">Ajukan Rekomendasi</span>
+                    <span className="text-black">Buat Penelaahan</span>
                 </nav>
 
                 {/* Title */}
@@ -99,7 +104,7 @@ const AjukanRekomendasiPage = () => {
 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                    
+
                     {/* Left Column: Pilih Penelaahan */}
                     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
                         <div className="p-4 border-b border-gray-100 bg-gray-50/50">
@@ -110,65 +115,65 @@ const AjukanRekomendasiPage = () => {
                                 <thead className="bg-gray-100 text-gray-600 font-semibold">
                                     <tr>
                                         <th className="px-4 py-3 w-10">
-                                             <input 
-                                                 type="checkbox" 
-                                                 className="w-4 h-4 rounded border-gray-300 accent-navy-600 cursor-pointer"
-                                                 checked={transactions.length > 0 && selectedIds.length === transactions.length}
-                                                 onChange={toggleSelectAll}
-                                             />
-                                         </th>
-                                         <th className="px-4 py-3 w-12 text-center">No</th>
-                                         <th className="px-4 py-3">Judul Penelaahan</th>
-                                         <th className="px-4 py-3 text-right">Jumlah Data</th>
-                                     </tr>
-                                 </thead>
-                                 <tbody className="divide-y divide-gray-100">
-                                     {isLoading ? (
-                                         <tr>
-                                             <td colSpan={4} className="px-4 py-10 text-center text-gray-400">
-                                                 <p className="animate-pulse">Memuat data penelaahan...</p>
-                                             </td>
-                                         </tr>
-                                     ) : transactions.length === 0 ? (
-                                         <tr>
-                                             <td colSpan={4} className="px-4 py-10 text-center text-gray-400">
-                                                 Tidak ada data penelaahan yang selesai.
-                                             </td>
-                                         </tr>
-                                     ) : (
-                                         transactions.map((item, idx) => (
-                                             <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                                 <td className="px-4 py-4">
-                                                     <input 
-                                                         type="checkbox" 
-                                                         className="w-4 h-4 rounded border-gray-300 accent-navy-600 cursor-pointer"
-                                                         checked={selectedIds.includes(item.id)}
-                                                         onChange={() => toggleSelect(item.id)}
-                                                     />
-                                                 </td>
-                                                 <td className="px-4 py-4 text-center text-gray-900">{idx + 1}</td>
-                                                 <td className="px-4 py-4 text-gray-900">{item.title}</td>
-                                                 <td className="px-4 py-4 text-right text-gray-900 font-medium">{item.accepted_data}</td>
-                                             </tr>
-                                         ))
-                                     )}
-                                 </tbody>
-                             </table>
-                         </div>
-                     </div>
- 
-                     {/* Right Column: Submission Form */}
-                     <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col gap-6">
-                         {/* Jumlah Data (ReadOnly) */}
-                         <div>
-                             <label className="block text-sm font-semibold text-gray-900 mb-2">Jumlah Data</label>
-                             <div className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-600 font-medium">
-                                 {totalSelectedData}
-                             </div>
-                         </div>
+                                            <input
+                                                type="checkbox"
+                                                className="w-4 h-4 rounded border-gray-300 accent-navy-600 cursor-pointer"
+                                                checked={transactions.length > 0 && selectedIds.length === transactions.length}
+                                                onChange={toggleSelectAll}
+                                            />
+                                        </th>
+                                        <th className="px-4 py-3 w-12 text-center">No</th>
+                                        <th className="px-4 py-3">Judul Penelaahan</th>
+                                        <th className="px-4 py-3 text-right">Jumlah Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {isLoading ? (
+                                        <tr>
+                                            <td colSpan={4} className="px-4 py-10 text-center text-gray-400">
+                                                <p className="animate-pulse">Memuat data penelaahan...</p>
+                                            </td>
+                                        </tr>
+                                    ) : transactions.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="px-4 py-10 text-center text-gray-400">
+                                                Tidak ada data penelaahan yang selesai.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        transactions.map((item, idx) => (
+                                            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                                                <td className="px-4 py-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="w-4 h-4 rounded border-gray-300 accent-navy-600 cursor-pointer"
+                                                        checked={selectedIds.includes(item.id)}
+                                                        onChange={() => toggleSelect(item.id)}
+                                                    />
+                                                </td>
+                                                <td className="px-4 py-4 text-center text-gray-900">{idx + 1}</td>
+                                                <td className="px-4 py-4 text-gray-900">{item.title}</td>
+                                                <td className="px-4 py-4 text-right text-gray-900 font-medium">{item.accepted_data}</td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Submission Form */}
+                    <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col gap-6">
+                        {/* Jumlah Data (ReadOnly) */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">Jumlah Data</label>
+                            <div className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-600 font-medium">
+                                {totalSelectedData}
+                            </div>
+                        </div>
 
                         {/* No. Surat Rekomendasi */}
-                        <TextInput 
+                        <TextInput
                             id="no_surat"
                             label="No. Surat Rekomendasi"
                             value={noSurat}
@@ -176,7 +181,7 @@ const AjukanRekomendasiPage = () => {
                         />
 
                         {/* Unggah Surat */}
-                        <FileInput 
+                        <FileInput
                             id="unggah_surat"
                             label="Unggah Surat"
                             onChange={(file) => setSelectedFile(file)}
@@ -186,20 +191,19 @@ const AjukanRekomendasiPage = () => {
 
                         {/* Action Buttons */}
                         <div className="grid grid-cols-2 gap-4 mt-2">
-                            <ButtonComponent 
+                            <ButtonComponent
                                 label="Batalkan"
                                 secondary
                                 className="w-full py-2.5"
                                 onClick={() => router.back()}
                             />
-                            <ButtonComponent 
+                            <ButtonComponent
                                 label={isPending ? "Memproses..." : "Ajukan"}
                                 disabled={!isValid || isPending}
-                                className={`w-full py-2.5 border-none transition-all ${
-                                    isValid 
-                                    ? "bg-navy-900 hover:bg-navy-800 text-white cursor-pointer" 
+                                className={`w-full py-2.5 border-none transition-all ${isValid
+                                    ? "bg-navy-900 hover:bg-navy-800 text-white cursor-pointer"
                                     : "bg-gray-400 text-white cursor-not-allowed"
-                                }`}
+                                    }`}
                                 onClick={handleSubmit}
                             />
                         </div>

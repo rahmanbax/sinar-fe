@@ -59,8 +59,8 @@ const DataPenelaahanLayout: React.FC<DataPenelaahanLayoutProps> = ({
                         onClick={() => handleSetViewMode('grid')}
                         title="Tampilan Kartu"
                         className={`p-2 rounded-xl transition-all cursor-pointer ${viewMode === 'grid'
-                                ? 'bg-navy-50 text-navy-500'
-                                : 'text-gray-500 hover:bg-gray-100'
+                            ? 'bg-navy-50 text-navy-500'
+                            : 'text-gray-500 hover:bg-gray-100'
                             }`}
                     >
                         <LayoutDashboard size={24} fill={viewMode === 'grid' ? 'currentColor' : 'none'} />
@@ -69,17 +69,19 @@ const DataPenelaahanLayout: React.FC<DataPenelaahanLayoutProps> = ({
                         onClick={() => handleSetViewMode('table')}
                         title="Tampilan Tabel"
                         className={`p-2 rounded-xl transition-all cursor-pointer ${viewMode === 'table'
-                                ? 'bg-navy-50 text-navy-500'
-                                : 'text-gray-500 hover:bg-gray-100'
+                            ? 'bg-navy-50 text-navy-500'
+                            : 'text-gray-500 hover:bg-gray-100'
                             }`}
                     >
                         <Table size={24} />
                     </button>
                 </div>
             </div>
-            {loadingTransactions ? (
-                <div className="flex justify-center py-20">
-                    <p className="text-gray-400 animate-pulse">Memuat data...</p>
+            {loadingTransactions && viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    {Array.from({ length: 8 }).map((_, idx) => (
+                        <ReviewCard key={idx} isLoading={true} />
+                    ))}
                 </div>
             ) : viewMode === 'grid' ? (
                 <>
@@ -122,8 +124,8 @@ const DataPenelaahanLayout: React.FC<DataPenelaahanLayoutProps> = ({
                                             key={pageNum}
                                             onClick={() => setTransactionPage(pageNum)}
                                             className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold transition cursor-pointer ${transactionPagination.current_page === pageNum
-                                                    ? 'text-black'
-                                                    : 'text-gray-400 hover:bg-gray-100'
+                                                ? 'text-black'
+                                                : 'text-gray-400 hover:bg-gray-100'
                                                 }`}
                                         >
                                             {pageNum}

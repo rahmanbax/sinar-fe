@@ -15,7 +15,8 @@ export const formatRoleName = (role: string) => {
     }
 }
 
-export const formatInstansiName = (instansi: string) => {
+export const formatInstansiName = (instansi: string | null | undefined) => {
+    if (!instansi) return '-';
     return instansi.replace('Organisasi ', '');
 }
 

@@ -57,18 +57,25 @@ const DataRekomendasiPusatPage = () => {
         {
             header: "Status",
             cell: (row) => {
-                const isDiajukan = row.status === "Diajukan" || row.status === "diajukan" || !row.status;
-                const isSelesai = row.status === "Selesai" || row.status === "selesai";
+                const isDiajukan = row.accepted === null;
+                const isDiterima = row.accepted === true;
+                const isDitolak = row.accepted === false;
+
+                let statusLabel = "Diajukan";
+                let statusClass = "bg-blue-100/80 text-blue-600";
+
+                if (isDiterima) {
+                    statusLabel = "Rekomendasi Diterima";
+                    statusClass = "bg-green-100/80 text-green-600";
+                } else if (isDitolak) {
+                    statusLabel = "Rekomendasi Ditolak";
+                    statusClass = "bg-red-100/80 text-red-600";
+                }
 
                 return (
                     <div className="flex justify-center">
-                        <span className={`px-4 py-1 rounded-full text-[13px] font-semibold ${isDiajukan
-                                ? "bg-blue-100/80 text-blue-600"
-                                : isSelesai
-                                    ? "bg-green-100/80 text-green-600"
-                                    : "bg-gray-100 text-gray-600"
-                            }`}>
-                            {row.status || "Diajukan"}
+                        <span className={`px-4 py-1 rounded-full text-[13px] font-semibold ${statusClass}`}>
+                            {statusLabel}
                         </span>
                     </div>
                 );

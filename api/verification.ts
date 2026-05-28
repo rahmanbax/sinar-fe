@@ -172,7 +172,7 @@ export const rejectVerificationToponym = async (token: string | null, transactio
 
 export const getCompletedVerificationTransactions = async (token: string | null) => {
     if (!token) return { error: true, message: "No token provided", data: [] };
-    const response = await fetch(`${API_URL}/verifications/transaction?status_num=2`, {
+    const response = await fetch(`${API_URL}/verifications/transaction?status_num=3`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

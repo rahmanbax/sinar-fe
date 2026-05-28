@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, SlidersHorizontal, LayoutDashboard, Table, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import ReviewCard from '@/components/v2/card/ReviewCard';
@@ -28,6 +28,11 @@ const DataPenelaahanLayout: React.FC<DataPenelaahanLayoutProps> = ({
     const router = useRouter();
     const searchParams = useSearchParams();
     const { searchText, setSearchText, transactionPage, setTransactionPage, viewMode } = useDataPenelaahanStore();
+
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleSetViewMode = (mode: 'card' | 'table') => {
         const params = new URLSearchParams(searchParams.toString());
@@ -76,7 +81,7 @@ const DataPenelaahanLayout: React.FC<DataPenelaahanLayoutProps> = ({
                     </button>
                 </div>
             </div>
-            {loadingTransactions && viewMode === 'card' ? (
+            {!mounted || (loadingTransactions && viewMode === 'card') ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                     {Array.from({ length: 4 }).map((_, idx) => (
                         <ReviewCard key={idx} isLoading={true} />

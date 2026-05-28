@@ -8,25 +8,7 @@ import {
 import Link from 'next/link';
 import { useDataPenelaahanStore } from '@/store/useDataPenelaahanStore';
 
-const getBadgeClass = (statusNum: number | undefined): string => {
-    if (statusNum === 4) return 'text-green-600 border-green-600';
-    if (statusNum === 3) return 'text-blue-600 border-blue-600';
-    if (statusNum === 2) return 'text-orange-600 border-orange-600';
-    if (statusNum === 1) return 'text-red-600 border-red-600';
-    if (statusNum === 0) return 'text-slate-600 border-slate-200';
-    if (statusNum === -1) return 'text-rose-600 border-rose-600';
-    return 'text-gray-600 border-gray-200';
-};
-
-const getBadgeLabel = (statusNum: number | undefined): string => {
-    if (statusNum === 4) return 'Selesai';
-    if (statusNum === 3) return 'Rekomendasi';
-    if (statusNum === 2) return 'Cetak BA';
-    if (statusNum === 1) return 'Closed';
-    if (statusNum === 0) return 'Proses Penelaahan';
-    if (statusNum === -1) return 'Due';
-    return 'Proses Penelaahan';
-};
+import { getBadgeColor, getBadgeLabel } from '@/utils/transactionStatus';
 
 const ReviewCard = ({
     item,
@@ -44,13 +26,6 @@ const ReviewCard = ({
     const { submittingTransactions, setSubmittingTransaction } = useDataPenelaahanStore();
 
     const isSubmitting = item ? !!submittingTransactions[item.id] : false;
-
-    const isDue = item?.status_num === -1;
-    const isIssued = item?.status_num === 0;
-    const isClosed = item?.status_num === 1;
-    const isCompleted = item?.status_num === 2;
-    const isAnnounced = item?.status_num === 3;
-    const isRecommended = item?.status_num === 4;
 
     const isVerificationDone = item ? (item.total_data > 0 && item.total_data === item.handled_data) : false;
 
@@ -108,7 +83,7 @@ const ReviewCard = ({
             >
                 <div className="flex items-start gap-2">
                     <h3 className="text-lg transition-colors w-full font-semibold">{item.title}</h3>
-                    <span className={`px-2 py-1 rounded-md text-xs font-semibold border whitespace-nowrap ${getBadgeClass(item?.status_num)}`}>
+                    <span className={`px-2 py-1 rounded-md text-xs font-semibold border whitespace-nowrap text-${getBadgeColor(item?.status_num)}-600 border-${getBadgeColor(item?.status_num)}-600`}>
                         {getBadgeLabel(item?.status_num)}
                     </span>
                 </div>

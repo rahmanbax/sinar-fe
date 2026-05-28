@@ -12,6 +12,7 @@ import Link from 'next/link';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 import DataPenelaahanLayout from '@/components/v2/layout/DataPenelaahanLayout';
 import { useDataPenelaahanStore } from '@/store/useDataPenelaahanStore';
+import { getBadgeColor, getBadgeLabel } from '@/utils/transactionStatus';
 
 const VerifikatorProvinsiDataPenelaahanContent = () => {
     const router = useRouter();
@@ -80,26 +81,13 @@ const VerifikatorProvinsiDataPenelaahanContent = () => {
         { header: "Jumlah Ditolak", accessorKey: "rejected_data", className: "text-center w-28" },
         {
             header: "Status", cell: (row) => {
-                const hasBA = !!row.ba_file_url;
-                const isSelesai = row.status === 'recommended' || !!row.news;
-                const isRekomendasi = row.status === 'completed' && hasBA;
-                const isCetakBA = row.status === 'completed' && !hasBA;
-
-                let colorClass = 'bg-gray-100 text-gray-600';
-                if (isSelesai) {
-                    colorClass = 'bg-emerald-100 text-emerald-700';
-                } else if (isRekomendasi) {
-                    colorClass = 'bg-blue-50 text-blue-600';
-                } else if (isCetakBA) {
-                    colorClass = 'bg-orange-100 text-orange-600';
-                }
-
                 return (
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${colorClass}`}>
-                        {isSelesai ? 'Selesai' : isRekomendasi ? 'Rekomendasi' : isCetakBA ? 'Cetak BA' : 'Proses Penelaahan'}
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase whitespace-nowrap text-${getBadgeColor(row.status_num)}-600 bg-${getBadgeColor(row.status_num)}-100`}>
+                        {getBadgeLabel(row.status_num)}
                     </span>
                 );
-            }
+            },
+            className: "text-center"
         },
         {
             header: "Aksi",

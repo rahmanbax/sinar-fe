@@ -40,7 +40,7 @@ export const getVerificationTransactions = async (token: string | null, params?:
     return response.json();
 };
 
-export const createVerificationTransaction = async (token: string | null, data: { title: string; elements: string[]; issued_at: string; due_at: string; participants?: string[] }) => {
+export const createVerificationTransaction = async (token: string | null, data: { title: string; elements: string[]; issued_at: string; due_at: string; participants?: number[] }) => {
     if (!token) return { error: true, message: "No token provided" };
     const response = await fetch(`${API_URL}/verifications/transaction`, {
         method: "POST",
@@ -61,6 +61,14 @@ export const finishVerificationTransaction = async (token: string | null, id: st
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
         },
+    });
+    return response.json();
+};
+
+export const getAvailableParticipants = async (token: string | null) => {
+    if (!token) return { error: true, message: "No token provided", data: [] };
+    const response = await fetch(`${API_URL}/verifications/transaction/participants/available`, {
+        headers: { Authorization: `Bearer ${token}` },
     });
     return response.json();
 };

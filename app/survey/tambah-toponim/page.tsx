@@ -388,7 +388,7 @@ const PreviewMap: React.FC<PreviewMapProps> = ({ isEditing, geometriType, snappi
 
 const Page = () => {
     const router = useRouter();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [openSpasial, setOpenSpasial] = useState(true);
     const [openAtribut, setOpenAtribut] = useState(true);
     const [openInformasiPendukung, setOpenInformasiPendukung] = useState(true);
@@ -417,6 +417,7 @@ const Page = () => {
     const [spelling, setSpelling] = useState("");
     const [elementCode, setElementCode] = useState("");
     const [surveyAt, setSurveyAt] = useState("");
+    const [targetLevel, setTargetLevel] = useState<string>("");
 
     useEffect(() => {
         setMapName(`${genericElement} ${specificElement}`.trim());
@@ -1028,6 +1029,7 @@ const Page = () => {
             if (uploadedAudio) payload.pronounciation_audio_url = uploadedAudio;
             if (uploadedVideo) payload.video_url = uploadedVideo;
             if (uploadedDocs) payload.support_document_url = uploadedDocs;
+            if (user?.role === 'contributor' && targetLevel) payload.target_level = parseInt(targetLevel);
 
             const result = await createToponym(payload, token!);
 
@@ -1578,6 +1580,24 @@ const Page = () => {
                                             <Label htmlFor="survey-at">Tanggal Survei </Label>
                                             <Input id="survey-at" type="date" value={surveyAt} onChange={(e) => setSurveyAt(e.target.value)} />
                                         </div>
+
+                                        {user?.role === 'contributor' && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor="target-level">
+                                                    Ajukan ke Level <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Select value={targetLevel} onValueChange={setTargetLevel} required>
+                                                    <SelectTrigger id="target-level">
+                                                        <SelectValue placeholder="Pilih level pengajuan" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="0">Kabupaten / Kota</SelectItem>
+                                                        <SelectItem value="3">Provinsi</SelectItem>
+                                                        <SelectItem value="6">Pusat (Nasional)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        )}
 
                                         {/* Photo Upload */}
                                         <div className="space-y-2">

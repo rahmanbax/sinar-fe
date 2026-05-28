@@ -1,11 +1,10 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, SlidersHorizontal, LayoutDashboard, Table, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import ReviewCard from '@/components/v2/card/ReviewCard';
 import { VerificationTransaction } from '@/api/verification';
-
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDataPenelaahanStore } from '@/store/useDataPenelaahanStore';
 
@@ -30,7 +29,12 @@ const DataPenelaahanLayout: React.FC<DataPenelaahanLayoutProps> = ({
     const searchParams = useSearchParams();
     const { searchText, setSearchText, transactionPage, setTransactionPage, viewMode } = useDataPenelaahanStore();
 
-    const handleSetViewMode = (mode: 'grid' | 'table') => {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const handleSetViewMode = (mode: 'card' | 'table') => {
         const params = new URLSearchParams(searchParams.toString());
         params.set('view', mode);
         router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
@@ -56,14 +60,14 @@ const DataPenelaahanLayout: React.FC<DataPenelaahanLayoutProps> = ({
                 </div>
                 <div className="flex items-center gap-2 justify-end shrink-0">
                     <button
-                        onClick={() => handleSetViewMode('grid')}
+                        onClick={() => handleSetViewMode('card')}
                         title="Tampilan Kartu"
-                        className={`p-2 rounded-xl transition-all cursor-pointer ${viewMode === 'grid'
+                        className={`p-2 rounded-xl transition-all cursor-pointer ${viewMode === 'card'
                             ? 'bg-navy-50 text-navy-500'
                             : 'text-gray-500 hover:bg-gray-100'
                             }`}
                     >
-                        <LayoutDashboard size={24} fill={viewMode === 'grid' ? 'currentColor' : 'none'} />
+                        <LayoutDashboard size={24} fill={viewMode === 'card' ? 'currentColor' : 'none'} />
                     </button>
                     <button
                         onClick={() => handleSetViewMode('table')}
@@ -77,35 +81,41 @@ const DataPenelaahanLayout: React.FC<DataPenelaahanLayoutProps> = ({
                     </button>
                 </div>
             </div>
-            {loadingTransactions && viewMode === 'grid' ? (
+            {!mounted || (loadingTransactions && viewMode === 'card') ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {Array.from({ length: 8 }).map((_, idx) => (
+                    {Array.from({ length: 4 }).map((_, idx) => (
                         <ReviewCard key={idx} isLoading={true} />
                     ))}
                 </div>
-            ) : viewMode === 'grid' ? (
+            ) : viewMode === 'card' ? (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                        {filteredTransactions.map((item: VerificationTransaction) => (
-                            <ReviewCard
-                                key={item.id}
-                                item={item}
-                                token={token}
-                                onRefresh={refetchTransactions}
-                                viewMode={viewMode}
-                            />
-                        ))}
-                    </div>
+                    {filteredTransactions.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-6 text-gray-500 bg-white rounded-xl border border-gray-200">
+                            <p className="text-sm">Data tidak ditemukan</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                            {filteredTransactions.map((item: VerificationTransaction) => (
+                                <ReviewCard
+                                    key={item.id}
+                                    item={item}
+                                    token={token}
+                                    onRefresh={refetchTransactions}
+                                    viewMode={viewMode}
+                                />
+                            ))}
+                        </div>
+                    )}
                     {transactionPagination && (
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-10 mt-2">
-                            <span className="text-[13px] text-gray-500">
+                            <span className="text-xs text-gray-500">
                                 Menampilkan{' '}
                                 {transactionPagination.from && transactionPagination.to
                                     ? transactionPagination.to - transactionPagination.from + 1
                                     : 0}{' '}
                                 dari {transactionPagination.total} data
                             </span>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-2">
                                 <button
                                     disabled={transactionPagination.current_page <= 1}
                                     onClick={() => setTransactionPage(transactionPage - 1)}

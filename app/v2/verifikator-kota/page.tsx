@@ -16,7 +16,7 @@ const VerifikatorKotaPage = () => {
     const chartData = useMemo(() => {
         if (!candidatesRes?.data) return [];
 
-        const maxVal = Math.max(...candidatesRes.data.map(c => c.count), 5); // Default min max to 5 if data is small
+        const maxVal = Math.max(...candidatesRes.data.map(c => c.count)); // Default min max to 5 if data is small
 
         return candidatesRes.data.map(candidate => ({
             name: candidate.element_name,

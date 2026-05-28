@@ -14,6 +14,7 @@ import { useVerificationTransactions, useAllVerificationToponyms } from '@/hooks
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 import Link from 'next/link';
+import { getBadgeColor, getBadgeLabel } from '@/utils/transactionStatus';
 
 const DataPenelaahanVerifikatorContent = () => {
     const router = useRouter();
@@ -25,8 +26,8 @@ const DataPenelaahanVerifikatorContent = () => {
 
     // Sync viewMode with URL params
     useEffect(() => {
-        const viewFromUrl = searchParams.get('view') as 'grid' | 'table' | null;
-        if (viewFromUrl && (viewFromUrl === 'grid' || viewFromUrl === 'table')) {
+        const viewFromUrl = searchParams.get('view') as 'card' | 'table' | null;
+        if (viewFromUrl && (viewFromUrl === 'card' || viewFromUrl === 'table')) {
             setViewMode(viewFromUrl);
         }
     }, [searchParams, setViewMode]);
@@ -74,14 +75,13 @@ const DataPenelaahanVerifikatorContent = () => {
         { header: "Jumlah Ditolak", accessorKey: "rejected_data", className: "text-center w-28" },
         {
             header: "Status", cell: (row) => {
-                const isRecommended = row.status === 'recommended' || !!row.news;
                 return (
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${isRecommended ? 'bg-emerald-100 text-emerald-700' : row.status === 'completed' ? 'bg-orange-100 text-orange-600' : 'bg-blue-50 text-blue-600'
-                        }`}>
-                        {isRecommended ? 'Selesai' : row.status === 'completed' ? 'Cetak BA' : 'Proses Penelaahan'}
+                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase whitespace-nowrap text-${getBadgeColor(row.status_num)}-600 bg-${getBadgeColor(row.status_num)}-100`}>
+                        {getBadgeLabel(row.status_num)}
                     </span>
                 );
-            }
+            },
+            className: "text-center"
         },
         {
             header: "Aksi", className: "w-16 text-center", cell: (row) => (
@@ -124,7 +124,7 @@ const DataPenelaahanVerifikatorContent = () => {
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Data Penelaahan</h1>
                 <Link href={"/v2/verifikator-kota/data-penelaahan/buat"}>
-                    <ButtonComponent label="Buat Penelaahan" icon={<Plus size={20} />}/>
+                    <ButtonComponent label="Buat Penelaahan" icon={<Plus size={20} />} />
                 </Link>
             </div>
 

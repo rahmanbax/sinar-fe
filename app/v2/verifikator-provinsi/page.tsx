@@ -1,13 +1,29 @@
 "use client";
 
 import { Database } from 'lucide-react';
-import React from 'react'
+import React, { useMemo } from 'react'
 import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart';
+import { useVerificationCandidates } from '@/hooks/useVerification';
 
 const VerifikatorProvinsiPage = () => {
-    const { user } = useAuth();
+    const { token, user } = useAuth();
+    const { data: candidatesRes, isLoading } = useVerificationCandidates(token);
+
+    const chartData = useMemo(() => {
+        if (!candidatesRes?.data) return [];
+
+        const maxVal = Math.max(...candidatesRes.data.map(c => c.count));
+
+        return candidatesRes.data.map(candidate => ({
+            name: candidate.element_name,
+            value: candidate.count,
+            max: maxVal
+        })).slice(0, 5);
+    }, [candidatesRes]);
+    
     return (
         <DashboardLayout>
             {/* Header Area */}
@@ -45,37 +61,11 @@ const VerifikatorProvinsiPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
 
                 {/* Horizontal Bar Chart (Jenis Unsur) */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
-                    <h3 className="text-sm font-bold  mb-8">Jenis Unsur</h3>
-
-                    <div className="space-y-6 flex-1 pr-6">
-                        {[
-                            { name: 'Gunung', value: 20, max: 20 },
-                            { name: 'Bukit', value: 15, max: 20 },
-                            { name: 'Stadion', value: 10, max: 20 },
-                            { name: 'Candi', value: 10, max: 20 },
-                            { name: 'Laut', value: 4, max: 20 },
-                        ].map((item, index) => (
-                            <div key={index} className="flex items-center gap-4">
-                                <span className="text-sm text-gray-600 w-16 shrink-0 font-medium">{item.name}</span>
-                                <div className="flex-1 h-3.5 bg-gray-50 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-[#4bb1cc] rounded-r-full"
-                                        style={{ width: `${(item.value / item.max) * 100}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* X-axis indicators */}
-                    <div className="flex justify-between pl-20 pr-1 mt-auto text-xs text-gray-600 font-medium pt-3 border-t border-gray-200/60">
-                        <span>5</span>
-                        <span>10</span>
-                        <span>15</span>
-                        <span>20</span>
-                    </div>
-                </div>
+                <HorizontalBarChart
+                    title="Kandidat Jenis Unsur"
+                    items={chartData}
+                    isLoading={isLoading}
+                />
 
                 {/* Map Preview Area */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden min-h-[350px] relative">

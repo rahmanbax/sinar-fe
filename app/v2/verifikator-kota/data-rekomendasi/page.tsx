@@ -80,13 +80,8 @@ const DataRekomendasiPage = () => {
 
                 return (
                     <div className="flex justify-center">
-                        <span className={`px-4 py-1 rounded-full text-[13px] font-semibold ${isDiajukan
-                                ? "bg-blue-100/80 text-blue-600"
-                                : isSelesai
-                                    ? "bg-green-100/80 text-green-600"
-                                    : "bg-gray-100 text-gray-600"
-                            }`}>
-                            {row.status || "Diajukan"}
+                        <span className={`px-4 py-1 rounded-full text-[13px] font-semibold ${statusClass}`}>
+                            {row.status || statusLabel}
                         </span>
                     </div>
                 );

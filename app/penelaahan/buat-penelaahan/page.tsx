@@ -1,188 +1,186 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, ChevronLeft, ChevronsUpDown, Loader2 } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { ChevronLeft, ChevronsUpDown, Loader2 } from "lucide-react"
 import ReviewerLayout from "@/layouts/ReviewerLayout"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 import { useAuth } from "@/contexts/AuthContext"
 import {
     createVerificationTransaction,
-    getVerificationCandidates
+    getVerificationCandidates,
+    getAvailableParticipants,
 } from "@/api/verification"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Checkbox } from "@/components/ui/checkbox"
-import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
-// Type for statistics data from API
 interface StatisticsData {
     count: number
     element_code: string
     element_name: string
+    category_code: string
+    category_name: string
+    subcategory_code: string
+    subcategory_name: string
 }
 
-// Province type from API
-interface Province {
+interface Participant {
     id: number
     name: string
-    code: string
-    level: string
-}
-
-// Element type from API
-interface Element {
-    code: string
-    name: string
-    subcategory_id: string
-    type: string | null
-    created_at: string
-    updated_at: string | null
-    deleted_at: string | null
+    email: string
+    verification_permission_level: number
 }
 
 const Page = () => {
     const router = useRouter()
 
     const [title, setTitle] = useState('')
-    // const [tanggalAwal, setTanggalAwal] = useState('') // Not needed for API
     const [tanggalAkhir, setTanggalAkhir] = useState('')
-    const [jenisUnsur, setJenisUnsur] = useState<string[]>([]) // Array for multi-select
-    const [wilayahAdministrasi, setWilayahAdministrasi] = useState('')
-    const [verifikator, setVerifikator] = useState('')
+    const [jenisUnsur, setJenisUnsur] = useState<string[]>([])
+    const [selectedParticipants, setSelectedParticipants] = useState<number[]>([])
     const [isSubmitting, setIsSubmitting] = useState(false)
     const { token } = useAuth()
 
-    // Statistics data (candidates) from API
     const [statisticsData, setStatisticsData] = useState<StatisticsData[]>([])
     const [loadingStatistics, setLoadingStatistics] = useState(true)
 
-    // Province data from API
-    const [provinces, setProvinces] = useState<Province[]>([])
-    const [loadingProvinces, setLoadingProvinces] = useState(true)
-    const [openProvinceCombobox, setOpenProvinceCombobox] = useState(false)
+    const [participants, setParticipants] = useState<Participant[]>([])
+    const [loadingParticipants, setLoadingParticipants] = useState(true)
 
-    // Popover states
     const [openElementPopover, setOpenElementPopover] = useState(false)
+    const [openParticipantPopover, setOpenParticipantPopover] = useState(false)
 
-    // Fetch data on mount
     useEffect(() => {
-        const fetchStatistics = async () => {
-            try {
-                const result = await getVerificationCandidates(token);
-                if (!result.error && result.data) {
-                    setStatisticsData(result.data)
-                }
-            } catch (err) {
-                console.error('Failed to fetch statistics:', err)
-            } finally {
-                setLoadingStatistics(false)
-            }
+        const fetchAll = async () => {
+            const [statsRes, participantsRes] = await Promise.all([
+                getVerificationCandidates(token),
+                getAvailableParticipants(token),
+            ])
+            if (!statsRes.error && statsRes.data) setStatisticsData(statsRes.data)
+            if (!participantsRes.error && participantsRes.data) setParticipants(participantsRes.data)
+            setLoadingStatistics(false)
+            setLoadingParticipants(false)
         }
-        fetchStatistics()
+        fetchAll()
     }, [token])
+
+    // Group elements by category
+    const elementsByCategory = useMemo(() => {
+        const map = new Map<string, { categoryName: string; items: StatisticsData[] }>()
+        for (const item of statisticsData) {
+            if (!map.has(item.category_code)) {
+                map.set(item.category_code, { categoryName: item.category_name, items: [] })
+            }
+            map.get(item.category_code)!.items.push(item)
+        }
+        return map
+    }, [statisticsData])
+
+    const toggleElement = (code: string) => {
+        setJenisUnsur(prev =>
+            prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
+        )
+    }
+
+    const toggleAllInCategory = (codes: string[]) => {
+        const allSelected = codes.every(c => jenisUnsur.includes(c))
+        if (allSelected) {
+            setJenisUnsur(prev => prev.filter(c => !codes.includes(c)))
+        } else {
+            setJenisUnsur(prev => [...new Set([...prev, ...codes])])
+        }
+    }
+
+    const selectAllElements = () => {
+        const all = statisticsData.map(i => i.element_code)
+        setJenisUnsur(prev => prev.length === all.length ? [] : all)
+    }
+
+    const toggleParticipant = (id: number) => {
+        setSelectedParticipants(prev =>
+            prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+        )
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-
         setIsSubmitting(true)
-
         try {
-            // Format due_at and issued_at to match required format: "2026-01-01 07:00:00.000 +0700"
             const dueDate = new Date(tanggalAkhir)
             const due_at = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}-${String(dueDate.getDate()).padStart(2, '0')} 07:00:00.000 +0700`
-
             const today = new Date()
             const issued_at = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')} 07:00:00.000 +0700`
 
-            const requestBody = {
-                title: title,
-                elements: jenisUnsur, // Array of selected element codes
-                issued_at: issued_at,
-                due_at: due_at
-            }
+            const result = await createVerificationTransaction(token, {
+                title,
+                elements: jenisUnsur,
+                issued_at,
+                due_at,
+                participants: selectedParticipants.length > 0 ? selectedParticipants : undefined,
+            })
 
-            const result = await createVerificationTransaction(token, requestBody)
-
-            if (result.error) {
-                throw new Error(result.message || 'Gagal membuat penelaahan')
-            }
-
+            if (result.error) throw new Error(result.message || 'Gagal membuat penelaahan')
             alert('Penelaahan berhasil dibuat!')
-
-            // Redirect to penelaahan list page
             router.push('/penelaahan?tab=review-data')
-
         } catch (error) {
-            console.error('Submit error:', error)
             alert(error instanceof Error ? error.message : 'Gagal membuat penelaahan')
         } finally {
             setIsSubmitting(false)
         }
     }
 
-    // Transform API data for chart
     const chartData = {
         labels: statisticsData.map(item => item.element_name),
-        datasets: [
-            {
-                label: 'Jumlah Data per Jenis Unsur',
-                data: statisticsData.map(item => item.count),
-                backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                borderColor: 'rgb(59, 130, 246)',
-                borderWidth: 1,
-            },
-        ],
+        datasets: [{
+            label: 'Jumlah Data',
+            data: statisticsData.map(item => item.count),
+            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+            borderColor: 'rgb(59, 130, 246)',
+            borderWidth: 1,
+        }],
     }
 
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: {
-                display: false,
-            },
+            legend: { display: false },
             title: {
                 display: true,
                 text: 'Jumlah Data per Jenis Unsur',
-                font: {
-                    size: 14,
-                    weight: 'bold' as const,
-                }
+                font: { size: 14, weight: 'bold' as const },
             },
         },
         scales: {
             y: {
                 beginAtZero: true,
+                ticks: { precision: 0, stepSize: 1 },
             },
         },
     }
+
+    const allSelected = statisticsData.length > 0 && jenisUnsur.length === statisticsData.length
 
     return (
         <ReviewerLayout>
             <div className="pt-20 p-6 mt-6 h-screen">
                 <div onClick={() => router.back()} className="flex items-center gap-3 mb-5 hover:opacity-70 transition-opacity cursor-pointer">
-                    <Button size="icon-sm">
-                        <ChevronLeft />
-                    </Button>
+                    <Button size="icon-sm"><ChevronLeft /></Button>
                     <span className="font-medium">Kembali</span>
                 </div>
 
                 <Card className="max-w-1/3">
-                    {/* <CardHeader>
-                        <CardTitle>Form Penelaahan Baru</CardTitle>
-                    </CardHeader> */}
                     <CardContent className="space-y-6">
                         <form onSubmit={handleSubmit}>
-                            {/* Ringkasan Statistik Chart */}
+                            {/* Chart */}
                             <div className="space-y-3 mb-6">
                                 <Label>Ringkasan Statistik - Jenis Unsur</Label>
                                 <div className="h-[200px] w-full bg-gray-50 rounded-lg p-3">
@@ -194,20 +192,17 @@ const Page = () => {
                                         <Bar data={chartData} options={chartOptions} />
                                     ) : (
                                         <div className="flex items-center justify-center h-full text-gray-400">
-                                            Tidak ada data
+                                            Tidak ada data kandidat
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Buat Penelaahan Section */}
                             <h2 className="font-semibold mb-6">Buat Penelaahan</h2>
 
-                            {/* Title */}
+                            {/* Judul */}
                             <div className="space-y-2 mb-6">
-                                <Label htmlFor="title">
-                                    Judul Penelaahan <span className="text-red-500">*</span>
-                                </Label>
+                                <Label htmlFor="title">Judul Penelaahan <span className="text-red-500">*</span></Label>
                                 <Input
                                     id="title"
                                     type="text"
@@ -220,9 +215,7 @@ const Page = () => {
 
                             {/* Tanggal Akhir */}
                             <div className="space-y-2 mb-6">
-                                <Label htmlFor="tanggal-akhir">
-                                    Tanggal Akhir <span className="text-red-500">*</span>
-                                </Label>
+                                <Label htmlFor="tanggal-akhir">Tanggal Akhir <span className="text-red-500">*</span></Label>
                                 <Input
                                     id="tanggal-akhir"
                                     type="date"
@@ -232,40 +225,15 @@ const Page = () => {
                                 />
                             </div>
 
-                            {/* Tanggal Awal - Not needed for API */}
-                            {/* <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="tanggal-awal">Tanggal Awal</Label>
-                                <Input
-                                    id="tanggal-awal"
-                                    type="date"
-                                    value={tanggalAwal}
-                                    onChange={(e) => setTanggalAwal(e.target.value)}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="tanggal-akhir">Tanggal Akhir</Label>
-                                <Input
-                                    id="tanggal-akhir"
-                                    type="date"
-                                    value={tanggalAkhir}
-                                    onChange={(e) => setTanggalAkhir(e.target.value)}
-                                />
-                            </div>
-                        </div> */}
-
-                            {/* Jenis Unsur */}
+                            {/* Jenis Unsur - grouped by category */}
                             <div className="space-y-2 mb-6">
-                                <Label>
-                                    Jenis Unsur <span className="text-red-500">*</span>
-                                </Label>
+                                <Label>Jenis Unsur <span className="text-red-500">*</span></Label>
                                 <input type="hidden" required={jenisUnsur.length === 0} />
                                 <Popover open={openElementPopover} onOpenChange={setOpenElementPopover}>
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant="outline"
                                             role="combobox"
-                                            aria-expanded={openElementPopover}
                                             className="w-full justify-between font-normal"
                                             disabled={loadingStatistics}
                                         >
@@ -275,7 +243,7 @@ const Page = () => {
                                                     <span>Memuat...</span>
                                                 </div>
                                             ) : jenisUnsur.length > 0 ? (
-                                                <span>{jenisUnsur.length} unsur dipilih</span>
+                                                <span>{jenisUnsur.length} jenis unsur dipilih</span>
                                             ) : (
                                                 <span className="text-muted-foreground">Pilih Jenis Unsur</span>
                                             )}
@@ -287,38 +255,111 @@ const Page = () => {
                                             <CommandInput placeholder="Cari jenis unsur..." />
                                             <CommandList>
                                                 <CommandEmpty>Jenis unsur tidak ditemukan.</CommandEmpty>
+
+                                                {/* Select All */}
                                                 <CommandGroup>
-                                                    {statisticsData
-                                                        .sort((a, b) => {
-                                                            const aSelected = jenisUnsur.includes(a.element_code)
-                                                            const bSelected = jenisUnsur.includes(b.element_code)
-                                                            // Selected items first
-                                                            if (aSelected && !bSelected) return -1
-                                                            if (!aSelected && bSelected) return 1
-                                                            return 0
-                                                        })
-                                                        .map((item) => {
-                                                            const isSelected = jenisUnsur.includes(item.element_code)
-                                                            return (
+                                                    <CommandItem
+                                                        onSelect={selectAllElements}
+                                                        className="font-medium text-blue-600"
+                                                    >
+                                                        <Checkbox
+                                                            checked={allSelected}
+                                                            className="mr-2"
+                                                        />
+                                                        Pilih Semua
+                                                    </CommandItem>
+                                                </CommandGroup>
+
+                                                {/* Grouped by category */}
+                                                {Array.from(elementsByCategory.entries()).map(([catCode, { categoryName, items }]) => {
+                                                    const allCatSelected = items.every(i => jenisUnsur.includes(i.element_code))
+                                                    const catCodes = items.map(i => i.element_code)
+                                                    return (
+                                                        <CommandGroup key={catCode} heading={categoryName}>
+                                                            {/* Select all in category */}
+                                                            <CommandItem
+                                                                onSelect={() => toggleAllInCategory(catCodes)}
+                                                                className="text-xs text-muted-foreground italic"
+                                                            >
+                                                                <Checkbox
+                                                                    checked={allCatSelected}
+                                                                    className="mr-2 h-3 w-3"
+                                                                />
+                                                                Pilih semua {categoryName}
+                                                            </CommandItem>
+                                                            {items.map((item) => (
                                                                 <CommandItem
                                                                     key={item.element_code}
-                                                                    value={item.element_name}
-                                                                    onSelect={() => {
-                                                                        if (isSelected) {
-                                                                            setJenisUnsur(jenisUnsur.filter(code => code !== item.element_code))
-                                                                        } else {
-                                                                            setJenisUnsur([...jenisUnsur, item.element_code])
-                                                                        }
-                                                                    }}
+                                                                    value={`${item.category_name} ${item.element_name}`}
+                                                                    onSelect={() => toggleElement(item.element_code)}
                                                                 >
                                                                     <Checkbox
-                                                                        checked={isSelected}
+                                                                        checked={jenisUnsur.includes(item.element_code)}
                                                                         className="mr-2"
                                                                     />
-                                                                    {item.element_name}
+                                                                    <span>{item.element_name}</span>
+                                                                    <span className="ml-auto text-xs text-muted-foreground">{item.count}</span>
                                                                 </CommandItem>
-                                                            )
-                                                        })}
+                                                            ))}
+                                                        </CommandGroup>
+                                                    )
+                                                })}
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            {/* Participants */}
+                            <div className="space-y-2 mb-6">
+                                <Label>Anggota Tim Penelaahan</Label>
+                                <Popover open={openParticipantPopover} onOpenChange={setOpenParticipantPopover}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className="w-full justify-between font-normal"
+                                            disabled={loadingParticipants}
+                                        >
+                                            {loadingParticipants ? (
+                                                <div className="flex items-center gap-2">
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    <span>Memuat...</span>
+                                                </div>
+                                            ) : selectedParticipants.length > 0 ? (
+                                                <span>{selectedParticipants.length} anggota dipilih</span>
+                                            ) : (
+                                                <span className="text-muted-foreground">Tambah anggota (opsional)</span>
+                                            )}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0" align="start">
+                                        <Command>
+                                            <CommandInput placeholder="Cari anggota..." />
+                                            <CommandList>
+                                                <CommandEmpty>
+                                                    {participants.length === 0
+                                                        ? "Tidak ada verificator lain di wilayah ini."
+                                                        : "Anggota tidak ditemukan."}
+                                                </CommandEmpty>
+                                                <CommandGroup>
+                                                    {participants.map((p) => (
+                                                        <CommandItem
+                                                            key={p.id}
+                                                            value={p.name}
+                                                            onSelect={() => toggleParticipant(p.id)}
+                                                        >
+                                                            <Checkbox
+                                                                checked={selectedParticipants.includes(p.id)}
+                                                                className="mr-2"
+                                                            />
+                                                            <div className="flex flex-col">
+                                                                <span>{p.name}</span>
+                                                                <span className="text-xs text-muted-foreground">{p.email}</span>
+                                                            </div>
+                                                        </CommandItem>
+                                                    ))}
                                                 </CommandGroup>
                                             </CommandList>
                                         </Command>
@@ -326,80 +367,7 @@ const Page = () => {
                                 </Popover>
                             </div>
 
-                            {/* Wilayah Administrasi */}
-                            {/* <div className="space-y-2">
-                            <Label>Wilayah Administrasi</Label>
-                            <Popover open={openProvinceCombobox} onOpenChange={setOpenProvinceCombobox}>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        role="combobox"
-                                        aria-expanded={openProvinceCombobox}
-                                        className="w-full justify-between font-normal"
-                                        disabled={loadingProvinces}
-                                    >
-                                        {loadingProvinces ? (
-                                            <div className="flex items-center gap-2">
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                <span>Memuat...</span>
-                                            </div>
-                                        ) : wilayahAdministrasi ? (
-                                            provinces.find((p) => p.code === wilayahAdministrasi)?.name
-                                        ) : (
-                                            "Pilih Wilayah Administrasi"
-                                        )}
-                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-full p-0" align="start">
-                                    <Command>
-                                        <CommandInput placeholder="Cari provinsi..." />
-                                        <CommandList>
-                                            <CommandEmpty>Provinsi tidak ditemukan.</CommandEmpty>
-                                            <CommandGroup>
-                                                {provinces.map((province) => (
-                                                    <CommandItem
-                                                        key={province.id}
-                                                        value={province.name}
-                                                        onSelect={() => {
-                                                            setWilayahAdministrasi(province.code)
-                                                            setOpenProvinceCombobox(false)
-                                                        }}
-                                                    >
-                                                        <Check
-                                                            className={cn(
-                                                                "mr-2 h-4 w-4",
-                                                                wilayahAdministrasi === province.code ? "opacity-100" : "opacity-0"
-                                                            )}
-                                                        />
-                                                        {province.name}
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
-                        </div> */}
-
-                            {/* Verifikator */}
-                            {/* <div className="space-y-2">
-                            <Label>Verifikator</Label>
-                            <Select value={verifikator} onValueChange={setVerifikator}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Pilih Verifikator" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="tim-1">Tim Verifikator 1</SelectItem>
-                                    <SelectItem value="tim-2">Tim Verifikator 2</SelectItem>
-                                    <SelectItem value="tim-3">Tim Verifikator 3</SelectItem>
-                                    <SelectItem value="tim-4">Tim Verifikator 4</SelectItem>
-                                    <SelectItem value="tim-5">Tim Verifikator 5</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div> */}
-
-                            {/* Submit Buttons */}
+                            {/* Submit */}
                             <div className="flex gap-4 pt-4">
                                 <Link href="/penelaahan" className="flex-1">
                                     <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
@@ -416,9 +384,7 @@ const Page = () => {
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                             Memproses...
                                         </>
-                                    ) : (
-                                        'Buat Penelaahan'
-                                    )}
+                                    ) : 'Buat Penelaahan'}
                                 </Button>
                             </div>
                         </form>

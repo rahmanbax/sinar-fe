@@ -5,8 +5,8 @@ export interface DataPenelaahanState {
   setSearchText: (text: string) => void;
   transactionPage: number;
   setTransactionPage: (page: number) => void;
-  viewMode: 'grid' | 'table';
-  setViewMode: (mode: 'grid' | 'table') => void;
+  viewMode: 'card' | 'table';
+  setViewMode: (mode: 'card' | 'table') => void;
   submittingTransactions: Record<string, boolean>;
   setSubmittingTransaction: (id: string, isSubmitting: boolean) => void;
   reset: () => void;
@@ -17,7 +17,7 @@ export const useDataPenelaahanStore = create<DataPenelaahanState>((set) => ({
   setSearchText: (text) => set({ searchText: text }),
   transactionPage: 1,
   setTransactionPage: (page) => set({ transactionPage: page }),
-  viewMode: 'grid',
+  viewMode: 'card',
   setViewMode: (mode) => set({ viewMode: mode }),
   submittingTransactions: {},
   setSubmittingTransaction: (id, isSubmitting) =>
@@ -31,7 +31,7 @@ export const useDataPenelaahanStore = create<DataPenelaahanState>((set) => ({
     set({
       searchText: '',
       transactionPage: 1,
-      viewMode: 'grid',
+      viewMode: 'card',
       submittingTransactions: {},
     }),
 }));

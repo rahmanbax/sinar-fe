@@ -25,8 +25,8 @@ const DataPenelaahanVerifikatorContent = () => {
 
     // Sync viewMode with URL params
     useEffect(() => {
-        const viewFromUrl = searchParams.get('view') as 'grid' | 'table' | null;
-        if (viewFromUrl && (viewFromUrl === 'grid' || viewFromUrl === 'table')) {
+        const viewFromUrl = searchParams.get('view') as 'card' | 'table' | null;
+        if (viewFromUrl && (viewFromUrl === 'card' || viewFromUrl === 'table')) {
             setViewMode(viewFromUrl);
         }
     }, [searchParams, setViewMode]);

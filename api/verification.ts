@@ -5,6 +5,7 @@ export interface VerificationTransaction {
     title: string;
     due_at: string;
     status: string;
+    status_num: number;
     total_data: number;
     handled_data: number;
     accepted_data: number;
@@ -20,6 +21,7 @@ export interface VerificationTransaction {
         file_url: string;
     };
     ba_file_url?: string | null;
+    is_owned?: boolean;
 }
 
 export interface VerificationPagination {

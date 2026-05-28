@@ -8,12 +8,31 @@ import {
 import Link from 'next/link';
 import { useDataPenelaahanStore } from '@/store/useDataPenelaahanStore';
 
+const getBadgeClass = (statusNum: number | undefined): string => {
+    if (statusNum === 4) return 'text-green-600 border-green-600';
+    if (statusNum === 3) return 'text-blue-600 border-blue-600';
+    if (statusNum === 2) return 'text-orange-600 border-orange-600';
+    if (statusNum === 1) return 'text-red-600 border-red-600';
+    if (statusNum === 0) return 'text-slate-600 border-slate-200';
+    if (statusNum === -1) return 'text-rose-600 border-rose-600';
+    return 'text-gray-600 border-gray-200';
+};
+
+const getBadgeLabel = (statusNum: number | undefined): string => {
+    if (statusNum === 4) return 'Selesai';
+    if (statusNum === 3) return 'Rekomendasi';
+    if (statusNum === 2) return 'Cetak BA';
+    if (statusNum === 1) return 'Closed';
+    if (statusNum === 0) return 'Proses Penelaahan';
+    if (statusNum === -1) return 'Due';
+    return 'Proses Penelaahan';
+};
+
 const ReviewCard = ({
     item,
     token,
     onRefresh,
-    viewMode,
-    isLoading = false
+    isLoading = false,
 }: {
     item?: VerificationTransaction;
     token?: string | null;
@@ -26,15 +45,14 @@ const ReviewCard = ({
 
     const isSubmitting = item ? !!submittingTransactions[item.id] : false;
 
-    const isCompleted = item?.status === 'completed';
-    const isIssued = item?.status === 'issued';
-    const isVerificationDone = item ? (item.total_data > 0 && item.total_data === item.handled_data) : false;
+    const isDue = item?.status_num === -1;
+    const isIssued = item?.status_num === 0;
+    const isClosed = item?.status_num === 1;
+    const isCompleted = item?.status_num === 2;
+    const isAnnounced = item?.status_num === 3;
+    const isRecommended = item?.status_num === 4;
 
-    const hasBA = item ? !!item.ba_file_url : false;
-    const isSelesai = item ? (item.status === 'recommended' || !!item.news) : false;
-    const isRekomendasi = isCompleted && hasBA;
-    const isCetakBA = isCompleted && !hasBA;
-    const isRecommended = isSelesai || isRekomendasi;
+    const isVerificationDone = item ? (item.total_data > 0 && item.total_data === item.handled_data) : false;
 
     const handleFinish = async (e: React.MouseEvent) => {
         if (!item) return;
@@ -90,13 +108,8 @@ const ReviewCard = ({
             >
                 <div className="flex items-start gap-2">
                     <h3 className="text-lg transition-colors w-full font-semibold">{item.title}</h3>
-                    <span className={`px-2 py-1 rounded-md text-xs font-semibold border whitespace-nowrap ${
-                        isSelesai ? 'text-green-600 border-green-600' :
-                        isRekomendasi ? 'text-blue-600 border-blue-600' :
-                        isCetakBA ? 'text-orange-600 border-orange-600' :
-                        'text-gray-600 border-gray-200'
-                    }`}>
-                        {isSelesai ? 'Selesai' : isRekomendasi ? 'Rekomendasi' : isCetakBA ? 'Cetak BA' : 'Proses Penelaahan'}
+                    <span className={`px-2 py-1 rounded-md text-xs font-semibold border whitespace-nowrap ${getBadgeClass(item?.status_num)}`}>
+                        {getBadgeLabel(item?.status_num)}
                     </span>
                 </div>
 
@@ -148,24 +161,26 @@ const ReviewCard = ({
                     </div>
                 </div>
 
-                {isRecommended ? (
-                    <Link
-                        href={item.ba_file_url || ''}
-                        target="_blank"
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full py-2 rounded-lg text-sm font-bold bg-white border border-gray-300 hover:bg-gray-100 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                        <FileText size={16} /> Lihat Berita Acara
-                    </Link>
-                ) : isCompleted ? (
-                    <button className="w-full py-2 rounded-lg text-sm font-bold bg-navy-500 hover:bg-navy-400 text-white transition-all flex items-center justify-center gap-2 cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/v2/verifikator-kota/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
-                        <FileText size={16} /> Cetak Berita Acara
-                    </button>
-                ) : isVerificationDone ? (
-                    <button className="w-full py-2 rounded-lg text-sm font-bold bg-green-600 hover:bg-green-700 text-white transition-all flex items-center justify-center gap-2 cursor-pointer" onClick={(e) => { e.preventDefault(); handleFinish(e); }} disabled={isSubmitting}>
-                        <Check size={16} /> {isSubmitting ? "Memproses..." : "Tandai Selesai"}
-                    </button>
-                ) : null}
+                {item.is_owned && (
+                    (item.status_num === 3 || item.status_num === 4) ? (
+                        <Link
+                            href={item.ba_file_url || ''}
+                            target="_blank"
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full py-2 rounded-lg text-sm font-bold bg-white border border-gray-300 hover:bg-gray-100 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <FileText size={16} /> Lihat Berita Acara
+                        </Link>
+                    ) : item.status_num === 2 ? (
+                        <button className="w-full py-2 rounded-lg text-sm font-bold bg-navy-500 hover:bg-navy-400 text-white transition-all flex items-center justify-center gap-2 cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/v2/verifikator-kota/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
+                            <FileText size={16} /> Cetak Berita Acara
+                        </button>
+                    ) : isVerificationDone ? (
+                        <button className="w-full py-2 rounded-lg text-sm font-bold bg-green-600 hover:bg-green-700 text-white transition-all flex items-center justify-center gap-2 cursor-pointer" onClick={(e) => { e.preventDefault(); handleFinish(e); }} disabled={isSubmitting}>
+                            <Check size={16} /> {isSubmitting ? "Memproses..." : "Tandai Selesai"}
+                        </button>
+                    ) : null
+                )}
             </div>
         )
     );

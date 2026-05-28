@@ -12,6 +12,7 @@ import Image from 'next/image';
 import AdminNav from './AdminNav';
 import BigNav from './BigNav';
 import SuperadminNav from './SuperadminNav';
+import ContributorNav from './ContributorNav';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -81,8 +82,11 @@ const DashboardLayout = ({ children, showNav = true, tightMargin = false }: Dash
             {/* Sidebar Navigation */}
             {showNav && (
                 <>
-                    {(user?.role === 'surveyor' || user?.role === 'contributor') && (
+                    {user?.role === 'surveyor' && (
                         <SurveyorNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+                    )}
+                    {user?.role === 'contributor' && (
+                        <ContributorNav isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
                     )}
                     {user?.role === 'verificator' && (
                         (!user?.level || user.level === 'NATIONAL') ? (

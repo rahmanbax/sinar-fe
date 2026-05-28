@@ -65,7 +65,7 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
             </label>
 
             <div
-                className={`relative w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center transition-all ${disabled ? (initialUrl ? 'bg-gray-50 hover:bg-gray-100 cursor-pointer' : 'bg-gray-50 opacity-60 cursor-not-allowed') : 'hover:border-navy-300 bg-white cursor-pointer'}`}
+                className={`relative w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center transition-all ${disabled ? (initialUrl ? 'bg-gray-50 hover:bg-gray-100 cursor-pointer' : 'bg-gray-100') : 'hover:border-navy-300 bg-white cursor-pointer'}`}
                 onClick={() => {
                     if (!disabled) {
                         inputRef.current?.click();
@@ -126,14 +126,25 @@ const FileInput = ({ id, label, accept, onChange, required = false, disabled, in
                     </div>
                 ) : (
                     <div className="flex flex-col items-center text-center space-y-1">
-                        {icon || <Upload size={20} className='text-gray-500' />}
-                        <p className="text-sm font-medium text-black">
-                            Pilih file untuk diunggah
-                        </p>
-                        <p className="text-xs text-gray-500">
-                            {instructions || (accept ? `Upload file dengan format: ${accept}` : 'Mendukung semua format file')}
-                            {maxSizeMB ? ` (Maks. ${maxSizeMB} MB)` : ''}
-                        </p>
+                        {disabled ? (
+                            <>
+                                {icon || <Upload size={20} className='text-gray-500' />}
+                                <p className="text-sm font-medium text-gray-500">
+                                    Tidak ada {label} yang di unggah
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                {icon || <Upload size={20} className='text-gray-500' />}
+                                <p className="text-sm font-medium text-black">
+                                    Pilih file untuk diunggah
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    {instructions || (accept ? `Unggah file dengan format: ${accept}` : 'Mendukung semua format file')}
+                                    {maxSizeMB ? ` (Maks. ${maxSizeMB} MB)` : ''}
+                                </p>
+                            </>
+                        )}
                     </div>
                 )}
             </div>

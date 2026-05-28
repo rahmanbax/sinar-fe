@@ -658,7 +658,7 @@ const ToponymDetailLayout = ({
               onChange={(file) => setFieldValue('foto', file)}
               required={true}
               accept='.jpg, .jpeg, .png'
-              maxSizeMB={5}
+              maxSizeMB={3}
               icon={<Camera size={20} className='text-gray-500' />}
               initialUrl={formData.fotoUrl}
               disabled={isReadOnly}

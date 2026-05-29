@@ -100,7 +100,6 @@ const TransactionDetailContent = () => {
         { header: "Provinsi", accessorKey: "province" },
         { header: "Kabupaten/ Kota", accessorKey: "city" },
         { header: "Surveyor", accessorKey: "surveyor" },
-        { header: "Ditugaskan ke", accessorKey: "assignedTo" },
         { header: "Koordinat", accessorKey: "coordinates" },
         {
             header: "Aksi",

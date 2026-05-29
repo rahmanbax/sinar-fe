@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import TextInput from '../inputs/TextInput'
 import CalendarInput from '../inputs/CalendarInput'
 import MultiSelectDropdown from '../inputs/MultiSelectDropdown'
@@ -28,6 +28,7 @@ interface BuatPenelaahanFormProps {
 
 const BuatPenelaahanForm = ({ jenisUnsurOptions, onSubmit, isSubmitting = false }: BuatPenelaahanFormProps) => {
   const { token } = useAuth()
+  const [metodePenugasan, setMetodePenugasan] = useState('semua')
   const { control, handleSubmit } = useForm<FormValues>({
     defaultValues: {
       judulPenelaahan: '',
@@ -127,6 +128,36 @@ const BuatPenelaahanForm = ({ jenisUnsurOptions, onSubmit, isSubmitting = false 
           />
         )}
       />
+
+      {/* UI Radio Button Metode Penugasan */}
+      <div className="space-y-3 pt-1">
+        <span className="block text-sm font-semibold text-gray-700">Metode Penugasan</span>
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer w-fit">
+            <input 
+              type="radio" 
+              name="metodePenugasanForm" 
+              value="semua"
+              checked={metodePenugasan === 'semua'}
+              onChange={() => setMetodePenugasan('semua')}
+              className="w-4 h-4 cursor-pointer" 
+            />
+            Tugaskan ke semua
+          </label>
+          <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer w-fit">
+            <input 
+              type="radio" 
+              name="metodePenugasanForm" 
+              value="bagi_rata"
+              checked={metodePenugasan === 'bagi_rata'}
+              onChange={() => setMetodePenugasan('bagi_rata')}
+              className="w-4 h-4 cursor-pointer" 
+            />
+            Bagi rata penugasan
+          </label>
+        </div>
+      </div>
+
       <ButtonComponent
         label={isSubmitting ? 'Menyimpan...' : 'Buat Penelaahan'}
         type='submit'

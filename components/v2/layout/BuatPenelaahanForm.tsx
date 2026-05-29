@@ -45,7 +45,7 @@ const BuatPenelaahanForm = ({ jenisUnsurOptions, onSubmit, isSubmitting = false 
 
   const verifikatorOptions = React.useMemo(() => {
     return (teamsResponse?.data || []).map((member: any) => ({
-      label: member.name,
+      label: `${member.name} - ${member.email}`,
       value: member.id,
     }))
   }, [teamsResponse])

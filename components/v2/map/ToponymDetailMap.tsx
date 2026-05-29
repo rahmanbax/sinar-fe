@@ -75,6 +75,21 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
     const [viewState, setViewState] = useState(initialViewState);
     const [mapStyle, setMapStyle] = useState(MapStyles[0]);
     const [isStylesOpen, setIsStylesOpen] = useState(false);
+    const [myLocation, setMyLocation] = useState<{ longitude: number; latitude: number } | null>(null);
+
+    useEffect(() => {
+        const stored = sessionStorage.getItem('my_location');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                if (parsed && typeof parsed.longitude === 'number' && typeof parsed.latitude === 'number') {
+                    setMyLocation(parsed);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }, []);
 
     const handleZoomIn = () => {
         mapRef.current?.getMap().zoomIn();
@@ -88,6 +103,9 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                 const { longitude, latitude } = position.coords;
+                const loc = { longitude, latitude };
+                setMyLocation(loc);
+                sessionStorage.setItem('my_location', JSON.stringify(loc));
                 mapRef.current?.getMap().flyTo({
                     center: [longitude, latitude],
                     zoom: 14,
@@ -473,6 +491,19 @@ const ToponymDetailMap = ({ isDrawingMode, drawType, drawnPoint, setDrawnPoint, 
                             );
                         })}
                     </>
+                )}
+
+                {myLocation && (
+                    <Marker
+                        longitude={myLocation.longitude}
+                        latitude={myLocation.latitude}
+                        anchor="center"
+                    >
+                        <span className="relative flex size-4">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400"></span>
+                            <span className="relative inline-flex size-4 rounded-full bg-blue-500 border-2 border-white"></span>
+                        </span>
+                    </Marker>
                 )}
             </Map>
         </div>

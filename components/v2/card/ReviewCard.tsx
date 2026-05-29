@@ -7,6 +7,8 @@ import {
 } from '@/api/verification';
 import Link from 'next/link';
 import { useDataPenelaahanStore } from '@/store/useDataPenelaahanStore';
+import { useAuth } from '@/contexts/AuthContext';
+import { getRoleDefaultRoute } from '@/types/User';
 
 import { getBadgeColor, getBadgeLabel } from '@/utils/transactionStatus';
 
@@ -23,6 +25,8 @@ const ReviewCard = ({
     isLoading?: boolean;
 }) => {
     const router = useRouter();
+    const { user } = useAuth();
+    const basePath = user ? getRoleDefaultRoute(user) : '/v2/verifikator-kota';
     const { submittingTransactions, setSubmittingTransaction } = useDataPenelaahanStore();
 
     const isSubmitting = item ? !!submittingTransactions[item.id] : false;
@@ -78,7 +82,7 @@ const ReviewCard = ({
             </div>
         ) : (
             <div
-                onClick={() => router.push(`/v2/verifikator-kota/data-penelaahan/detail?transactionId=${item.id}`)}
+                onClick={() => router.push(`${basePath}/data-penelaahan/detail?transactionId=${item.id}`)}
                 className="bg-white hover:bg-gray-100 rounded-xl border border-gray-300 p-4 transition-all cursor-pointer group space-y-4"
             >
                 <div className="flex items-start gap-2">
@@ -147,7 +151,7 @@ const ReviewCard = ({
                             <FileText size={16} /> Lihat Berita Acara
                         </Link>
                     ) : item.status_num === 2 ? (
-                        <button className="w-full py-2 rounded-lg text-sm font-bold bg-navy-500 hover:bg-navy-400 text-white transition-all flex items-center justify-center gap-2 cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/v2/verifikator-kota/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
+                        <button className="w-full py-2 rounded-lg text-sm font-bold bg-navy-500 hover:bg-navy-400 text-white transition-all flex items-center justify-center gap-2 cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`${basePath}/data-penelaahan/cetak-ba?transactionId=${item.id}`); }}>
                             <FileText size={16} /> Cetak Berita Acara
                         </button>
                     ) : isVerificationDone ? (

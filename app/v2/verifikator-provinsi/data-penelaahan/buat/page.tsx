@@ -84,10 +84,8 @@ const BuatPenelaahanProvinsiPage = () => {
       <div className='mt-6 mx-5 lg:mx-auto max-w-7xl space-y-5'>
         {/* Breadcrumb */}
         <nav className="flex items-center text-sm text-gray-500 gap-2" >
-          <Link href="/v2/verifikator-provinsi" className="hover:text-black transition-colors">Dashboard</Link>
-          <ChevronRight size={14} />
-          <Link href="/v2/verifikator-provinsi/data-penelaahan" className="hover:text-black transition-colors">Data Penelaahan</Link>
-          <ChevronRight size={14} />
+          <Link href="/v2/verifikator-provinsi" className="hover:text-black transition-colors">Dashboard</Link> / 
+          <Link href="/v2/verifikator-provinsi/data-penelaahan" className="hover:text-black transition-colors">Data Penelaahan</Link> / 
           <span className="text-black">Buat Penelaahan</span>
         </nav>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>

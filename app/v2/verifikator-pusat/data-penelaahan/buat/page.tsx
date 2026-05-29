@@ -50,6 +50,7 @@ const BuatPenelaahanPusatPage = () => {
           elements: formData.jenisUnsur,
           due_at,
           issued_at,
+          participants: formData.adminVerifikator,
         },
       },
       {

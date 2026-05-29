@@ -4,6 +4,8 @@ import CalendarInput from '../inputs/CalendarInput'
 import MultiSelectDropdown from '../inputs/MultiSelectDropdown'
 import ButtonComponent from '../buttons/ButtonComponent'
 import { useBuatPenelaahanPusatStore } from '@/store/useBuatPenelaahanPusatStore'
+import { useAuth } from '@/contexts/AuthContext'
+import { useMyTeams } from '@/hooks/usePersonal'
 
 interface Option {
   label: string;
@@ -32,8 +34,18 @@ const BuatPenelaahanPusatForm = ({
   isSubmitting = false 
 }: BuatPenelaahanPusatFormProps) => {
   const { formData, setFieldValue } = useBuatPenelaahanPusatStore()
+  const { token } = useAuth()
+
+  const { data: teamsResponse } = useMyTeams(token, 1, "", "verificator")
 
   const options = jenisUnsurOptions ?? DEFAULT_JENIS_UNSUR_OPTIONS
+
+  const verifikatorOptions = React.useMemo(() => {
+    return (teamsResponse?.data || []).map((member: any) => ({
+      label: `${member.name} - ${member.email}`,
+      value: member.id,
+    }))
+  }, [teamsResponse])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,6 +84,12 @@ const BuatPenelaahanPusatForm = ({
         onChange={(val) => setFieldValue('jenisUnsur', val)}
         options={options}
         required
+      />
+      <MultiSelectDropdown
+        label="Partisipan Verifikator"
+        value={formData.adminVerifikator}
+        onChange={(val) => setFieldValue('adminVerifikator', val)}
+        options={verifikatorOptions}
       />
 
       <div className="flex gap-3 pt-2">

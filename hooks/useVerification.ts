@@ -75,7 +75,7 @@ export interface VerificationCandidatesResponse {
 
 export const useVerificationCandidates = (token: string | null) => {
     return useQuery<VerificationCandidatesResponse>({
-        queryKey: ["verification-candidates"],
+        queryKey: ["verification-candidates", token],
         queryFn: () => getVerificationCandidates(token),
         enabled: !!token,
         retry: false,
@@ -99,7 +99,7 @@ export const useCreateVerificationTransaction = () => {
             data,
         }: {
             token: string | null;
-            data: { title: string; elements: string[]; issued_at: string; due_at: string; participants?: string[] };
+            data: { title: string; elements: string[]; issued_at: string; due_at: string; participants?: any[] };
         }) => createVerificationTransaction(token, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["verification-transactions"], exact: false });

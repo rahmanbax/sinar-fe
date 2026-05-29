@@ -28,7 +28,7 @@ export function proxy(request: NextRequest) {
     const level = request.cookies.get('level')?.value;
 
     // 1. If trying to access login page (/v2)
-    if (pathname === '/v2') {
+    if (pathname === '/v2' || pathname === '/v2/pengumuman' || pathname === '/v2/gazeter' || pathname === '/v2/bantuan') {
         return NextResponse.next();
     }
 

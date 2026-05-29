@@ -149,7 +149,6 @@ const TransactionDetailContent = () => {
         { header: "Provinsi", accessorKey: "province_display" },
         { header: "Kabupaten/ Kota", accessorKey: "regency_display" },
         { header: "Surveyor", accessorKey: "surveyor" },
-        { header: "Ditugaskan ke", accessorKey: "assignedTo" },
         { header: "Koordinat", accessorKey: "coordinates" },
         {
             header: "Aksi",

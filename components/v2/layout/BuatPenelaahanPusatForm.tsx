@@ -1,9 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import TextInput from '../inputs/TextInput'
 import CalendarInput from '../inputs/CalendarInput'
 import MultiSelectDropdown from '../inputs/MultiSelectDropdown'
 import ButtonComponent from '../buttons/ButtonComponent'
 import { useBuatPenelaahanPusatStore } from '@/store/useBuatPenelaahanPusatStore'
+import { useAuth } from '@/contexts/AuthContext'
+import { useMyTeams } from '@/hooks/usePersonal'
 
 interface Option {
   label: string;
@@ -32,8 +34,19 @@ const BuatPenelaahanPusatForm = ({
   isSubmitting = false 
 }: BuatPenelaahanPusatFormProps) => {
   const { formData, setFieldValue } = useBuatPenelaahanPusatStore()
+  const { token } = useAuth()
+  const [metodePenugasan, setMetodePenugasan] = useState('semua')
+
+  const { data: teamsResponse } = useMyTeams(token, 1, "", "verificator")
 
   const options = jenisUnsurOptions ?? DEFAULT_JENIS_UNSUR_OPTIONS
+
+  const verifikatorOptions = React.useMemo(() => {
+    return (teamsResponse?.data || []).map((member: any) => ({
+      label: `${member.name} - ${member.email}`,
+      value: member.id,
+    }))
+  }, [teamsResponse])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,6 +86,41 @@ const BuatPenelaahanPusatForm = ({
         options={options}
         required
       />
+      <MultiSelectDropdown
+        label="Partisipan Verifikator"
+        value={formData.adminVerifikator}
+        onChange={(val) => setFieldValue('adminVerifikator', val)}
+        options={verifikatorOptions}
+      />
+
+      {/* UI Radio Button Metode Penugasan */}
+      <div className="space-y-3 pt-1">
+        <span className="block text-sm font-semibold text-gray-700">Metode Penugasan</span>
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer w-fit">
+            <input 
+              type="radio" 
+              name="metodePenugasan" 
+              value="semua"
+              checked={metodePenugasan === 'semua'}
+              onChange={() => setMetodePenugasan('semua')}
+              className="w-4 h-4 cursor-pointer" 
+            />
+            Tugaskan ke semua
+          </label>
+          <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer w-fit">
+            <input 
+              type="radio" 
+              name="metodePenugasan" 
+              value="bagi_rata"
+              checked={metodePenugasan === 'bagi_rata'}
+              onChange={() => setMetodePenugasan('bagi_rata')}
+              className="w-4 h-4 cursor-pointer" 
+            />
+            Bagi rata penugasan
+          </label>
+        </div>
+      </div>
 
       <div className="flex gap-3 pt-2">
         <ButtonComponent

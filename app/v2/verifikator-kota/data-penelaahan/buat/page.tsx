@@ -2,7 +2,7 @@
 
 import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart'
 import BuatPenelaahanForm from '@/components/v2/layout/BuatPenelaahanForm'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useVerificationCandidates, useCreateVerificationTransaction } from '@/hooks/useVerification'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -13,11 +13,7 @@ import { ChevronRight } from 'lucide-react'
 const BuatPenelaahanPage = () => {
   const { token } = useAuth()
   const router = useRouter()
-  const { data: candidatesRes, isLoading, refetch } = useVerificationCandidates(token)
-  
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
+  const { data: candidatesRes, isLoading } = useVerificationCandidates(token)
 
   const { mutate: createTransaction, isPending } = useCreateVerificationTransaction()
 

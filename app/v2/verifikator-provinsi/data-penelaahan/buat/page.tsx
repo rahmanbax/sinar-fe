@@ -4,7 +4,7 @@ import HorizontalBarChart from '@/components/v2/charts/HorizontalBarChart'
 import { useVerificationCandidates, useCreateVerificationTransaction } from '@/hooks/useVerification'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import React from 'react'
 
 import Link from 'next/link'
 import DashboardLayout from '@/components/v2/nav/DashboardLayout'
@@ -16,11 +16,7 @@ const BuatPenelaahanProvinsiPage = () => {
   const router = useRouter()
 
   // Use existing hooks
-  const { data: candidatesRes, isLoading, refetch } = useVerificationCandidates(token)
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
+  const { data: candidatesRes, isLoading } = useVerificationCandidates(token)
 
   const { mutate: createTransaction, isPending } = useCreateVerificationTransaction()
 

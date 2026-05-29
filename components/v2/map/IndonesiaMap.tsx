@@ -81,6 +81,21 @@ const IndonesiaMap = ({
     const [mapStyle, setMapStyle] = useState(MapStyles[0])
     const [isStylesOpen, setIsStylesOpen] = useState(false);
     const [selectedToponymId, setSelectedToponymId] = useState<string | null>(searchParams.get('id') || null);
+    const [myLocation, setMyLocation] = useState<{ longitude: number; latitude: number } | null>(null);
+
+    useEffect(() => {
+        const stored = sessionStorage.getItem('my_location');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                if (parsed && typeof parsed.longitude === 'number' && typeof parsed.latitude === 'number') {
+                    setMyLocation(parsed);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }, []);
 
     // Search state
     const [searchText, setSearchText] = useState("");
@@ -210,6 +225,9 @@ const IndonesiaMap = ({
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                 const { longitude, latitude } = position.coords;
+                const loc = { longitude, latitude };
+                setMyLocation(loc);
+                sessionStorage.setItem('my_location', JSON.stringify(loc));
                 mapRef.current?.getMap().flyTo({
                     center: [longitude, latitude],
                     zoom: 14,
@@ -555,6 +573,19 @@ const IndonesiaMap = ({
                         </div>
                     </Marker>
                 ))}
+
+                {myLocation && (
+                    <Marker
+                        longitude={myLocation.longitude}
+                        latitude={myLocation.latitude}
+                        anchor="center"
+                    >
+                        <span className="relative flex size-4">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400"></span>
+                            <span className="relative inline-flex size-4 rounded-full bg-blue-500 border-2 border-white"></span>
+                        </span>
+                    </Marker>
+                )}
 
                 {isLoading && (
                     <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full border border-gray-100 shadow-sm z-30">

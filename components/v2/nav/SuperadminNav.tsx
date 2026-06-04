@@ -9,7 +9,7 @@ import {
     MessageSquare, Newspaper, Bell, Images, Database, Map,
     FolderOpen, ClipboardList, FileText, Search, Megaphone, CalendarDays,
     MessageCircle, CheckCircle, RefreshCw, Navigation2, BookMarked,
-    Inbox, BarChart2, ChevronDown, ChevronRight, X,
+    Inbox, BarChart2, ChevronDown, ChevronRight, X, CalendarCheck, HelpCircle,
 } from 'lucide-react';
 
 type NavItem = {
@@ -29,13 +29,14 @@ const navItems: NavItem[] = [
         children: [
             { name: 'Struktur Kelembagaan', href: '/v2/superadmin/kelola-konten/struktur-kelembagaan', icon: Building2 },
             { name: 'Petunjuk Penggunaan', href: '/v2/superadmin/kelola-konten/petunjuk-penggunaan', icon: BookOpen },
-            { name: 'Tautan Terkait', href: '/v2/superadmin/kelola-konten/tautan-terkait', icon: Link2 },
             { name: 'Kontak Kami', href: '/v2/superadmin/kelola-konten/kontak-kami', icon: Phone },
             { name: 'Tentang Aplikasi', href: '/v2/superadmin/kelola-konten/tentang-aplikasi', icon: Info },
             { name: 'Forum', href: '/v2/superadmin/kelola-konten/forum', icon: MessageSquare },
             { name: 'Berita', href: '/v2/superadmin/kelola-konten/berita', icon: Newspaper },
             { name: 'Pengumuman Popup', href: '/v2/superadmin/kelola-konten/pengumuman-popup', icon: Bell },
             { name: 'Galeri', href: '/v2/superadmin/kelola-konten/galeri', icon: Images },
+            { name: 'Agenda', href: '/v2/superadmin/kelola-konten/agenda', icon: CalendarCheck },
+            { name: 'FAQ', href: '/v2/superadmin/kelola-konten/faq', icon: HelpCircle },
         ],
     },
     {

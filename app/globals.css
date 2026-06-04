@@ -165,6 +165,27 @@
   animation: collapse 1s ease-in-out forwards;
 }
 
+/* Tiptap rich text editor output styles */
+.prose h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+.prose h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+.prose h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.4rem; }
+.prose p { margin-bottom: 0.75rem; line-height: 1.7; }
+.prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+.prose ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+.prose li { margin-bottom: 0.25rem; }
+.prose hr { border-color: #e5e7eb; margin: 1rem 0; }
+.prose a { color: #2563eb; text-decoration: underline; }
+.prose strong { font-weight: 700; }
+.prose em { font-style: italic; }
+.prose s { text-decoration: line-through; }
+.tiptap p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #9ca3af;
+    pointer-events: none;
+    height: 0;
+}
+
 @layer utilities {
   /* Base: hide scrollbar visually but keep scroll functionality */
   .scrollbar-hover-hidden::-webkit-scrollbar {

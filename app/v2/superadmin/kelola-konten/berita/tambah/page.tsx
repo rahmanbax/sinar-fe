@@ -172,6 +172,7 @@ const TambahBeritaPage = () => {
                             Batal
                         </button>
                         <ButtonComponent
+                            type="submit"
                             label={isSubmitting ? "Menyimpan..." : "Simpan Berita"}
                             disabled={isSubmitting}
                         />

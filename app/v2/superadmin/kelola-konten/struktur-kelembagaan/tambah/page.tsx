@@ -161,7 +161,7 @@ const TambahStrukturPage = () => {
                         <button type="button" onClick={() => router.back()} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                             Batal
                         </button>
-                        <ButtonComponent label={isSubmitting ? "Menyimpan..." : "Simpan"} disabled={isSubmitting} />
+                        <ButtonComponent type="submit" label={isSubmitting ? "Menyimpan..." : "Simpan"} disabled={isSubmitting} />
                     </div>
                 </form>
             </div>

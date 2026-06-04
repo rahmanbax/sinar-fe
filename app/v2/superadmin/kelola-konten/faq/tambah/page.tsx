@@ -95,6 +95,7 @@ const TambahFaqPage = () => {
                             Batal
                         </button>
                         <ButtonComponent
+                            type="submit"
                             label={createMutation.isPending ? "Menyimpan..." : "Simpan"}
                             disabled={createMutation.isPending}
                         />

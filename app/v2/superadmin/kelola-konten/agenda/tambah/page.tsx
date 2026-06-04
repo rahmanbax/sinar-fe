@@ -154,6 +154,7 @@ const TambahAgendaPage = () => {
                             Batal
                         </button>
                         <ButtonComponent
+                            type="submit"
                             label={isSubmitting ? "Menyimpan..." : "Simpan"}
                             disabled={isSubmitting}
                         />

@@ -76,7 +76,7 @@ const EditRoomPage = () => {
 
                     <div className="flex justify-end gap-2 pt-2">
                         <button type="button" onClick={() => router.back()} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
-                        <ButtonComponent label={updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"} disabled={updateMutation.isPending} />
+                        <ButtonComponent type="submit" label={updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"} disabled={updateMutation.isPending} />
                     </div>
                 </form>
             </div>

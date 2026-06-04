@@ -153,6 +153,7 @@ const TambahGaleriPage = () => {
                             Batal
                         </button>
                         <ButtonComponent
+                            type="submit"
                             label={isSubmitting ? "Mengunggah..." : "Simpan"}
                             disabled={isSubmitting}
                         />

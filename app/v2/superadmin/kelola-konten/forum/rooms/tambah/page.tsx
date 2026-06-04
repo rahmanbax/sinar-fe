@@ -61,7 +61,7 @@ const TambahRoomPage = () => {
 
                     <div className="flex justify-end gap-2 pt-2">
                         <button type="button" onClick={() => router.back()} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Batal</button>
-                        <ButtonComponent label={createMutation.isPending ? "Menyimpan..." : "Simpan"} disabled={createMutation.isPending} />
+                        <ButtonComponent type="submit" label={createMutation.isPending ? "Menyimpan..." : "Simpan"} disabled={createMutation.isPending} />
                     </div>
                 </form>
             </div>

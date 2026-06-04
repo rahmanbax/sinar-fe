@@ -123,6 +123,7 @@ const EditFaqPage = () => {
                             Batal
                         </button>
                         <ButtonComponent
+                            type="submit"
                             label={updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                             disabled={updateMutation.isPending}
                         />

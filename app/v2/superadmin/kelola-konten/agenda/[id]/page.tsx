@@ -182,6 +182,7 @@ const EditAgendaPage = () => {
                             Batal
                         </button>
                         <ButtonComponent
+                            type="submit"
                             label={isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
                             disabled={isSubmitting}
                         />

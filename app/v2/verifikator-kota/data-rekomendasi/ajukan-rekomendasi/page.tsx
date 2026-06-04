@@ -31,7 +31,7 @@ const AjukanRekomendasiPage = () => {
 
     const { mutateAsync: createRec, isPending } = useCreateRecommendationMutation();
 
-    const transactions: VerificationTransaction[] = transactionsRes?.data || [];
+    const transactions: VerificationTransaction[] = (transactionsRes?.data || []).filter((t: VerificationTransaction) => !!t.ba_file_url);
 
     const toggleSelect = (id: string) => {
         setSelectedIds(prev =>

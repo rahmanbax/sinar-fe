@@ -37,6 +37,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable} antialiased font-dm-sans`}
+        suppressHydrationWarning
       >
         <AuthProvider>
           <QueryProvider>

@@ -78,7 +78,7 @@ export default function PengumumanPage() {
             cell: (row) => (
                 <div className="flex justify-center">
                     <button
-                        onClick={() => console.log("Navigate to detail", row.id)}
+                        onClick={() => router.push(`/v2/big/pengumuman/detail?id=${row.id}`)}
                         className="p-1.5 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                     >
                         <Search size={18} className="text-gray-900" strokeWidth={3} />

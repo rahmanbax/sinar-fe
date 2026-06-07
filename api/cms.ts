@@ -814,6 +814,123 @@ export const deleteUserGuide = async (
     return res.json();
 };
 
+// ─── Slider ──────────────────────────────────────────────────────────────────
+
+export interface SliderItem {
+    id: string;
+    title: string | null;
+    image_url: string;
+    link_url: string | null;
+    order: number;
+    is_active: boolean;
+    created_by: number | null;
+    created_at: string;
+    updated_at: string;
+    creator?: { id: number; name: string } | null;
+}
+
+export interface SliderPaginated {
+    error: boolean;
+    message: string;
+    data: SliderItem[];
+    pagination: {
+        total: number;
+        per_page: number;
+        current_page: number;
+        last_page: number;
+        from: number;
+        to: number;
+    };
+}
+
+export interface SliderResponse {
+    error: boolean;
+    message: string;
+    data: SliderItem;
+}
+
+export interface SliderListResponse {
+    error: boolean;
+    message: string;
+    data: SliderItem[];
+}
+
+export const getSliderList = async (
+    token: string | null,
+    page = 1,
+    search = ""
+): Promise<SliderPaginated> => {
+    if (!token) throw new Error("No token");
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    if (search) params.set("search", search);
+    const res = await fetch(`${API_URL}/cms/sliders?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Gagal mengambil data slider");
+    return res.json();
+};
+
+export const getSliderDetail = async (
+    token: string | null,
+    id: string
+): Promise<SliderResponse> => {
+    if (!token) throw new Error("No token");
+    const res = await fetch(`${API_URL}/cms/sliders/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Gagal mengambil detail slider");
+    return res.json();
+};
+
+export const createSlider = async (
+    token: string | null,
+    data: { title?: string; image_url: string; link_url?: string; order?: number; is_active?: boolean }
+): Promise<SliderResponse> => {
+    if (!token) throw new Error("No token");
+    const res = await fetch(`${API_URL}/cms/sliders`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || "Gagal membuat slider");
+    }
+    return res.json();
+};
+
+export const updateSlider = async (
+    token: string | null,
+    id: string,
+    data: { title?: string; image_url: string; link_url?: string; order?: number; is_active?: boolean }
+): Promise<SliderResponse> => {
+    if (!token) throw new Error("No token");
+    const res = await fetch(`${API_URL}/cms/sliders/${id}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || "Gagal memperbarui slider");
+    }
+    return res.json();
+};
+
+export const deleteSlider = async (
+    token: string | null,
+    id: string
+): Promise<{ error: boolean; message: string }> => {
+    if (!token) throw new Error("No token");
+    const res = await fetch(`${API_URL}/cms/sliders/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Gagal menghapus slider");
+    return res.json();
+};
+
 export const deleteNews = async (
     token: string | null,
     id: string

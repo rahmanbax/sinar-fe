@@ -10,6 +10,7 @@ import {
     FolderOpen, ClipboardList, FileText, Search, Megaphone, CalendarDays,
     MessageCircle, CheckCircle, RefreshCw, Navigation2, BookMarked,
     Inbox, BarChart2, ChevronDown, ChevronRight, X, CalendarCheck, HelpCircle,
+    SlidersHorizontal,
 } from 'lucide-react';
 
 type NavItem = {
@@ -37,6 +38,7 @@ const navItems: NavItem[] = [
             { name: 'Galeri', href: '/v2/superadmin/kelola-konten/galeri', icon: Images },
             { name: 'Agenda', href: '/v2/superadmin/kelola-konten/agenda', icon: CalendarCheck },
             { name: 'FAQ', href: '/v2/superadmin/kelola-konten/faq', icon: HelpCircle },
+            { name: 'Slider', href: '/v2/superadmin/kelola-konten/slider', icon: SlidersHorizontal },
         ],
     },
     {

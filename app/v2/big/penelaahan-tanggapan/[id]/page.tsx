@@ -1,9 +1,9 @@
 "use client"
 
 import DashboardLayout from '@/components/v2/nav/DashboardLayout'
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Camera, MapPin } from 'lucide-react'
+import { ArrowLeft, Camera, MapPin, Check, Trash2, X } from 'lucide-react'
 import MiniIndonesiaMap from '@/components/v2/map/MiniIndonesiaMap'
 
 const ReadOnlyField = ({ label, value, actionRight }: { label: string, value: string, actionRight?: React.ReactNode }) => (
@@ -28,6 +28,18 @@ const DashedBox = ({ label, icon }: { label: string, icon: React.ReactNode }) =>
 );
 
 export default function DetailPenelaahanTanggapanPage() {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedSaran, setSelectedSaran] = useState<string | null>(null);
+
+    const dummySaran = [
+        { id: 1, saran: "Gelas Kaca", penanggap: "Jane", tanggal: "08/06/2026" },
+        { id: 2, saran: "Gelas Kayu", penanggap: "John", tanggal: "08/06/2026" },
+    ];
+
+    const currentSaranList = selectedSaran 
+        ? dummySaran.filter(s => s.saran !== selectedSaran)
+        : dummySaran;
+
     return (
         <DashboardLayout showNav={false} tightMargin={true}>
             <div className="flex h-full w-full bg-white">
@@ -96,8 +108,8 @@ export default function DetailPenelaahanTanggapanPage() {
                         
                         <ReadOnlyField 
                             label="Sejarah Nama" 
-                            value="Sejarah Nama" 
-                            actionRight={<span className="text-navy-600 text-[11px] font-semibold cursor-pointer hover:underline">Lihat Tanggapan (2)</span>} 
+                            value="Gelas Teko" 
+                            actionRight={<button onClick={() => setIsModalOpen(true)} className="text-navy-600 text-[11px] font-semibold cursor-pointer hover:underline focus:outline-none">Lihat Tanggapan (2)</button>} 
                         />
                         
                         <ReadOnlyField label="Pelafalan" value="Pelafalan" />
@@ -136,6 +148,100 @@ export default function DetailPenelaahanTanggapanPage() {
                     />
                 </div>
             </div>
+
+            {/* Modal Tanggapan Sejarah Nama */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                        <div className="p-6 overflow-y-auto">
+                            <h2 className="text-xl font-bold text-gray-900 mb-6">Tanggapan Sejarah Nama</h2>
+                            
+                            <div className="flex flex-col gap-2 mb-6">
+                                <span className="text-sm font-semibold text-gray-900">Sejarah Nama</span>
+                                <div className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white">
+                                    Gelas Teko
+                                </div>
+
+                                {selectedSaran && (
+                                    <div className="flex flex-col items-center gap-2 mt-2">
+                                        <span className="text-xs text-gray-400 font-medium">akan menjadi</span>
+                                        <div className="flex items-center gap-2 w-full">
+                                            <div className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white">
+                                                {selectedSaran}
+                                            </div>
+                                            <button 
+                                                onClick={() => setSelectedSaran(null)}
+                                                className="p-2 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 cursor-pointer"
+                                            >
+                                                <X size={18} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                <span className="text-sm font-semibold text-gray-900">Saran Perubahan</span>
+                                
+                                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-200">
+                                            <tr>
+                                                <th className="px-4 py-3 w-16">No</th>
+                                                <th className="px-4 py-3">Saran Perubahan</th>
+                                                <th className="px-4 py-3">Nama Penanggap</th>
+                                                <th className="px-4 py-3">Tanggal Tanggapan</th>
+                                                <th className="px-4 py-3 w-24">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {currentSaranList.map((item, index) => (
+                                                <tr key={item.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                                                    <td className="px-4 py-3">{index + 1}</td>
+                                                    <td className="px-4 py-3">{item.saran}</td>
+                                                    <td className="px-4 py-3">{item.penanggap}</td>
+                                                    <td className="px-4 py-3">{item.tanggal}</td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <button 
+                                                                onClick={() => setSelectedSaran(item.saran)}
+                                                                className="p-1.5 border border-green-500 text-green-500 rounded hover:bg-green-50 cursor-pointer transition-colors"
+                                                            >
+                                                                <Check size={16} />
+                                                            </button>
+                                                            <button className="p-1.5 border border-red-500 text-red-500 rounded hover:bg-red-50 cursor-pointer transition-colors">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div className="mt-6 flex justify-end gap-3">
+                                <button 
+                                    onClick={() => { setIsModalOpen(false); setSelectedSaran(null); }}
+                                    className="px-6 py-2.5 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50"
+                                >
+                                    Batal
+                                </button>
+                                <button 
+                                    disabled={!selectedSaran}
+                                    onClick={() => { setIsModalOpen(false); setSelectedSaran(null); }}
+                                    className={`px-8 py-2.5 font-semibold rounded-lg w-full transition-colors ${
+                                        selectedSaran ? 'bg-navy-700 text-white hover:bg-navy-800' : 'bg-[#A3A3A3] text-white cursor-not-allowed'
+                                    }`}
+                                >
+                                    Simpan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
     )
 }

@@ -36,14 +36,24 @@ export default function BuatPengumumanPage() {
                 <h1 className="text-2xl font-bold text-gray-900">Buat Pengumuman</h1>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                    {/* Left Panel: Chart */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        <HorizontalBarChart
-                            title="Data Toponim"
-                            items={dummyChartData}
-                            className="border-none shadow-none"
-                            color="#4CB3CF"
-                        />
+                    {/* Left Panel: Charts */}
+                    <div className="flex flex-col gap-6">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <HorizontalBarChart
+                                title="Jenis Unsur"
+                                items={dummyChartData}
+                                className="border-none shadow-none"
+                                color="#4CB3CF"
+                            />
+                        </div>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <HorizontalBarChart
+                                title="Provinsi"
+                                items={dummyChartData}
+                                className="border-none shadow-none"
+                                color="#4CB3CF"
+                            />
+                        </div>
                     </div>
 
                     {/* Right Panel: Form */}
@@ -63,7 +73,7 @@ export default function BuatPengumumanPage() {
                         />
                         <CalendarInput
                             id="tanggalAkhir"
-                            label="Tanggal Akhir Penelaahan"
+                            label="Tanggal Selesai"
                             value={tanggalAkhir}
                             onChange={(e) => setTanggalAkhir(e.target.value)}
                         />

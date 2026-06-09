@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient, UseMutationOptions } from "@tanstack/react-query";
 import {
+    getSliderList,
+    getSliderDetail,
+    createSlider,
+    updateSlider,
+    deleteSlider,
     getNewsList,
     getNewsDetail,
     createNews,
@@ -110,6 +115,79 @@ export const useDeleteNewsMutation = (
         ...options,
         onSuccess: (...args) => {
             queryClient.invalidateQueries({ queryKey: ["cms", "news"] });
+            options?.onSuccess?.(...args);
+        },
+    });
+};
+
+// ─── Slider ──────────────────────────────────────────────────────────────────
+
+export const useSliderList = (token: string | null, page = 1, search = "") => {
+    return useQuery({
+        queryKey: ["cms", "sliders", page, search],
+        queryFn: () => getSliderList(token, page, search),
+        enabled: !!token,
+    });
+};
+
+export const useSliderDetail = (token: string | null, id: string) => {
+    return useQuery({
+        queryKey: ["cms", "sliders", id],
+        queryFn: () => getSliderDetail(token, id),
+        enabled: !!token && !!id,
+    });
+};
+
+type CreateSliderVars = {
+    token: string | null;
+    data: { title?: string; image_url: string; link_url?: string; order?: number; is_active?: boolean };
+};
+
+export const useCreateSliderMutation = (
+    options?: Omit<UseMutationOptions<any, Error, CreateSliderVars>, "mutationFn">
+) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ token, data }: CreateSliderVars) => createSlider(token, data),
+        ...options,
+        onSuccess: (...args) => {
+            queryClient.invalidateQueries({ queryKey: ["cms", "sliders"] });
+            options?.onSuccess?.(...args);
+        },
+    });
+};
+
+type UpdateSliderVars = {
+    token: string | null;
+    id: string;
+    data: { title?: string; image_url: string; link_url?: string; order?: number; is_active?: boolean };
+};
+
+export const useUpdateSliderMutation = (
+    options?: Omit<UseMutationOptions<any, Error, UpdateSliderVars>, "mutationFn">
+) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ token, id, data }: UpdateSliderVars) => updateSlider(token, id, data),
+        ...options,
+        onSuccess: (...args) => {
+            queryClient.invalidateQueries({ queryKey: ["cms", "sliders"] });
+            options?.onSuccess?.(...args);
+        },
+    });
+};
+
+type DeleteSliderVars = { token: string | null; id: string };
+
+export const useDeleteSliderMutation = (
+    options?: Omit<UseMutationOptions<any, Error, DeleteSliderVars>, "mutationFn">
+) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ token, id }: DeleteSliderVars) => deleteSlider(token, id),
+        ...options,
+        onSuccess: (...args) => {
+            queryClient.invalidateQueries({ queryKey: ["cms", "sliders"] });
             options?.onSuccess?.(...args);
         },
     });

@@ -1,15 +1,14 @@
 "use client";
 
-import React from 'react';
-import { Plus, Search, ChevronLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, ArrowLeft } from 'lucide-react';
 import DashboardLayout from '@/components/v2/nav/DashboardLayout';
-import ButtonComponent from '@/components/v2/buttons/ButtonComponent';
 import { DataTable, ColumnDef } from '@/components/v2/table/DataTable';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface GazeterDetailData {
     no: number;
-    tanggalDiajukan: string;
     jenisUnsur: string;
     namaRupabumi: string;
     provinsi: string;
@@ -17,12 +16,19 @@ interface GazeterDetailData {
     koordinat: string;
 }
 
+const SummaryCard = ({ value, label }: { value: string | number, label: string }) => (
+    <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+        <span className="font-bold text-gray-900 text-base">{value}</span>
+        <span className="text-sm text-gray-600">{label}</span>
+    </div>
+);
+
 const GazeterDetailPage = () => {
     const router = useRouter();
+    const [page, setPage] = useState(1);
 
     const dummyData: GazeterDetailData[] = Array.from({ length: 10 }).map((_, i) => ({
         no: i + 1,
-        tanggalDiajukan: '05/02/2026',
         jenisUnsur: 'Candi',
         namaRupabumi: 'Candi Borobudur',
         provinsi: 'JAWA BARAT',
@@ -32,58 +38,63 @@ const GazeterDetailPage = () => {
 
     const columns: ColumnDef<GazeterDetailData>[] = [
         { header: 'No', accessorKey: 'no', className: 'w-12' },
-        { header: 'Tanggal Diajukan', accessorKey: 'tanggalDiajukan' },
         { header: 'Jenis Unsur', accessorKey: 'jenisUnsur' },
         { header: 'Nama Rupabumi', accessorKey: 'namaRupabumi' },
         { header: 'Provinsi', accessorKey: 'provinsi' },
         { header: 'Kabupaten/ Kota', accessorKey: 'kabupatenKota' },
         { header: 'Koordinat', accessorKey: 'koordinat' },
-        {
-            header: 'Aksi',
-            cell: () => (
-                <button className="p-1 hover:bg-gray-100 rounded transition cursor-pointer">
-                    <Search size={18} className="" />
-                </button>
-            ),
-            className: 'w-16 text-center'
-        },
     ];
 
     return (
         <DashboardLayout>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                <h1 className="text-2xl font-bold ">Pembuatan GRI</h1>
-                <ButtonComponent
-                    label="Buat Gazeter"
-                    icon={<Plus size={18} />}
-                    onClick={() => { }}
-                />
-            </div>
+            <div className="flex flex-col gap-6">
+                {/* Header Area */}
+                <div className="flex items-center justify-between">
+                    <h1 className="text-[22px] font-bold text-gray-900">Gazeter</h1>
+                    <Link 
+                        href="/v2/big/pembuatan-gazeter/tambah"
+                        className="flex items-center gap-2 bg-navy-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-navy-700 transition"
+                    >
+                        <Plus size={18} /> Buat Gazeter
+                    </Link>
+                </div>
 
-            <div className="flex items-center gap-3 mb-6">
-                <button
-                    onClick={() => router.back()}
-                    className="p-1 hover:bg-gray-100 rounded-full transition cursor-pointer"
-                >
-                    <ChevronLeft size={24} className="" />
-                </button>
-                <h2 className="text-lg font-bold ">Gazeter Republic Indonesia 2025</h2>
-            </div>
+                {/* Subheader Title */}
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => router.back()}
+                        className="p-1.5 hover:bg-gray-100 rounded-lg transition cursor-pointer"
+                    >
+                        <ArrowLeft size={20} className="text-gray-900" />
+                    </button>
+                    <h2 className="text-lg font-bold text-gray-900">Gazeter Republic Indonesia 2025</h2>
+                </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-2 md:p-4">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <SummaryCard value="5" label="Jenis Unsur" />
+                    <SummaryCard value="5" label="Kabupaten/ Kota" />
+                    <SummaryCard value="2" label="Provinsi" />
+                    <SummaryCard value="20" label="Total Data" />
+                </div>
+
+                {/* Table Area */}
                 <DataTable
                     columns={columns}
                     data={dummyData}
                     showSearch={true}
                     showFilter={true}
+                    showDownload={false}
+                    showMap={false}
                     pagination={{
                         total: 20,
                         per_page: 10,
-                        current_page: 1,
+                        current_page: page,
                         last_page: 2,
-                        from: 1,
-                        to: 10,
+                        from: (page - 1) * 10 + 1,
+                        to: page * 10,
                     }}
+                    onPageChange={(newPage) => setPage(newPage)}
                 />
             </div>
         </DashboardLayout>
